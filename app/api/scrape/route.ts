@@ -27,8 +27,12 @@ export async function POST(request: Request) {
         success: false,
         error: "Failed to scrape prices",
       },
-      { status: 500 },
+      { status: 500 }
     )
   }
 }
 
+// Add GET method to allow browser access
+export async function GET(request: Request) {
+  return POST(request)
+}
