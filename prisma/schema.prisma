@@ -1,0 +1,45 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Store {
+  id          String     @id
+  name        String
+  website     String
+  prices      EggPrice[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model EggPrice {
+  id          String   @id @default(cuid())
+  storeId     String
+  store       Store    @relation(fields: [storeId], references: [id])
+  price       Float
+  eggType     String   @default("regular") // Can be "regular" or "organic"
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  @@index([storeId, date, eggType])
+}
+
+model AveragePrice {
+  id          String   @id @default(cuid())
+  price       Float
+  eggType     String   @default("regular") // Can be "regular" or "organic"
+  date        DateTime
+  storeCount  Int
+  createdAt   DateTime @default(now())
+
+  @@unique([date, eggType])
+  @@index([date, eggType])
+}
+
