@@ -1,31 +1,34 @@
-import type React from "react"
-import type { Metadata } from "next"
-import { JetBrains_Mono } from "next/font/google"
+import { ThemeProvider } from "@/components/theme-provider"
 import "./globals.css"
 
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono",
-})
-
-export const metadata: Metadata = {
-  title: "EGG INDEX - PRICE TRACKER",
-  description: "TERMINAL-STYLE EGG PRICE TRACKER",
-    generator: 'v0.dev'
+export const metadata = {
+  title: "Egg Price Tracker",
+  description: "Track nationwide egg prices in real-time",
 }
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode
-}>) {
+}) {
   return (
-    <html lang="en">
-      <body className={jetbrainsMono.className}>{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=VT323&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem={false}
+          disableTransitionOnChange
+        >
+          {children}
+        </ThemeProvider>
+      </body>
     </html>
   )
 }
-
-
-
-import './globals.css'
