@@ -12,12 +12,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Run the scraper
+    // Run the placeholder scraper
     const results = await scrapeEggPrices()
 
     return NextResponse.json({
       success: true,
-      message: "Scraping completed successfully",
+      message: "Scraping completed successfully (placeholder)",
       results,
     })
   } catch (error) {
@@ -36,3 +36,4 @@ export async function POST(request: Request) {
 export async function GET(request: Request) {
   return POST(request)
 }
+
