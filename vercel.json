@@ -1,4 +1,7 @@
 {
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
+  "framework": "nextjs",
   "crons": [
     {
       "path": "/api/scrape?key=${SCRAPER_API_KEY_2}",
@@ -6,3 +9,4 @@
     }
   ]
 }
+
