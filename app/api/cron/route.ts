@@ -1,5 +1,4 @@
-// app/api/cron/route.ts
-
+// Create this file at: app/api/cron/route.ts
 import { NextResponse } from 'next/server';
 import { scheduleDailyScraping } from '../../../lib/scrapers/scheduler';
 
