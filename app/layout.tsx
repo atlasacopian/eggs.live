@@ -1,34 +1,29 @@
-import { ThemeProvider } from "@/components/theme-provider"
+import type React from "react"
+import type { Metadata } from "next"
+import { Inter } from "next/font/google"
 import "./globals.css"
+import { ThemeProvider } from "@/components/theme-provider"
 
-export const metadata = {
+const inter = Inter({ subsets: ["latin"] })
+
+export const metadata: Metadata = {
   title: "Egg Price Tracker",
-  description: "Track nationwide egg prices in real-time",
+  description: "Track egg prices across the US",
 }
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode
-}) {
+}>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <link
-          href="https://fonts.googleapis.com/css2?family=VT323&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem={false}
-          disableTransitionOnChange
-        >
+    <html lang="en">
+      <body className={inter.className}>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           {children}
         </ThemeProvider>
       </body>
     </html>
   )
 }
+
