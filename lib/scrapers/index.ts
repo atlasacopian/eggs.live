@@ -1,35 +1,85 @@
-// lib/scrapers/index.ts
-// Main export file for the egg price scraping system
+// Base scraper
+export * from "./base-scraper"
 
-// Export the scheduler functions
-export { scheduleDailyScraping, manualTriggerScraping } from './scheduler';
+// Individual store scrapers
+export * from "./aldi-scraper"
+export * from "./albertsons-scraper"
+export * from "./costco-scraper"
+export * from "./egg-scraper"
+export * from "./erewhon-scraper"
+export * from "./food-lion-scraper"
+export * from "./food4less-scraper"
+export * from "./giant-eagle-scraper"
+export * from "./heb-scraper"
+export * from "./kroger-scraper"
+export * from "./meijer-scraper"
+export * from "./publix-scraper"
+export * from "./ralphs-scraper"
+export * from "./safeway-scraper"
+export * from "./shoprite-scraper"
+export * from "./sprouts-scraper"
+export * from "./stop-and-shop-scraper"
+export * from "./target-scraper"
+export * from "./trader-joes-scraper"
+export * from "./walmart-scraper"
+export * from "./wegmans-scraper"
+export * from "./whole-foods-scraper"
+export * from "./winn-dixie-scraper"
 
-// Export the base scraper
-export { scrapeStore } from './base-scraper';
-export type { ScraperResult } from './base-scraper';
+// Scheduler
+export * from "./scheduler"
 
-// Export retailer-specific scrapers
-export { scrapeWalmartEggs } from './walmart-scraper';
-export { scrapeKrogerEggs } from './kroger-scraper';
-export { scrapeTargetEggs } from './target-scraper';
-export { scrapeCostcoEggs } from './costco-scraper';
-export { scrapeWholeFoodsEggs } from './whole-foods-scraper';
-export { scrapeTraderJoesEggs } from './trader-joes-scraper';
-export { scrapeAldiEggs } from './aldi-scraper';
+// Export a list of all scrapers for easy initialization
+import { AldiScraper } from "./aldi-scraper"
+import { AlbertsonsScraper } from "./albertsons-scraper"
+import { CostcoScraper } from "./costco-scraper"
+import { ErewhonScraper } from "./erewhon-scraper"
+import { FoodLionScraper } from "./food-lion-scraper"
+import { Food4LessScraper } from "./food4less-scraper"
+import { GiantEagleScraper } from "./giant-eagle-scraper"
+import { HEBScraper } from "./heb-scraper"
+import { KrogerScraper } from "./kroger-scraper"
+import { MeijerScraper } from "./meijer-scraper"
+import { PublixScraper } from "./publix-scraper"
+import { RalphsScraper } from "./ralphs-scraper"
+import { SafewayScraper } from "./safeway-scraper"
+import { ShopRiteScraper } from "./shoprite-scraper"
+import { SproutsScraper } from "./sprouts-scraper"
+import { StopAndShopScraper } from "./stop-and-shop-scraper"
+import { TargetScraper } from "./target-scraper"
+import { TraderJoesScraper } from "./trader-joes-scraper"
+import { WalmartScraper } from "./walmart-scraper"
+import { WegmansScraper } from "./wegmans-scraper"
+import { WholeFoodsScraper } from "./whole-foods-scraper"
+import { WinnDixieScraper } from "./winn-dixie-scraper"
+import { VonsScraper } from "./vons-scraper"
+import type { BaseScraper } from "./base-scraper"
 
-// Export utility functions
-export { isMatchingEggProduct, eggScraperConfig } from './egg-scraper';
-
-// Legacy function for backward compatibility
-export async function scrapeEggPrices() {
-  console.log('Legacy scrapeEggPrices function called, redirecting to scheduleDailyScraping');
-  const { scheduleDailyScraping } = await import('./scheduler');
-  return scheduleDailyScraping();
+export const getAllScrapers = (): BaseScraper[] => {
+  return [
+    new AldiScraper(),
+    new AlbertsonsScraper(),
+    new CostcoScraper(),
+    new ErewhonScraper(),
+    new FoodLionScraper(),
+    new Food4LessScraper(),
+    new GiantEagleScraper(),
+    new HEBScraper(),
+    new KrogerScraper(),
+    new MeijerScraper(),
+    new PublixScraper(),
+    new RalphsScraper(),
+    new SafewayScraper(),
+    new ShopRiteScraper(),
+    new SproutsScraper(),
+    new StopAndShopScraper(),
+    new TargetScraper(),
+    new TraderJoesScraper(),
+    new VonsScraper(),
+    new WalmartScraper(),
+    new WegmansScraper(),
+    new WholeFoodsScraper(),
+    new WinnDixieScraper(),
+  ]
 }
 
-// Export store coverage and egg type configurations
-export { storeLocations, scrapingConfig } from '../store-coverage';
-export { eggTypes, retailerProductMap } from '../egg-types';
-
-// Export price history data
-export { usdaHistoricalData } from '../price-history';
