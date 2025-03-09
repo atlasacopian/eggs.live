@@ -159,6 +159,13 @@ const stores = [
     priceSelector: ".product-price .price",
     eggType: "regular",
   },
+  {
+    id: "food4less",
+    name: "Food 4 Less",
+    website: "https://www.food4less.com/p/kroger-grade-a-large-eggs/0001111060933",
+    priceSelector: ".kds-Price-promotional, .kds-Price-regular",
+    eggType: "regular",
+  },
 
   // Organic eggs
   {
@@ -208,6 +215,13 @@ const stores = [
     name: "Sprouts",
     website: "https://shop.sprouts.com/product/33796/sprouts-organic-cage-free-large-grade-a-brown-eggs",
     priceSelector: ".product-price",
+    eggType: "organic",
+  },
+  {
+    id: "food4less-organic",
+    name: "Food 4 Less",
+    website: "https://www.food4less.com/p/simple-truth-organic-cage-free-large-brown-eggs/0001111087374",
+    priceSelector: ".kds-Price-promotional, .kds-Price-regular",
     eggType: "organic",
   },
 ]
@@ -359,7 +373,23 @@ export async function seedHistoricalData() {
       { id: "wholeFoods", name: "Whole Foods", website: "https://www.amazon.com" },
       { id: "costco", name: "Costco", website: "https://www.costco.com" },
       { id: "traderJoes", name: "Trader Joe's", website: "https://www.traderjoes.com" },
+      { id: "vons", name: "Vons", website: "https://www.vons.com" },
+      { id: "ralphs", name: "Ralphs", website: "https://www.ralphs.com" },
+      { id: "wegmans", name: "Wegmans", website: "https://www.wegmans.com" },
+      { id: "shopRite", name: "ShopRite", website: "https://www.shoprite.com" },
+      { id: "publix", name: "Publix", website: "https://www.publix.com" },
+      { id: "albertsons", name: "Albertsons", website: "https://www.albertsons.com" },
+      { id: "safeway", name: "Safeway", website: "https://www.safeway.com" },
+      { id: "aldi", name: "Aldi", website: "https://www.aldi.us" },
+      { id: "heb", name: "H-E-B", website: "https://www.heb.com" },
+      { id: "meijer", name: "Meijer", website: "https://www.meijer.com" },
+      { id: "foodLion", name: "Food Lion", website: "https://www.foodlion.com" },
+      { id: "giantEagle", name: "Giant Eagle", website: "https://www.gianteagle.com" },
+      { id: "stopAndShop", name: "Stop & Shop", website: "https://www.stopandshop.com" },
+      { id: "winnDixie", name: "Winn-Dixie", website: "https://www.winndixie.com" },
       { id: "sprouts", name: "Sprouts", website: "https://www.sprouts.com" },
+      { id: "erewhon", name: "Erewhon", website: "https://www.erewhonmarket.com" },
+      { id: "food4less", name: "Food 4 Less", website: "https://www.food4less.com" },
     ]
 
     for (const store of storeData) {
@@ -449,4 +479,3 @@ export async function seedHistoricalData() {
     throw error
   }
 }
-
