@@ -4,9 +4,8 @@
   "framework": "nextjs",
   "crons": [
     {
-      "path": "/api/scrape?key=${SCRAPER_API_KEY_2}",
+      "path": "/api/cron?key=${SCRAPER_API_KEY_2}",
       "schedule": "0 0 * * *"
     }
   ]
 }
-
