@@ -25,6 +25,7 @@ export * from "./walmart-scraper"
 export * from "./wegmans-scraper"
 export * from "./whole-foods-scraper"
 export * from "./winn-dixie-scraper"
+export * from "./vons-scraper"
 
 // Scheduler
 export * from "./scheduler"
@@ -85,4 +86,3 @@ export const getAllScrapers = (): BaseScraper[] => {
 
 // Re-export the main scraper functions
 export { scrapeEggPrices, seedHistoricalData } from "../scrapers"
-
