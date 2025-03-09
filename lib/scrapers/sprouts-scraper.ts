@@ -1,4 +1,4 @@
-import { BaseScraper } from "./base-scraper"
+import { BaseScraper } from "./base-scraper";
 
 export class SproutsScraper extends BaseScraper {
   constructor() {
@@ -8,7 +8,6 @@ export class SproutsScraper extends BaseScraper {
       regularEggSelector: ".product-price",
       organicEggUrl: "https://shop.sprouts.com/product/33796/sprouts-organic-cage-free-large-grade-a-brown-eggs",
       organicEggSelector: ".product-price",
-    })
+    });
   }
 }
-
