@@ -1,4 +1,4 @@
-import { BaseScraper } from "./base-scraper"
+import { BaseScraper } from "./base-scraper";
 
 export class HEBScraper extends BaseScraper {
   constructor() {
@@ -8,7 +8,6 @@ export class HEBScraper extends BaseScraper {
       regularEggSelector: ".prod-price",
       organicEggUrl: null,
       organicEggSelector: null,
-    })
+    });
   }
 }
-
