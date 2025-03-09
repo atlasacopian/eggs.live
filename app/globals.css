@@ -4,117 +4,108 @@
  
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 142.1 76.2% 36.3%;
-    --primary-foreground: 355.7 100% 97.3%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 142.1 76.2% 36.3%;
-    --radius: 0.5rem;
-  }
- 
-  .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 142.1 70.6% 45.3%;
-    --primary-foreground: 144.9 80.4% 10%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 142.1 76.2% 36.3%;
+    --background: 0 0% 0%;
+    --foreground: 120 100% 50%;
   }
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
-  }
-}
-
-/* Add retro terminal styling */
-@font-face {
-  font-family: 'VT323';
-  src: url('/fonts/VT323-Regular.ttf') format('truetype');
-}
-
+/* Terminal styling */
 body {
-  font-family: 'VT323', monospace;
-  background-color: #000;
+  background-color: black;
   color: #00ff00;
+  font-family: 'VT323', monospace;
   line-height: 1.2;
   padding: 2rem;
-}
-
-.terminal {
-  font-family: 'VT323', monospace;
-  color: #00ff00;
   text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
 }
 
-.terminal-header {
-  font-size: 2.5rem;
-  margin-bottom: 2rem;
+/* Buttons and inputs */
+button, 
+input, 
+select {
+  background-color: black !important;
+  border: 1px solid #00ff00 !important;
+  color: #00ff00 !important;
+  font-family: 'VT323', monospace !important;
+  padding: 0.5rem 1rem !important;
+  margin: 0.25rem !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.terminal-subheader {
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
+button:hover,
+input:hover,
+select:hover {
+  background-color: #00ff00 !important;
+  color: black !important;
+  text-shadow: none;
 }
 
-.terminal-price {
-  font-size: 2rem;
+/* Headers */
+h1, h2, h3 {
+  color: #00ff00;
+  text-shadow: 0 0 10px rgba(0, 255, 0, 0.7);
   margin: 1rem 0;
 }
 
-.terminal-text {
+/* Price displays */
+.price-display {
+  font-size: 2rem;
+  margin: 0.5rem 0;
+}
+
+/* Percentage changes */
+.percentage-change {
   font-size: 1.2rem;
+  opacity: 0.9;
 }
 
-.terminal-button {
-  background-color: #000;
+/* Active states for buttons */
+button.active {
+  background-color: #00ff00 !important;
+  color: black !important;
+  text-shadow: none;
+}
+
+/* Search input specific styling */
+input[type="search"] {
+  background-color: black;
   border: 1px solid #00ff00;
   color: #00ff00;
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  width: 100%;
+  max-width: 300px;
 }
 
-.terminal-button:hover {
-  background-color: #00ff00;
-  color: #000;
+/* Table styling */
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 0.5rem;
 }
 
-.terminal-input {
-  background-color: #000;
-  border: 1px solid #00ff00;
-  color: #00ff00;
+th, td {
   padding: 0.5rem;
+  text-align: left;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 10px;
+  background-color: black;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #00ff00;
+  border-radius: 5px;
+}
+
+/* Animation for cursor */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.cursor::after {
+  content: '_';
+  animation: blink 1s infinite;
 }
