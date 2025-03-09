@@ -31,3 +31,5 @@ export class BaseScraper {
   }
 }
 
+export type { ScraperConfig }
+
