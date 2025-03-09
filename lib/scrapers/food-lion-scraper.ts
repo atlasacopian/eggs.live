@@ -1,4 +1,4 @@
-import { BaseScraper } from "./base-scraper"
+import { BaseScraper } from "./base-scraper";
 
 export class FoodLionScraper extends BaseScraper {
   constructor() {
@@ -8,7 +8,6 @@ export class FoodLionScraper extends BaseScraper {
       regularEggSelector: ".product-price",
       organicEggUrl: null,
       organicEggSelector: null,
-    })
+    });
   }
 }
-
