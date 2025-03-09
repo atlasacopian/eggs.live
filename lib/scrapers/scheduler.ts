@@ -1,227 +1,179 @@
-// lib/scrapers/scheduler.ts
-// Scheduler for daily egg price scraping
+import { getAllScrapers } from "./index"
+import { prisma } from "../db"
 
-import { storeLocations, scrapingConfig } from '../store-coverage';
-import { prisma } from '../db';
-import { scrapeStore } from './base-scraper';
-import { scrapeWalmartEggs } from './walmart-scraper';
-import { scrapeKrogerEggs } from './kroger-scraper';
-import { scrapeTargetEggs } from './target-scraper';
-import { scrapeCostcoEggs } from './costco-scraper';
-import { scrapeWholeFoodsEggs } from './whole-foods-scraper';
-import { scrapeTraderJoesEggs } from './trader-joes-scraper';
-import { scrapeAldiEggs } from './aldi-scraper';
+// Interface for scraper results
+interface ScraperResult {
+  storeName: string
+  storeId: string
+  regularPrice: number | null
+  organicPrice: number | null
+  timestamp: Date
+}
 
-// Function to check if we already scraped today
-async function hasScrapedToday(): Promise<boolean> {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0); // Start of today
-  
-  const latestJob = await prisma.scrapingJob.findFirst({
-    where: {
-      startTime: {
-        gte: today
+/**
+ * Run all scrapers and collect results
+ */
+export async function runScrapers(): Promise<ScraperResult[]> {
+  console.log("Starting egg price scraping...")
+  const scrapers = getAllScrapers()
+  const results: ScraperResult[] = []
+
+  // Run all scrapers in parallel
+  const scraperPromises = scrapers.map(async (scraper) => {
+    try {
+      const result = await scraper.scrape()
+
+      // Only add results if at least one price was found
+      if (result.regular !== null || result.organic !== null) {
+        results.push({
+          storeName: scraper.name,
+          storeId: scraper.name.toLowerCase().replace(/\s+/g, "-"),
+          regularPrice: result.regular,
+          organicPrice: result.organic,
+          timestamp: new Date(),
+        })
       }
+    } catch (error) {
+      console.error(`Error scraping ${scraper.name}:`, error)
+    }
+  })
+
+  // Wait for all scrapers to complete
+  await Promise.all(scraperPromises)
+
+  console.log(`Scraping completed. Found prices for ${results.length} stores.`)
+  return results
+}
+
+/**
+ * Save scraper results to the database
+ */
+export async function saveResults(results: ScraperResult[]): Promise<void> {
+  console.log("Saving results to database...")
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  // Process each result
+  for (const result of results) {
+    // Save regular egg price if available
+    if (result.regularPrice !== null) {
+      await prisma.eggPrice.create({
+        data: {
+          storeId: result.storeId,
+          price: result.regularPrice,
+          eggType: "regular",
+          date: today,
+        },
+      })
+    }
+
+    // Save organic egg price if available
+    if (result.organicPrice !== null) {
+      await prisma.eggPrice.create({
+        data: {
+          storeId: result.storeId,
+          price: result.organicPrice,
+          eggType: "organic",
+          date: today,
+        },
+      })
+    }
+  }
+
+  // Calculate and save average prices
+  await calculateAverages(today)
+
+  console.log("Results saved successfully")
+}
+
+/**
+ * Calculate average prices for a given date
+ */
+async function calculateAverages(date: Date): Promise<void> {
+  // Calculate regular egg average
+  const regularPrices = await prisma.eggPrice.findMany({
+    where: {
+      date,
+      eggType: "regular",
     },
-    orderBy: {
-      startTime: 'desc'
-    }
-  });
-  
-  return !!latestJob;
-}
+  })
 
-export async function scheduleDailyScraping() {
-  // Check if we already scraped today
-  const alreadyScraped = await hasScrapedToday();
-  if (alreadyScraped) {
-    console.log('Already scraped today, skipping...');
-    return;
-  }
-  
-  console.log('Starting daily egg price scraping job');
-  
-  // Track overall statistics
-  const stats = {
-    totalAttempts: 0,
-    successful: 0,
-    failed: 0,
-    startTime: new Date(),
-    endTime: null,
-    byRetailer: {}
-  };
-  
-  // Process each retailer
-  for (const [retailer, retailerConfig] of Object.entries(storeLocations.retailers)) {
-    const retailerStats = {
-      attempts: 0,
-      successful: 0,
-      failed: 0,
-      statesCovered: 0,
-      prices: {
-        regular: [],
-        organic: []
-      }
-    };
-    
-    stats.byRetailer[retailer] = retailerStats;
-    
-    // Process each state
-    for (const state of storeLocations.states) {
-      const storeIds = retailerConfig.storeIds[state];
-      if (!storeIds || storeIds.length === 0) continue;
-      
-      let stateSuccess = false;
-      
-      // Try to scrape 2 locations per state
-      for (const storeId of storeIds) {
-        retailerStats.attempts++;
-        stats.totalAttempts++;
-        
-        try {
-          // Scrape the store
-          const result = await scrapeStore(retailer, storeId, state, {
-            timeout: scrapingConfig.timeout,
-            retries: scrapingConfig.retryAttempts
-          });
-          
-          if (result && result.success) {
-            // Add to price arrays for averaging
-            if (result.regularPrice) retailerStats.prices.regular.push(result.regularPrice);
-            if (result.organicPrice) retailerStats.prices.organic.push(result.organicPrice);
-            
-            retailerStats.successful++;
-            stats.successful++;
-            stateSuccess = true;
-          } else {
-            retailerStats.failed++;
-            stats.failed++;
-          }
-        } catch (error) {
-          console.error(`Error scraping ${retailer} store ${storeId} in ${state}:`, error);
-          retailerStats.failed++;
-          stats.failed++;
-        }
-        
-        // Add delay between requests to avoid rate limiting
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
-      
-      if (stateSuccess) {
-        retailerStats.statesCovered++;
-      }
-    }
-    
-    // Calculate averages for this retailer
-    if (retailerStats.prices.regular.length > 0) {
-      const avgRegular = retailerStats.prices.regular.reduce((sum, price) => sum + price, 0) / 
-                         retailerStats.prices.regular.length;
-      
-      await prisma.retailerAverage.create({
-        data: {
-          retailer,
-          eggType: 'REGULAR',
-          averagePrice: avgRegular,
-          dataPoints: retailerStats.prices.regular.length,
-          statesCovered: retailerStats.statesCovered,
-          calculatedAt: new Date()
-        }
-      });
-    }
-    
-    if (retailerStats.prices.organic.length > 0) {
-      const avgOrganic = retailerStats.prices.organic.reduce((sum, price) => sum + price, 0) / 
-                         retailerStats.prices.organic.length;
-      
-      await prisma.retailerAverage.create({
-        data: {
-          retailer,
-          eggType: 'ORGANIC',
-          averagePrice: avgOrganic,
-          dataPoints: retailerStats.prices.organic.length,
-          statesCovered: retailerStats.statesCovered,
-          calculatedAt: new Date()
-        }
-      });
-    }
-    
-    // Add delay between retailers
-    await new Promise(resolve => setTimeout(resolve, 5000));
-  }
-  
-  // Calculate national averages
-  await calculateNationalAverages();
-  
-  // Complete stats
-  stats.endTime = new Date();
-  console.log('Daily scraping completed', stats);
-  
-  // Store scraping job stats
-  await prisma.scrapingJob.create({
-    data: {
-      startTime: stats.startTime,
-      endTime: stats.endTime,
-      totalAttempts: stats.totalAttempts,
-      successful: stats.successful,
-      failed: stats.failed,
-      statsJson: JSON.stringify(stats)
-    }
-  });
-}
+  if (regularPrices.length > 0) {
+    const totalRegularPrice = regularPrices.reduce((sum, price) => sum + price.price, 0)
+    const averageRegularPrice = totalRegularPrice / regularPrices.length
 
-async function calculateNationalAverages() {
-  // Calculate national average for regular eggs
-  const regularRetailerAverages = await prisma.retailerAverage.findMany({
+    await prisma.averagePrice.upsert({
+      where: {
+        date_eggType: {
+          date,
+          eggType: "regular",
+        },
+      },
+      update: {
+        price: averageRegularPrice,
+        storeCount: regularPrices.length,
+      },
+      create: {
+        date,
+        eggType: "regular",
+        price: averageRegularPrice,
+        storeCount: regularPrices.length,
+      },
+    })
+  }
+
+  // Calculate organic egg average
+  const organicPrices = await prisma.eggPrice.findMany({
     where: {
-      eggType: 'REGULAR',
-      calculatedAt: {
-        gte: new Date(Date.now() - 24 * 60 * 60 * 1000) // Last 24 hours
-      }
-    }
-  });
-  
-  if (regularRetailerAverages.length > 0) {
-    const nationalRegularAvg = regularRetailerAverages.reduce((sum, record) => 
-      sum + record.averagePrice, 0) / regularRetailerAverages.length;
-    
-    await prisma.nationalAverage.create({
-      data: {
-        eggType: 'REGULAR',
-        averagePrice: nationalRegularAvg,
-        retailerCount: regularRetailerAverages.length,
-        statesCovered: Math.max(...regularRetailerAverages.map(r => r.statesCovered)),
-        calculatedAt: new Date()
-      }
-    });
-  }
-  
-  // Calculate national average for organic eggs
-  const organicRetailerAverages = await prisma.retailerAverage.findMany({
-    where: {
-      eggType: 'ORGANIC',
-      calculatedAt: {
-        gte: new Date(Date.now() - 24 * 60 * 60 * 1000) // Last 24 hours
-      }
-    }
-  });
-  
-  if (organicRetailerAverages.length > 0) {
-    const nationalOrganicAvg = organicRetailerAverages.reduce((sum, record) => 
-      sum + record.averagePrice, 0) / organicRetailerAverages.length;
-    
-    await prisma.nationalAverage.create({
-      data: {
-        eggType: 'ORGANIC',
-        averagePrice: nationalOrganicAvg,
-        retailerCount: organicRetailerAverages.length,
-        statesCovered: Math.max(...organicRetailerAverages.map(r => r.statesCovered)),
-        calculatedAt: new Date()
-      }
-    });
+      date,
+      eggType: "organic",
+    },
+  })
+
+  if (organicPrices.length > 0) {
+    const totalOrganicPrice = organicPrices.reduce((sum, price) => sum + price.price, 0)
+    const averageOrganicPrice = totalOrganicPrice / organicPrices.length
+
+    await prisma.averagePrice.upsert({
+      where: {
+        date_eggType: {
+          date,
+          eggType: "organic",
+        },
+      },
+      update: {
+        price: averageOrganicPrice,
+        storeCount: organicPrices.length,
+      },
+      create: {
+        date,
+        eggType: "organic",
+        price: averageOrganicPrice,
+        storeCount: organicPrices.length,
+      },
+    })
   }
 }
 
-// Export a function to manually trigger scraping (for testing)
-export async function manualTriggerScraping() {
-  return scheduleDailyScraping();
+/**
+ * Main function to schedule and run scrapers
+ */
+export async function scheduleScrapers(): Promise<ScraperResult[]> {
+  try {
+    // Run scrapers and get results
+    const results = await runScrapers()
+
+    // Save results to database
+    if (results.length > 0) {
+      await saveResults(results)
+    } else {
+      console.log("No results to save")
+    }
+
+    return results
+  } catch (error) {
+    console.error("Error in scheduler:", error)
+    throw error
+  }
 }
+
