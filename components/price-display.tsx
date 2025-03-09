@@ -27,4 +27,3 @@ export function PriceDisplay({ currentPrice, previousPrice, storeCount, date, is
     </div>
   )
 }
-
