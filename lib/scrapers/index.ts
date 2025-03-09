@@ -83,3 +83,6 @@ export const getAllScrapers = (): BaseScraper[] => {
   ]
 }
 
+// Re-export the main scraper functions
+export { scrapeEggPrices, seedHistoricalData } from "../scrapers"
+
