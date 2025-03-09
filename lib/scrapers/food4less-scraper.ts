@@ -11,4 +11,3 @@ export class Food4LessScraper extends BaseScraper {
     })
   }
 }
-
