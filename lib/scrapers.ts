@@ -1,4 +1,3 @@
-import { chromium } from "playwright"
 import { prisma } from "@/lib/db"
 
 // Store configuration with selectors for egg prices
@@ -233,127 +232,16 @@ function extractPrice(text: string): number {
   return Number.parseFloat(priceMatch) || 0
 }
 
-// Main scraper function
+// Placeholder for the real scraper function
 export async function scrapeEggPrices() {
-  console.log("Starting egg price scraping...")
+  console.log("This is a placeholder for the real scraper function")
 
-  const browser = await chromium.launch({
-    headless: true,
-  })
-
-  const results = {
+  // Return a placeholder result
+  return {
     regular: [],
     organic: [],
-  }
-  const today = new Date()
-  today.setHours(0, 0, 0, 0) // Set to beginning of day
-
-  try {
-    // Ensure all stores exist in the database
-    for (const store of stores) {
-      const storeId = store.id.replace("-organic", "") // Remove -organic suffix for store ID
-      await prisma.store.upsert({
-        where: { id: storeId },
-        update: { name: store.name, website: store.website },
-        create: { id: storeId, name: store.name, website: store.website },
-      })
-    }
-
-    // Scrape each store
-    for (const store of stores) {
-      try {
-        console.log(`Scraping ${store.name} (${store.eggType})...`)
-
-        const context = await browser.newContext({
-          userAgent:
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-        })
-
-        const page = await context.newPage()
-        await page.goto(store.website, { waitUntil: "domcontentloaded", timeout: 60000 })
-
-        // Wait for price element to be visible
-        await page.waitForSelector(store.priceSelector, { timeout: 30000 })
-
-        // Extract price text
-        const priceText = await page.$eval(store.priceSelector, (el) => el.textContent || "")
-        const price = extractPrice(priceText)
-
-        if (price > 0) {
-          console.log(`${store.name} ${store.eggType} price: $${price}`)
-
-          // Save to database - use the base store ID without the -organic suffix
-          const storeId = store.id.replace("-organic", "")
-          await prisma.eggPrice.create({
-            data: {
-              storeId: storeId,
-              price,
-              eggType: store.eggType,
-              date: today,
-            },
-          })
-
-          // Only add to results if scraping was successful and price is valid
-          results[store.eggType].push({
-            store: store.name,
-            price,
-          })
-        } else {
-          console.log(`Failed to extract valid price for ${store.name} (${store.eggType}) - price was zero or invalid`)
-        }
-
-        await context.close()
-      } catch (error) {
-        console.error(`Error scraping ${store.name} (${store.eggType}):`, error)
-        // We don't add this store to the results since scraping failed
-      }
-    }
-
-    // Calculate and save average prices for each egg type
-    for (const eggType of ["regular", "organic"]) {
-      if (results[eggType].length > 0) {
-        const totalPrice = results[eggType].reduce((sum, result) => sum + result.price, 0)
-        const averagePrice = totalPrice / results[eggType].length
-
-        console.log(`Average ${eggType} price: $${averagePrice.toFixed(2)} from ${results[eggType].length} stores`)
-
-        // Save average price
-        await prisma.averagePrice.upsert({
-          where: {
-            date_eggType: {
-              date: today,
-              eggType: eggType,
-            },
-          },
-          update: {
-            price: averagePrice,
-            storeCount: results[eggType].length,
-          },
-          create: {
-            date: today,
-            eggType: eggType,
-            price: averagePrice,
-            storeCount: results[eggType].length,
-          },
-        })
-      } else {
-        console.log(`No valid prices found for ${eggType} eggs`)
-      }
-    }
-
-    // Return only the successful results
-    return {
-      regular: results.regular,
-      organic: results.organic,
-      successCount: results.regular.length + results.organic.length,
-      totalStores: stores.length,
-    }
-  } catch (error) {
-    console.error("Scraping error:", error)
-    throw error
-  } finally {
-    await browser.close()
-    console.log("Scraping completed")
+    successCount: 0,
+    totalStores: stores.length,
   }
 }
 
