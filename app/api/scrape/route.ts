@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { scheduleDailyScraping } from "@/lib/scrapers/scheduler"
+import { scrapeEggPrices } from "@/lib/scrapers"
 
 // This endpoint is protected with a secret key to prevent unauthorized access
 export async function POST(request: Request) {
@@ -8,28 +8,26 @@ export async function POST(request: Request) {
     const apiKey = searchParams.get("key")
 
     // Verify API key
-    if (apiKey !== process.env.SCRAPER_API_KEY) {
+    if (apiKey !== process.env.SCRAPER_API_KEY_2) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Run the daily scraping scheduler
-    await scheduleDailyScraping()
+    // Run the scraper
+    const results = await scrapeEggPrices()
 
     return NextResponse.json({
       success: true,
-      message: "Daily egg price scraping initiated successfully",
-      timestamp: new Date().toISOString(),
+      message: "Scraping completed successfully",
+      results,
     })
   } catch (error) {
     console.error("Scraping error:", error)
     return NextResponse.json(
       {
         success: false,
-        error: "Failed to initiate scraping job",
-        details: error.message,
-        timestamp: new Date().toISOString(),
+        error: "Failed to scrape prices",
       },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }
