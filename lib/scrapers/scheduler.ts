@@ -4,8 +4,41 @@
 import { storeLocations, scrapingConfig } from '../store-coverage';
 import { prisma } from '../db';
 import { scrapeStore } from './base-scraper';
+import { scrapeWalmartEggs } from './walmart-scraper';
+import { scrapeKrogerEggs } from './kroger-scraper';
+import { scrapeTargetEggs } from './target-scraper';
+import { scrapeCostcoEggs } from './costco-scraper';
+import { scrapeWholeFoodsEggs } from './whole-foods-scraper';
+import { scrapeTraderJoesEggs } from './trader-joes-scraper';
+import { scrapeAldiEggs } from './aldi-scraper';
+
+// Function to check if we already scraped today
+async function hasScrapedToday(): Promise<boolean> {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Start of today
+  
+  const latestJob = await prisma.scrapingJob.findFirst({
+    where: {
+      startTime: {
+        gte: today
+      }
+    },
+    orderBy: {
+      startTime: 'desc'
+    }
+  });
+  
+  return !!latestJob;
+}
 
 export async function scheduleDailyScraping() {
+  // Check if we already scraped today
+  const alreadyScraped = await hasScrapedToday();
+  if (alreadyScraped) {
+    console.log('Already scraped today, skipping...');
+    return;
+  }
+  
   console.log('Starting daily egg price scraping job');
   
   // Track overall statistics
@@ -186,4 +219,9 @@ async function calculateNationalAverages() {
       }
     });
   }
+}
+
+// Export a function to manually trigger scraping (for testing)
+export async function manualTriggerScraping() {
+  return scheduleDailyScraping();
 }
