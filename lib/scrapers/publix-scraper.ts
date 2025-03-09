@@ -1,4 +1,4 @@
-import { BaseScraper } from "./base-scraper"
+import { BaseScraper } from "./base-scraper";
 
 export class PublixScraper extends BaseScraper {
   constructor() {
@@ -8,7 +8,6 @@ export class PublixScraper extends BaseScraper {
       regularEggSelector: ".reg-price, .sale-price",
       organicEggUrl: null,
       organicEggSelector: null,
-    })
+    });
   }
 }
-
