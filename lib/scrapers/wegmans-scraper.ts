@@ -1,4 +1,4 @@
-import { BaseScraper } from "./base-scraper"
+import { BaseScraper } from "./base-scraper";
 
 export class WegmansScraper extends BaseScraper {
   constructor() {
@@ -8,7 +8,6 @@ export class WegmansScraper extends BaseScraper {
       regularEggSelector: '[data-testid="product-price"]',
       organicEggUrl: null,
       organicEggSelector: null,
-    })
+    });
   }
 }
-
