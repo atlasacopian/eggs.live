@@ -1,4 +1,5 @@
-import { prisma } from "@/lib/db"
+import { prisma } from "@/lib/db";
+import { getAllScrapers } from "./scrapers/index";
 
 // Store configuration with selectors for egg prices
 const stores = [
@@ -235,12 +236,42 @@ function extractPrice(text: string): number {
 // Placeholder for the real scraper function
 export async function scrapeEggPrices() {
   console.log("This is a placeholder for the real scraper function")
+  
+  // Use the scrapers to get placeholder data
+  const scrapers = getAllScrapers();
+  const regularPrices = [];
+  const organicPrices = [];
+  let successCount = 0;
+  
+  for (const scraper of scrapers) {
+    try {
+      const result = await scraper.scrape();
+      
+      if (result.regular !== null) {
+        regularPrices.push({
+          store: scraper.name,
+          price: result.regular
+        });
+        successCount++;
+      }
+      
+      if (result.organic !== null) {
+        organicPrices.push({
+          store: scraper.name,
+          price: result.organic
+        });
+        successCount++;
+      }
+    } catch (error) {
+      console.error(`Error scraping ${scraper.name}:`, error);
+    }
+  }
 
   // Return a placeholder result
   return {
-    regular: [],
-    organic: [],
-    successCount: 0,
+    regular: regularPrices,
+    organic: organicPrices,
+    successCount,
     totalStores: stores.length,
   }
 }
