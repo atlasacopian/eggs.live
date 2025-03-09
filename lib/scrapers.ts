@@ -375,7 +375,7 @@ export async function seedHistoricalData() {
       { id: "traderJoes", name: "Trader Joe's", website: "https://www.traderjoes.com" },
       { id: "vons", name: "Vons", website: "https://www.vons.com" },
       { id: "ralphs", name: "Ralphs", website: "https://www.ralphs.com" },
-      { id: "wegmans", name: "Wegmans", website: "https://www.wegmans.com" },
+      { id: "wegmans", name: "Wegmans", website: "https://shop.wegmans.com" },
       { id: "shopRite", name: "ShopRite", website: "https://www.shoprite.com" },
       { id: "publix", name: "Publix", website: "https://www.publix.com" },
       { id: "albertsons", name: "Albertsons", website: "https://www.albertsons.com" },
@@ -383,22 +383,14 @@ export async function seedHistoricalData() {
       { id: "aldi", name: "Aldi", website: "https://www.aldi.us" },
       { id: "heb", name: "H-E-B", website: "https://www.heb.com" },
       { id: "meijer", name: "Meijer", website: "https://www.meijer.com" },
-      { id: "foodLion", name: "Food Lion", website: "https://www.foodlion.com" },
-      { id: "giantEagle", name: "Giant Eagle", website: "https://www.gianteagle.com" },
-      { id: "stopAndShop", name: "Stop & Shop", website: "https://www.stopandshop.com" },
+      { id: "foodLion", name: "Food Lion", website: "https://shop.foodlion.com" },
+      { id: "giantEagle", name: "Giant Eagle", website: "https://shop.gianteagle.com" },
+      { id: "stopAndShop", name: "Stop & Shop", website: "https://stopandshop.com" },
       { id: "winnDixie", name: "Winn-Dixie", website: "https://www.winndixie.com" },
-      { id: "sprouts", name: "Sprouts", website: "https://www.sprouts.com" },
+      { id: "sprouts", name: "Sprouts", website: "https://shop.sprouts.com" },
       { id: "erewhon", name: "Erewhon", website: "https://www.erewhonmarket.com" },
       { id: "food4less", name: "Food 4 Less", website: "https://www.food4less.com" },
     ]
-
-    for (const store of storeData) {
-      await prisma.store.upsert({
-        where: { id: store.id },
-        update: { name: store.name, website: store.website },
-        create: { id: store.id, name: store.name, website: store.website },
-      })
-    }
 
     // Generate historical data for the past 90 days
     for (let i = 90; i >= 0; i--) {
@@ -479,3 +471,4 @@ export async function seedHistoricalData() {
     throw error
   }
 }
+
