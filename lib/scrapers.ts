@@ -279,17 +279,19 @@ export async function scrapeEggPrices() {
             },
           })
 
+          // Only add to results if scraping was successful and price is valid
           results[store.eggType].push({
             store: store.name,
             price,
           })
         } else {
-          console.log(`Failed to extract valid price for ${store.name} (${store.eggType})`)
+          console.log(`Failed to extract valid price for ${store.name} (${store.eggType}) - price was zero or invalid`)
         }
 
         await context.close()
       } catch (error) {
         console.error(`Error scraping ${store.name} (${store.eggType}):`, error)
+        // We don't add this store to the results since scraping failed
       }
     }
 
@@ -320,10 +322,18 @@ export async function scrapeEggPrices() {
             storeCount: results[eggType].length,
           },
         })
+      } else {
+        console.log(`No valid prices found for ${eggType} eggs`)
       }
     }
 
-    return results
+    // Return only the successful results
+    return {
+      regular: results.regular,
+      organic: results.organic,
+      successCount: results.regular.length + results.organic.length,
+      totalStores: stores.length,
+    }
   } catch (error) {
     console.error("Scraping error:", error)
     throw error
