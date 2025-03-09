@@ -359,4 +359,3 @@ export async function seedHistoricalData() {
     throw error
   }
 }
-
