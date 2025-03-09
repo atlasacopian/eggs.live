@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { scheduleDailyScraping } from "@/lib/scrapers/daily-scraping"; // Updated import path
+import { scheduleDailyScraping } from "@/lib/scrapers/daily-scraping";
 
 export async function GET(request: Request) {
   try {
@@ -31,6 +31,7 @@ export async function GET(request: Request) {
   }
 }
 
+// Add POST method to allow webhook access
 export async function POST(request: Request) {
   return GET(request);
 }
