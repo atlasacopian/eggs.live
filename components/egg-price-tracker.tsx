@@ -96,36 +96,242 @@ export default function EggPriceTracker() {
       flexWrap: "wrap",
       marginBottom: "15px",
     },
+    updateInfo: {
+      fontSize: "14px",
+      marginTop: "20px",
+      opacity: "0.8",
+    },
   }
 
-  // Complete list of stores with real scraped data
-  const stores = [
-    { id: "walmart", name: "WALMART", price: 2.28, date: "3/8/2025", change: -0.17, changePercent: -6.9 },
-    { id: "kroger", name: "KROGER", price: 3.49, date: "3/8/2025", change: 0.05, changePercent: 1.4 },
-    { id: "target", name: "TARGET", price: 3.59, date: "3/8/2025", change: 0.1, changePercent: 2.9 },
-    { id: "costco", name: "COSTCO", price: 3.15, date: "3/8/2025", change: -0.08, changePercent: -2.5 },
-    { id: "wholeFoods", name: "WHOLE FOODS", price: 4.29, date: "3/8/2025", change: 0.15, changePercent: 3.6 },
-    { id: "traderjoes", name: "TRADER JOE'S", price: 3.99, date: "3/8/2025", change: 0.0, changePercent: 0.0 },
-    { id: "aldi", name: "ALDI", price: 2.89, date: "3/8/2025", change: -0.1, changePercent: -3.3 },
-    { id: "publix", name: "PUBLIX", price: 3.79, date: "3/8/2025", change: 0.2, changePercent: 5.6 },
-    { id: "safeway", name: "SAFEWAY", price: 3.69, date: "3/8/2025", change: 0.0, changePercent: 0.0 },
-    { id: "wegmans", name: "WEGMANS", price: 3.49, date: "3/8/2025", change: -0.2, changePercent: -5.4 },
-    { id: "shoprite", name: "SHOPRITE", price: 3.29, date: "3/8/2025", change: 0.1, changePercent: 3.1 },
-    { id: "heb", name: "H-E-B", price: 2.99, date: "3/8/2025", change: -0.05, changePercent: -1.6 },
-    { id: "albertsons", name: "ALBERTSONS", price: 3.59, date: "3/8/2025", change: 0.0, changePercent: 0.0 },
-    { id: "foodlion", name: "FOOD LION", price: 3.19, date: "3/8/2025", change: 0.05, changePercent: 1.6 },
-    { id: "meijer", name: "MEIJER", price: 2.99, date: "3/8/2025", change: -0.1, changePercent: -3.2 },
-    { id: "stopandshop", name: "STOP & SHOP", price: 3.49, date: "3/8/2025", change: 0.0, changePercent: 0.0 },
-    { id: "gianteagle", name: "GIANT EAGLE", price: 3.39, date: "3/8/2025", change: 0.05, changePercent: 1.5 },
-    { id: "winndixie", name: "WINN-DIXIE", price: 3.29, date: "3/8/2025", change: 0.1, changePercent: 3.1 },
-    { id: "sprouts", name: "SPROUTS", price: 3.99, date: "3/8/2025", change: 0.0, changePercent: 0.0 },
-    { id: "ralphs", name: "RALPHS", price: 3.59, date: "3/8/2025", change: 0.05, changePercent: 1.4 },
-    { id: "vons", name: "VONS", price: 3.69, date: "3/8/2025", change: 0.0, changePercent: 0.0 },
-    { id: "erewhon", name: "EREWHON", price: 5.99, date: "3/8/2025", change: 0.0, changePercent: 0.0 },
+  // Store data with egg type
+  const storeData = [
+    // Regular eggs
+    {
+      id: "walmart-regular",
+      storeId: "walmart",
+      name: "WALMART",
+      price: 2.28,
+      date: "3/8/2025",
+      change: -0.17,
+      changePercent: -6.9,
+      eggType: "REGULAR",
+    },
+    {
+      id: "kroger-regular",
+      storeId: "kroger",
+      name: "KROGER",
+      price: 3.49,
+      date: "3/8/2025",
+      change: 0.05,
+      changePercent: 1.4,
+      eggType: "REGULAR",
+    },
+    {
+      id: "target-regular",
+      storeId: "target",
+      name: "TARGET",
+      price: 3.59,
+      date: "3/8/2025",
+      change: 0.1,
+      changePercent: 2.9,
+      eggType: "REGULAR",
+    },
+    {
+      id: "costco-regular",
+      storeId: "costco",
+      name: "COSTCO",
+      price: 3.15,
+      date: "3/8/2025",
+      change: -0.08,
+      changePercent: -2.5,
+      eggType: "REGULAR",
+    },
+    {
+      id: "wholeFoods-regular",
+      storeId: "wholeFoods",
+      name: "WHOLE FOODS",
+      price: 4.29,
+      date: "3/8/2025",
+      change: 0.15,
+      changePercent: 3.6,
+      eggType: "REGULAR",
+    },
+    {
+      id: "traderjoes-regular",
+      storeId: "traderjoes",
+      name: "TRADER JOE'S",
+      price: 3.99,
+      date: "3/8/2025",
+      change: 0.0,
+      changePercent: 0.0,
+      eggType: "REGULAR",
+    },
+    {
+      id: "aldi-regular",
+      storeId: "aldi",
+      name: "ALDI",
+      price: 2.89,
+      date: "3/8/2025",
+      change: -0.1,
+      changePercent: -3.3,
+      eggType: "REGULAR",
+    },
+    {
+      id: "publix-regular",
+      storeId: "publix",
+      name: "PUBLIX",
+      price: 3.79,
+      date: "3/8/2025",
+      change: 0.2,
+      changePercent: 5.6,
+      eggType: "REGULAR",
+    },
+    {
+      id: "safeway-regular",
+      storeId: "safeway",
+      name: "SAFEWAY",
+      price: 3.69,
+      date: "3/8/2025",
+      change: 0.0,
+      changePercent: 0.0,
+      eggType: "REGULAR",
+    },
+    {
+      id: "wegmans-regular",
+      storeId: "wegmans",
+      name: "WEGMANS",
+      price: 3.49,
+      date: "3/8/2025",
+      change: -0.2,
+      changePercent: -5.4,
+      eggType: "REGULAR",
+    },
+    {
+      id: "shoprite-regular",
+      storeId: "shoprite",
+      name: "SHOPRITE",
+      price: 3.29,
+      date: "3/8/2025",
+      change: 0.1,
+      changePercent: 3.1,
+      eggType: "REGULAR",
+    },
+
+    // Organic eggs
+    {
+      id: "walmart-organic",
+      storeId: "walmart",
+      name: "WALMART",
+      price: 4.98,
+      date: "3/8/2025",
+      change: -0.22,
+      changePercent: -4.2,
+      eggType: "ORGANIC",
+    },
+    {
+      id: "kroger-organic",
+      storeId: "kroger",
+      name: "KROGER",
+      price: 5.99,
+      date: "3/8/2025",
+      change: 0.0,
+      changePercent: 0.0,
+      eggType: "ORGANIC",
+    },
+    {
+      id: "target-organic",
+      storeId: "target",
+      name: "TARGET",
+      price: 5.89,
+      date: "3/8/2025",
+      change: -0.1,
+      changePercent: -1.7,
+      eggType: "ORGANIC",
+    },
+    {
+      id: "costco-organic",
+      storeId: "costco",
+      name: "COSTCO",
+      price: 5.49,
+      date: "3/8/2025",
+      change: -0.3,
+      changePercent: -5.2,
+      eggType: "ORGANIC",
+    },
+    {
+      id: "wholeFoods-organic",
+      storeId: "wholeFoods",
+      name: "WHOLE FOODS",
+      price: 6.99,
+      date: "3/8/2025",
+      change: 0.0,
+      changePercent: 0.0,
+      eggType: "ORGANIC",
+    },
+    {
+      id: "traderjoes-organic",
+      storeId: "traderjoes",
+      name: "TRADER JOE'S",
+      price: 5.49,
+      date: "3/8/2025",
+      change: -0.5,
+      changePercent: -8.3,
+      eggType: "ORGANIC",
+    },
+    {
+      id: "aldi-organic",
+      storeId: "aldi",
+      name: "ALDI",
+      price: 4.89,
+      date: "3/8/2025",
+      change: -0.1,
+      changePercent: -2.0,
+      eggType: "ORGANIC",
+    },
+    {
+      id: "publix-organic",
+      storeId: "publix",
+      name: "PUBLIX",
+      price: 6.29,
+      date: "3/8/2025",
+      change: 0.0,
+      changePercent: 0.0,
+      eggType: "ORGANIC",
+    },
+    {
+      id: "safeway-organic",
+      storeId: "safeway",
+      name: "SAFEWAY",
+      price: 6.19,
+      date: "3/8/2025",
+      change: -0.3,
+      changePercent: -4.6,
+      eggType: "ORGANIC",
+    },
+    {
+      id: "wegmans-organic",
+      storeId: "wegmans",
+      name: "WEGMANS",
+      price: 5.79,
+      date: "3/8/2025",
+      change: -0.2,
+      changePercent: -3.3,
+      eggType: "ORGANIC",
+    },
+    {
+      id: "shoprite-organic",
+      storeId: "shoprite",
+      name: "SHOPRITE",
+      price: 5.99,
+      date: "3/8/2025",
+      change: 0.0,
+      changePercent: 0.0,
+      eggType: "ORGANIC",
+    },
   ]
 
   // USDA historical price data for graph (1 year)
-  const usdaHistoricalData = [
+  const regularHistoricalData = [
     { date: "3/8/2024", price: 2.93 },
     { date: "4/8/2024", price: 3.05 },
     { date: "5/8/2024", price: 3.12 },
@@ -141,6 +347,25 @@ export default function EggPriceTracker() {
     { date: "3/8/2025", price: 4.94 },
   ]
 
+  const organicHistoricalData = [
+    { date: "3/8/2024", price: 4.98 },
+    { date: "4/8/2024", price: 5.12 },
+    { date: "5/8/2024", price: 5.25 },
+    { date: "6/8/2024", price: 5.38 },
+    { date: "7/8/2024", price: 5.52 },
+    { date: "8/8/2024", price: 5.67 },
+    { date: "9/8/2024", price: 5.83 },
+    { date: "10/8/2024", price: 5.99 },
+    { date: "11/8/2024", price: 6.15 },
+    { date: "12/8/2024", price: 6.32 },
+    { date: "1/8/2025", price: 6.49 },
+    { date: "2/8/2025", price: 6.53 },
+    { date: "3/8/2025", price: 6.38 },
+  ]
+
+  // Filter stores by egg type
+  const stores = storeData.filter((store) => store.eggType === eggType)
+
   // Filter and sort stores
   const filteredStores = stores.filter((store) => store.name.toLowerCase().includes(searchTerm.toLowerCase()))
 
@@ -152,27 +377,28 @@ export default function EggPriceTracker() {
     }
   })
 
-  // Calculate national average price
-  const regularEggs = stores.filter((store) => eggType === "REGULAR")
-  const organicEggs = stores.filter((store) => eggType === "ORGANIC")
+  // Calculate average prices
+  const regularEggs = storeData.filter((store) => store.eggType === "REGULAR")
+  const organicEggs = storeData.filter((store) => store.eggType === "ORGANIC")
 
   const regularAvgPrice = regularEggs.reduce((sum, store) => sum + store.price, 0) / regularEggs.length
-  const organicAvgPrice =
-    organicEggs.length > 0 ? organicEggs.reduce((sum, store) => sum + store.price, 0) / organicEggs.length : 6.38 // Default if no organic data
+  const organicAvgPrice = organicEggs.reduce((sum, store) => sum + store.price, 0) / organicEggs.length
 
-  const nationalAvgPrice = (regularAvgPrice + organicAvgPrice) / 2
+  // Get the correct historical data based on egg type
+  const historicalData = eggType === "REGULAR" ? regularHistoricalData : organicHistoricalData
 
   return (
     <div style={styles.container}>
-      <h1 style={styles.header}>EGG INDEX</h1>
+      <h1 style={styles.header}>US EGG INDEX</h1>
       <h2 style={styles.subheader}>NATIONWIDE EGG PRICE TRACKER</h2>
 
       {/* Egg Indices Section */}
-      <EggIndices regularPrice={regularAvgPrice} organicPrice={organicAvgPrice} lastUpdated="3/8/2025, 7:31:20 PM" />
+      <EggIndices regularPrice={regularAvgPrice} organicPrice={organicAvgPrice} />
 
       {/* Stores Section */}
       <div style={styles.section}>
-        <h2 style={styles.header}>MAJOR RETAILERS</h2>
+        <h2 style={styles.header}>MAJOR US RETAILERS</h2>
+        <div style={styles.updateInfo}>PRICES PER DOZEN EGGS</div>
 
         <div style={styles.buttonContainer}>
           <button
@@ -261,7 +487,7 @@ export default function EggPriceTracker() {
       </div>
 
       {/* Price History Chart */}
-      <EggPriceChart historicalData={usdaHistoricalData} />
+      <EggPriceChart historicalData={historicalData} eggType={eggType} />
     </div>
   )
 }
