@@ -10,7 +10,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Store model represents retail stores that sell eggs
 model Store {
   id       String     @id
   name     String
@@ -20,7 +19,6 @@ model Store {
   @@map("stores")
 }
 
-// EggPrice model represents individual price points for eggs at specific stores
 model EggPrice {
   id        String   @id @default(cuid())
   storeId   String
@@ -33,7 +31,6 @@ model EggPrice {
   @@map("egg_prices")
 }
 
-// AveragePrice model represents the daily average price across all stores
 model AveragePrice {
   id         String   @id @default(cuid())
   date       DateTime @db.Date
