@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server"
-import { prisma } from "@/lib/db"
+import { PrismaClient } from "@prisma/client"
 
 export async function GET() {
+  // Create a new PrismaClient instance for this request to avoid prepared statement conflicts
+  const prisma = new PrismaClient()
+
   try {
     console.log("Starting database seeding...")
 
@@ -128,7 +131,7 @@ export async function GET() {
       }
     }
 
-    return NextResponse.json({
+    const response = {
       success: true,
       message: "Database seeded successfully",
       results: {
@@ -136,9 +139,18 @@ export async function GET() {
         prices: priceResults,
         averages: avgResults,
       },
-    })
+    }
+
+    // Disconnect the Prisma client to clean up connections
+    await prisma.$disconnect()
+
+    return NextResponse.json(response)
   } catch (error) {
     console.error("Seed error:", error)
+
+    // Make sure to disconnect even on error
+    await prisma.$disconnect()
+
     return NextResponse.json(
       {
         success: false,
