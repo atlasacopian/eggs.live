@@ -168,12 +168,7 @@ export default function EggPriceTracker() {
       <h2 style={styles.subheader}>NATIONWIDE EGG PRICE TRACKER</h2>
 
       {/* Egg Indices Section */}
-      <EggIndices
-        regularPrice={regularAvgPrice}
-        organicPrice={organicAvgPrice}
-        nationalAvgPrice={nationalAvgPrice}
-        lastUpdated="3/8/2025, 7:31:20 PM"
-      />
+      <EggIndices regularPrice={regularAvgPrice} organicPrice={organicAvgPrice} lastUpdated="3/8/2025, 7:31:20 PM" />
 
       {/* Stores Section */}
       <div style={styles.section}>
