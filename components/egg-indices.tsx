@@ -9,6 +9,7 @@ interface EggIndicesProps {
 }
 
 export default function EggIndices({ regularPrice, organicPrice, lastUpdated }: EggIndicesProps) {
+  // Remove the nationalAvgPrice prop since we don't need it anymore
   const styles = {
     section: {
       marginBottom: "40px",
