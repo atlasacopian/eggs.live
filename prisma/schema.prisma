@@ -15,7 +15,7 @@ model Store {
   name     String
   website  String
   prices   EggPrice[]
-  
+
   @@map("stores")
 }
 
@@ -25,8 +25,8 @@ model EggPrice {
   store     Store    @relation(fields: [storeId], references: [id])
   price     Float
   date      DateTime @db.Date
-  eggType   String   // "regular" or "organic"
-  
+  eggType   String   // "regular", "brown", or "organic"
+
   @@unique([storeId, date, eggType])
   @@map("egg_prices")
 }
@@ -36,9 +36,18 @@ model AveragePrice {
   date       DateTime @db.Date
   price      Float
   storeCount Int
-  eggType    String   // "regular" or "organic"
-  
+  eggType    String   // "regular", "brown", or "organic"
+
   @@unique([date, eggType], name: "date_eggType")
   @@map("average_prices")
 }
 
+model DozenPrice {
+  id       String   @id @default(cuid())
+  date     DateTime @db.Date
+  price    Float
+  eggType  String   // "regular", "brown", or "organic"
+
+  @@unique([date, eggType])
+  @@map("dozen_prices")
+}
