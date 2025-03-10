@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from "react"
+import EggIndices from "./egg-indices"
+import EggPriceChart from "./egg-price-chart"
 
 export default function EggPriceTracker() {
   const [eggType, setEggType] = useState("REGULAR")
@@ -17,6 +19,7 @@ export default function EggPriceTracker() {
       lineHeight: "1.3",
       minHeight: "100vh",
       textAlign: "center",
+      width: "100%",
       maxWidth: "1200px",
       margin: "0 auto",
     },
@@ -33,27 +36,7 @@ export default function EggPriceTracker() {
     },
     section: {
       marginBottom: "40px",
-    },
-    priceSection: {
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      marginBottom: "20px",
-    },
-    priceLabel: {
-      fontSize: "18px",
-      marginBottom: "5px",
-    },
-    price: {
-      fontSize: "32px",
-      marginBottom: "5px",
-      fontWeight: "bold",
-    },
-    change: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      marginBottom: "15px",
+      width: "100%",
     },
     button: {
       backgroundColor: "#000",
@@ -83,9 +66,10 @@ export default function EggPriceTracker() {
     },
     storesContainer: {
       display: "grid",
-      gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+      gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
       gap: "15px",
       marginTop: "20px",
+      width: "100%",
     },
     storeItem: {
       border: "1px solid #00ff00",
@@ -111,46 +95,6 @@ export default function EggPriceTracker() {
       justifyContent: "center",
       flexWrap: "wrap",
       marginBottom: "15px",
-    },
-    timestamp: {
-      fontSize: "14px",
-      marginTop: "20px",
-      opacity: "0.8",
-    },
-    graph: {
-      width: "100%",
-      height: "300px",
-      border: "1px solid #00ff00",
-      marginTop: "20px",
-      position: "relative",
-      padding: "20px",
-    },
-    graphLine: {
-      position: "absolute",
-      bottom: "50px",
-      left: "50px",
-      width: "calc(100% - 100px)",
-      height: "2px",
-      backgroundColor: "#00ff00",
-    },
-    graphPoint: {
-      position: "absolute",
-      width: "8px",
-      height: "8px",
-      backgroundColor: "#00ff00",
-      borderRadius: "50%",
-      transform: "translate(-50%, 50%)",
-    },
-    graphLabel: {
-      position: "absolute",
-      fontSize: "12px",
-      transform: "translateX(-50%)",
-    },
-    dataSource: {
-      fontSize: "12px",
-      marginTop: "10px",
-      opacity: "0.7",
-      textAlign: "right",
     },
   }
 
@@ -208,11 +152,6 @@ export default function EggPriceTracker() {
     }
   })
 
-  // Calculate graph points
-  const maxPrice = Math.max(...usdaHistoricalData.map((d) => d.price))
-  const minPrice = Math.min(...usdaHistoricalData.map((d) => d.price))
-  const priceRange = maxPrice - minPrice
-
   // Calculate national average price
   const regularEggs = stores.filter((store) => eggType === "REGULAR")
   const organicEggs = stores.filter((store) => eggType === "ORGANIC")
@@ -228,46 +167,15 @@ export default function EggPriceTracker() {
       <h1 style={styles.header}>EGG INDEX</h1>
       <h2 style={styles.subheader}>NATIONWIDE EGG PRICE TRACKER</h2>
 
-      <div style={styles.section}>
-        <div style={styles.priceSection}>
-          <div style={styles.priceLabel}>NATIONAL AVG PRICE</div>
-          <div style={styles.price}>${nationalAvgPrice.toFixed(2)}</div>
-          <div style={styles.change}>
-            <span style={{ marginRight: "8px", fontSize: "24px" }}>↑</span>
-            <span>+0.22 (+4.66%)</span>
-          </div>
-        </div>
+      {/* Egg Indices Section */}
+      <EggIndices
+        regularPrice={regularAvgPrice}
+        organicPrice={organicAvgPrice}
+        nationalAvgPrice={nationalAvgPrice}
+        lastUpdated="3/8/2025, 7:31:20 PM"
+      />
 
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            gap: "40px",
-            flexWrap: "wrap",
-          }}
-        >
-          <div style={styles.priceSection}>
-            <div style={styles.priceLabel}>REGULAR EGGS</div>
-            <div style={styles.price}>${regularAvgPrice.toFixed(2)}</div>
-            <div style={styles.change}>
-              <span style={{ marginRight: "8px", fontSize: "24px" }}>↑</span>
-              <span>+0.05 (+1.45%)</span>
-            </div>
-          </div>
-
-          <div style={styles.priceSection}>
-            <div style={styles.priceLabel}>ORGANIC EGGS</div>
-            <div style={styles.price}>${organicAvgPrice.toFixed(2)}</div>
-            <div style={styles.change}>
-              <span style={{ marginRight: "8px", fontSize: "24px", color: "#ff0000" }}>↓</span>
-              <span>-0.15 (-2.30%)</span>
-            </div>
-          </div>
-        </div>
-
-        <div style={styles.timestamp}>LAST SCRAPED: 3/8/2025, 7:31:20 PM</div>
-      </div>
-
+      {/* Stores Section */}
       <div style={styles.section}>
         <h2 style={styles.header}>MAJOR RETAILERS</h2>
 
@@ -329,7 +237,14 @@ export default function EggPriceTracker() {
               <div style={styles.storeName}>{store.name}</div>
               <div style={styles.storePrice}>${store.price.toFixed(2)}</div>
               <div style={styles.storeDate}>UPDATED: {store.date}</div>
-              <div style={styles.change}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: "15px",
+                }}
+              >
                 <span
                   style={{
                     marginRight: "8px",
@@ -350,133 +265,8 @@ export default function EggPriceTracker() {
         </div>
       </div>
 
-      {/* Price History Graph - Moved to bottom */}
-      <div style={styles.section}>
-        <h2 style={styles.header}>PRICE HISTORY (1 YEAR)</h2>
-
-        <div style={styles.buttonContainer}>
-          <button
-            style={{
-              ...styles.button,
-              ...(eggType === "REGULAR" ? styles.activeButton : {}),
-            }}
-            onClick={() => setEggType("REGULAR")}
-          >
-            REGULAR
-          </button>
-          <button
-            style={{
-              ...styles.button,
-              ...(eggType === "ORGANIC" ? styles.activeButton : {}),
-            }}
-            onClick={() => setEggType("ORGANIC")}
-          >
-            ORGANIC
-          </button>
-        </div>
-
-        <div style={styles.graph}>
-          {/* X and Y axes */}
-          <div
-            style={{
-              position: "absolute",
-              left: "50px",
-              top: "20px",
-              bottom: "50px",
-              width: "2px",
-              backgroundColor: "#00ff00",
-            }}
-          ></div>
-          <div
-            style={{
-              position: "absolute",
-              bottom: "50px",
-              left: "50px",
-              right: "20px",
-              height: "2px",
-              backgroundColor: "#00ff00",
-            }}
-          ></div>
-
-          {/* Price labels */}
-          <div
-            style={{
-              position: "absolute",
-              left: "20px",
-              top: "20px",
-              fontSize: "14px",
-            }}
-          >
-            ${maxPrice.toFixed(2)}
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              left: "20px",
-              bottom: "40px",
-              fontSize: "14px",
-            }}
-          >
-            ${minPrice.toFixed(2)}
-          </div>
-
-          {/* Graph points and lines */}
-          {usdaHistoricalData.map((point, index) => {
-            const x = 50 + (index / (usdaHistoricalData.length - 1)) * (100 - 10) + "%"
-            const y = 100 - ((point.price - minPrice) / priceRange) * 100 + "%"
-
-            return (
-              <div key={index}>
-                {/* Point */}
-                <div
-                  style={{
-                    ...styles.graphPoint,
-                    left: x,
-                    bottom: y,
-                  }}
-                ></div>
-
-                {/* Line to next point */}
-                {index < usdaHistoricalData.length - 1 && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      left: x,
-                      bottom: y,
-                      width: (1 / (usdaHistoricalData.length - 1)) * (100 - 10) + "%",
-                      height: "2px",
-                      backgroundColor: "#00ff00",
-                      transform: "translateY(1px)",
-                      transformOrigin: "left bottom",
-                      rotate:
-                        Math.atan2(
-                          ((usdaHistoricalData[index + 1].price - minPrice) / priceRange) * 100 -
-                            ((point.price - minPrice) / priceRange) * 100,
-                          100 / (usdaHistoricalData.length - 1),
-                        ) + "rad",
-                    }}
-                  ></div>
-                )}
-
-                {/* Date label - only show every other month for clarity */}
-                {index % 2 === 0 && (
-                  <div
-                    style={{
-                      ...styles.graphLabel,
-                      left: x,
-                      bottom: "30px",
-                    }}
-                  >
-                    {point.date.split("/")[0]}/{point.date.split("/")[2].substring(2)}
-                  </div>
-                )}
-              </div>
-            )
-          })}
-
-          <div style={styles.dataSource}>Source: USDA Agricultural Marketing Service</div>
-        </div>
-      </div>
+      {/* Price History Chart */}
+      <EggPriceChart historicalData={usdaHistoricalData} />
     </div>
   )
 }
