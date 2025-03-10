@@ -6,10 +6,8 @@ import EggPriceChart from "./egg-price-chart"
 
 export default function EggPriceTracker() {
   const [eggType, setEggType] = useState("REGULAR")
-  const [searchTerm, setSearchTerm] = useState("")
   const [sortBy, setSortBy] = useState("STORE")
 
-  // Custom styles with centered content
   const styles = {
     container: {
       backgroundColor: "#000",
@@ -20,8 +18,9 @@ export default function EggPriceTracker() {
       minHeight: "100vh",
       textAlign: "center",
       width: "100%",
-      maxWidth: "1200px",
+      maxWidth: "100vw",
       margin: "0 auto",
+      overflowX: "hidden",
     },
     header: {
       fontSize: "36px",
@@ -37,6 +36,7 @@ export default function EggPriceTracker() {
     section: {
       marginBottom: "40px",
       width: "100%",
+      padding: "0 10px",
     },
     button: {
       backgroundColor: "#000",
@@ -52,22 +52,10 @@ export default function EggPriceTracker() {
       backgroundColor: "#00ff00",
       color: "#000",
     },
-    input: {
-      backgroundColor: "#000",
-      color: "#00ff00",
-      border: "1px solid #00ff00",
-      padding: "8px",
-      width: "100%",
-      maxWidth: "300px",
-      marginBottom: "15px",
-      fontFamily: "monospace",
-      fontSize: "16px",
-      textAlign: "center",
-    },
     storesContainer: {
       display: "grid",
-      gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-      gap: "15px",
+      gridTemplateColumns: "repeat(2, 1fr)",
+      gap: "10px",
       marginTop: "20px",
       width: "100%",
     },
@@ -78,15 +66,15 @@ export default function EggPriceTracker() {
       textAlign: "center",
     },
     storeName: {
-      fontSize: "20px",
+      fontSize: "16px",
       marginBottom: "10px",
     },
     storePrice: {
-      fontSize: "28px",
+      fontSize: "24px",
       marginBottom: "5px",
     },
     storeDate: {
-      fontSize: "14px",
+      fontSize: "12px",
       marginBottom: "10px",
       opacity: "0.8",
     },
@@ -95,11 +83,6 @@ export default function EggPriceTracker() {
       justifyContent: "center",
       flexWrap: "wrap",
       marginBottom: "15px",
-    },
-    updateInfo: {
-      fontSize: "14px",
-      marginTop: "20px",
-      opacity: "0.8",
     },
   }
 
@@ -367,7 +350,7 @@ export default function EggPriceTracker() {
   const stores = storeData.filter((store) => store.eggType === eggType)
 
   // Filter and sort stores
-  const filteredStores = stores.filter((store) => store.name.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredStores = stores.filter((store) => store.name.toLowerCase().includes(""))
 
   const sortedStores = [...filteredStores].sort((a, b) => {
     if (sortBy === "PRICE") {
@@ -389,16 +372,13 @@ export default function EggPriceTracker() {
 
   return (
     <div style={styles.container}>
-      <h1 style={styles.header}>US EGG INDEX</h1>
-      <h2 style={styles.subheader}>NATIONWIDE EGG PRICE TRACKER</h2>
+      <h1 style={styles.header}>eggs.live</h1>
+      <h2 style={styles.subheader}>US EGG PRICES PER DOZEN</h2>
 
-      {/* Egg Indices Section */}
       <EggIndices regularPrice={regularAvgPrice} organicPrice={organicAvgPrice} />
 
-      {/* Stores Section */}
       <div style={styles.section}>
         <h2 style={styles.header}>MAJOR US RETAILERS</h2>
-        <div style={styles.updateInfo}>PRICES PER DOZEN EGGS</div>
 
         <div style={styles.buttonContainer}>
           <button
@@ -419,16 +399,6 @@ export default function EggPriceTracker() {
           >
             ORGANIC
           </button>
-        </div>
-
-        <div>
-          <input
-            type="text"
-            placeholder="SEARCH STORES..."
-            style={styles.input}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
         </div>
 
         <div style={styles.buttonContainer}>
@@ -469,7 +439,7 @@ export default function EggPriceTracker() {
                 <span
                   style={{
                     marginRight: "8px",
-                    fontSize: "20px",
+                    fontSize: "16px",
                     color: store.change >= 0 ? "#00ff00" : "#ff0000",
                   }}
                 >
@@ -486,7 +456,6 @@ export default function EggPriceTracker() {
         </div>
       </div>
 
-      {/* Price History Chart */}
       <EggPriceChart historicalData={historicalData} eggType={eggType} />
     </div>
   )
