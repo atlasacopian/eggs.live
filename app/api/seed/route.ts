@@ -1,244 +1,151 @@
-import { prisma } from "@/lib/db"
 import { NextResponse } from "next/server"
+import { prisma } from "@/lib/db"
 
 export async function GET() {
   try {
-    // Add multiple stores
-    const stores = await Promise.all([
-      prisma.store.upsert({
-        where: { id: "walmart" },
-        update: {},
-        create: {
-          id: "walmart",
-          name: "Walmart",
-          website: "https://www.walmart.com"
-        }
-      }),
-      prisma.store.upsert({
-        where: { id: "kroger" },
-        update: {},
-        create: {
-          id: "kroger",
-          name: "Kroger",
-          website: "https://www.kroger.com"
-        }
-      }),
-      prisma.store.upsert({
-        where: { id: "target" },
-        update: {},
-        create: {
-          id: "target",
-          name: "Target",
-          website: "https://www.target.com"
-        }
-      }),
-      prisma.store.upsert({
-        where: { id: "food4less" },
-        update: {},
-        create: {
-          id: "food4less",
-          name: "Food 4 Less",
-          website: "https://www.food4less.com"
-        }
-      }),
-      prisma.store.upsert({
-        where: { id: "albertsons" },
-        update: {},
-        create: {
-          id: "albertsons",
-          name: "Albertsons",
-          website: "https://www.albertsons.com"
-        }
-      })
-    ])
+    console.log("Starting database seeding...")
 
-    // Add egg prices for each store
-    const today = new Date()
-    const yesterday = new Date(today)
-    yesterday.setDate(yesterday.getDate() - 1)
-    
-    const eggPrices = []
-    
-    // Add prices for each store and egg type
+    // Create stores with upsert operations
+    const stores = [
+      { id: "walmart", name: "Walmart", website: "https://www.walmart.com" },
+      { id: "kroger", name: "Kroger", website: "https://www.kroger.com" },
+      { id: "target", name: "Target", website: "https://www.target.com" },
+      { id: "food4less", name: "Food 4 Less", website: "https://www.food4less.com" },
+    ]
+
+    // Process stores one by one to avoid batch issues
+    const results = []
     for (const store of stores) {
-      // Regular eggs
-      eggPrices.push(
-        await prisma.eggPrice.upsert({
-          where: {
-            storeId_date_eggType: {
-              storeId: store.id,
-              date: today,
-              eggType: "regular"
-            }
-          },
-          update: {},
-          create: {
-            storeId: store.id,
-            price: 3.49 + Math.random() * 1.5, // Random price between $3.49 and $4.99
-            date: today,
-            eggType: "regular"
-          }
+      try {
+        const result = await prisma.store.upsert({
+          where: { id: store.id },
+          update: { name: store.name, website: store.website },
+          create: store,
         })
-      )
-      
-      // Brown eggs
-      eggPrices.push(
-        await prisma.eggPrice.upsert({
-          where: {
-            storeId_date_eggType: {
-              storeId: store.id,
-              date: today,
-              eggType: "brown"
-            }
-          },
-          update: {},
-          create: {
-            storeId: store.id,
-            price: 4.29 + Math.random() * 1.5, // Random price between $4.29 and $5.79
-            date: today,
-            eggType: "brown"
-          }
+        results.push({ store: store.id, status: "success", data: result })
+      } catch (storeError) {
+        console.error(`Error upserting store ${store.id}:`, storeError)
+        results.push({
+          store: store.id,
+          status: "error",
+          error: storeError instanceof Error ? storeError.message : String(storeError),
         })
-      )
-      
-      // Organic eggs
-      eggPrices.push(
-        await prisma.eggPrice.upsert({
-          where: {
-            storeId_date_eggType: {
-              storeId: store.id,
-              date: today,
-              eggType: "organic"
-            }
-          },
-          update: {},
-          create: {
-            storeId: store.id,
-            price: 5.99 + Math.random() * 2, // Random price between $5.99 and $7.99
-            date: today,
-            eggType: "organic"
-          }
-        })
-      )
+      }
     }
 
-    // Calculate and add average prices
-    const regularPrices = eggPrices.filter(p => p.eggType === "regular")
-    const brownPrices = eggPrices.filter(p => p.eggType === "brown")
-    const organicPrices = eggPrices.filter(p => p.eggType === "organic")
-    
-    const regularAvg = regularPrices.reduce((sum, p) => sum + p.price, 0) / regularPrices.length
-    const brownAvg = brownPrices.reduce((sum, p) => sum + p.price, 0) / brownPrices.length
-    const organicAvg = organicPrices.reduce((sum, p) => sum + p.price, 0) / organicPrices.length
-    
-    const averagePrices = await Promise.all([
-      prisma.averagePrice.upsert({
-        where: {
-          date_eggType: {
-            date: today,
-            eggType: "regular"
-          }
-        },
-        update: {},
-        create: {
-          date: today,
-          price: parseFloat(regularAvg.toFixed(2)),
-          storeCount: regularPrices.length,
-          eggType: "regular"
-        }
-      }),
-      prisma.averagePrice.upsert({
-        where: {
-          date_eggType: {
-            date: today,
-            eggType: "brown"
-          }
-        },
-        update: {},
-        create: {
-          date: today,
-          price: parseFloat(brownAvg.toFixed(2)),
-          storeCount: brownPrices.length,
-          eggType: "brown"
-        }
-      }),
-      prisma.averagePrice.upsert({
-        where: {
-          date_eggType: {
-            date: today,
-            eggType: "organic"
-          }
-        },
-        update: {},
-        create: {
-          date: today,
-          price: parseFloat(organicAvg.toFixed(2)),
-          storeCount: organicPrices.length,
-          eggType: "organic"
-        }
-      })
-    ])
+    // Add some sample data for testing if needed
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
 
-    // Add dozen prices
-    const dozenPrices = await Promise.all([
-      prisma.dozenPrice.upsert({
-        where: {
-          date_eggType: {
+    // Sample egg prices for today
+    const samplePrices = [
+      { storeId: "walmart", price: 3.49, date: today, eggType: "regular" },
+      { storeId: "walmart", price: 5.99, date: today, eggType: "organic" },
+      { storeId: "kroger", price: 3.79, date: today, eggType: "regular" },
+      { storeId: "kroger", price: 6.29, date: today, eggType: "organic" },
+      { storeId: "target", price: 3.99, date: today, eggType: "regular" },
+      { storeId: "target", price: 6.49, date: today, eggType: "organic" },
+      { storeId: "food4less", price: 3.29, date: today, eggType: "regular" },
+      { storeId: "food4less", price: 5.79, date: today, eggType: "organic" },
+    ]
+
+    // Add sample prices
+    const priceResults = []
+    for (const price of samplePrices) {
+      try {
+        const result = await prisma.eggPrice.upsert({
+          where: {
+            storeId_date_eggType: {
+              storeId: price.storeId,
+              date: price.date,
+              eggType: price.eggType,
+            },
+          },
+          update: { price: price.price },
+          create: price,
+        })
+        priceResults.push({ price: `${price.storeId}-${price.eggType}`, status: "success" })
+      } catch (priceError) {
+        console.error(`Error upserting price for ${price.storeId} (${price.eggType}):`, priceError)
+        priceResults.push({
+          price: `${price.storeId}-${price.eggType}`,
+          status: "error",
+          error: priceError instanceof Error ? priceError.message : String(priceError),
+        })
+      }
+    }
+
+    // Calculate and store average prices
+    const eggTypes = ["regular", "organic"]
+    const avgResults = []
+
+    for (const eggType of eggTypes) {
+      try {
+        // Get all prices for this egg type today
+        const prices = await prisma.eggPrice.findMany({
+          where: {
             date: today,
-            eggType: "regular"
-          }
-        },
-        update: {},
-        create: {
-          date: today,
-          price: 4.29,
-          eggType: "regular"
+            eggType: eggType,
+          },
+        })
+
+        if (prices.length > 0) {
+          // Calculate average
+          const sum = prices.reduce((acc, curr) => acc + curr.price, 0)
+          const avg = sum / prices.length
+
+          // Store average
+          const avgResult = await prisma.averagePrice.upsert({
+            where: {
+              date_eggType: {
+                date: today,
+                eggType: eggType,
+              },
+            },
+            update: {
+              price: avg,
+              storeCount: prices.length,
+            },
+            create: {
+              date: today,
+              price: avg,
+              storeCount: prices.length,
+              eggType: eggType,
+            },
+          })
+
+          avgResults.push({ type: eggType, status: "success", avg: avg })
+        } else {
+          avgResults.push({ type: eggType, status: "skipped", reason: "No prices found" })
         }
-      }),
-      prisma.dozenPrice.upsert({
-        where: {
-          date_eggType: {
-            date: today,
-            eggType: "brown"
-          }
-        },
-        update: {},
-        create: {
-          date: today,
-          price: 5.49,
-          eggType: "brown"
-        }
-      }),
-      prisma.dozenPrice.upsert({
-        where: {
-          date_eggType: {
-            date: today,
-            eggType: "organic"
-          }
-        },
-        update: {},
-        create: {
-          date: today,
-          price: 6.99,
-          eggType: "organic"
-        }
-      })
-    ])
+      } catch (avgError) {
+        console.error(`Error calculating average for ${eggType}:`, avgError)
+        avgResults.push({
+          type: eggType,
+          status: "error",
+          error: avgError instanceof Error ? avgError.message : String(avgError),
+        })
+      }
+    }
 
     return NextResponse.json({
       success: true,
-      data: {
-        stores,
-        eggPrices,
-        averagePrices,
-        dozenPrices
-      }
+      message: "Database seeded successfully",
+      results: {
+        stores: results,
+        prices: priceResults,
+        averages: avgResults,
+      },
     })
   } catch (error) {
     console.error("Seed error:", error)
     return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : "Unknown error" },
-      { status: 500 }
+      {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 },
     )
   }
 }
+
