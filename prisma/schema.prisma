@@ -1,4 +1,6 @@
-// prisma/schema.prisma
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,31 +10,38 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Store model represents retail stores that sell eggs
 model Store {
-  id      String     @id
-  name    String
-  website String
-  prices  EggPrice[]
+  id       String     @id
+  name     String
+  website  String
+  prices   EggPrice[]
+  
+  @@map("stores")
 }
 
+// EggPrice model represents individual price points for eggs at specific stores
 model EggPrice {
-  id      String   @id @default(cuid())
-  storeId String
-  price   Float
-  date    DateTime
-  eggType String   // "regular" or "organic"
-  store   Store    @relation(fields: [storeId], references: [id])
-
-  @@index([storeId])
-  @@index([date])
+  id        String   @id @default(cuid())
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id])
+  price     Float
+  date      DateTime @db.Date
+  eggType   String   // "regular" or "organic"
+  
+  @@unique([storeId, date, eggType])
+  @@map("egg_prices")
 }
 
+// AveragePrice model represents the daily average price across all stores
 model AveragePrice {
   id         String   @id @default(cuid())
+  date       DateTime @db.Date
   price      Float
-  date       DateTime
   storeCount Int
   eggType    String   // "regular" or "organic"
-
-  @@unique([date, eggType])
+  
+  @@unique([date, eggType], name: "date_eggType")
+  @@map("average_prices")
 }
+
