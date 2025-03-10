@@ -1,110 +1,76 @@
 "use client"
 
 import { useState } from "react"
-import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
-import { useEggPriceData } from "@/hooks/use-egg-price-data"
-import { Button } from "@/components/ui/button"
+import EggChart from "./egg-chart"
 
-export function EggPriceChart() {
-  const [timeframe, setTimeframe] = useState("1M")
-  const [eggType, setEggType] = useState("regular")
-  const { priceData, isLoading } = useEggPriceData(timeframe, eggType)
+interface EggPriceChartProps {
+  historicalData: Array<{
+    date: string
+    price: number
+  }>
+}
 
-  if (isLoading) {
-    return (
-      <div className="h-full w-full flex items-center justify-center font-mono uppercase">
-        <div className="animate-pulse text-white">LOADING DATA...</div>
-      </div>
-    )
-  }
+export default function EggPriceChart({ historicalData }: EggPriceChartProps) {
+  const [eggType, setEggType] = useState("REGULAR")
 
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-black border border-gray-700 p-3 font-mono uppercase">
-          <p className="text-gray-400 mb-1">
-            {new Date(label)
-              .toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-              .toUpperCase()}
-          </p>
-          <p className="text-lg font-bold text-white">${payload[0].value.toFixed(2)}</p>
-        </div>
-      )
-    }
-    return null
+  const styles = {
+    section: {
+      marginBottom: "40px",
+    },
+    header: {
+      fontSize: "36px",
+      marginBottom: "15px",
+      fontWeight: "normal" as const,
+      textShadow: "0 0 5px rgba(0, 255, 0, 0.5)",
+    },
+    buttonContainer: {
+      display: "flex",
+      justifyContent: "center",
+      flexWrap: "wrap" as const,
+      marginBottom: "15px",
+    },
+    button: {
+      backgroundColor: "#000",
+      color: "#00ff00",
+      border: "1px solid #00ff00",
+      padding: "8px 20px",
+      margin: "0 5px 5px 0",
+      cursor: "pointer",
+      fontFamily: "monospace",
+      fontSize: "16px",
+    },
+    activeButton: {
+      backgroundColor: "#00ff00",
+      color: "#000",
+    },
   }
 
   return (
-    <div className="h-full w-full relative font-mono uppercase">
-      {/* Egg type selector */}
-      <div className="absolute top-0 right-0 z-10 flex space-x-2 mb-4">
-        <Button
-          variant={eggType === "regular" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setEggType("regular")}
-          className="text-xs"
+    <div style={styles.section}>
+      <h2 style={styles.header}>PRICE HISTORY (1 YEAR)</h2>
+
+      <div style={styles.buttonContainer}>
+        <button
+          style={{
+            ...styles.button,
+            ...(eggType === "REGULAR" ? styles.activeButton : {}),
+          }}
+          onClick={() => setEggType("REGULAR")}
         >
           REGULAR
-        </Button>
-        <Button
-          variant={eggType === "organic" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setEggType("organic")}
-          className="text-xs"
+        </button>
+        <button
+          style={{
+            ...styles.button,
+            ...(eggType === "ORGANIC" ? styles.activeButton : {}),
+          }}
+          onClick={() => setEggType("ORGANIC")}
         >
           ORGANIC
-        </Button>
+        </button>
       </div>
 
-      <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={priceData} margin={{ top: 30, right: 10, left: 0, bottom: 0 }}>
-          <defs>
-            <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#ffffff" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#ffffff" stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <XAxis
-            dataKey="date"
-            axisLine={{ stroke: "#555555" }}
-            tickLine={{ stroke: "#555555" }}
-            tick={{ fill: "#ffffff", fontSize: 10, fontFamily: "monospace" }}
-            tickFormatter={(date) => {
-              const d = new Date(date)
-              return d.toLocaleDateString("en-US", { month: "short", day: "numeric" }).toUpperCase()
-            }}
-          />
-          <YAxis
-            domain={["auto", "auto"]}
-            axisLine={{ stroke: "#555555" }}
-            tickLine={{ stroke: "#555555" }}
-            tick={{ fill: "#ffffff", fontSize: 10, fontFamily: "monospace" }}
-            tickFormatter={(value) => `$${value.toFixed(2)}`}
-            width={60}
-          />
-          <Tooltip content={<CustomTooltip />} />
-          <Area
-            type="monotone"
-            dataKey="price"
-            stroke="#ffffff"
-            strokeWidth={1}
-            fill="url(#colorPrice)"
-            activeDot={{ r: 4, fill: "#ffffff", stroke: "#ffffff", strokeWidth: 1 }}
-          />
-        </AreaChart>
-      </ResponsiveContainer>
-
-      {/* Grid lines overlay for terminal effect */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="w-full h-full grid grid-cols-12 grid-rows-12">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div key={`h-${i}`} className="border-t border-gray-800" />
-          ))}
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div key={`v-${i}`} className="border-l border-gray-800" />
-          ))}
-        </div>
-      </div>
+      <EggChart data={historicalData} dataSource="USDA Agricultural Marketing Service" />
     </div>
   )
 }
