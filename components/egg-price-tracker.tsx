@@ -37,6 +37,8 @@ export default function EggPriceTracker() {
       marginBottom: "40px",
       width: "100%",
       padding: "0 10px",
+      maxWidth: "1200px",
+      margin: "0 auto",
     },
     button: {
       backgroundColor: "#000",
@@ -54,10 +56,14 @@ export default function EggPriceTracker() {
     },
     storesContainer: {
       display: "grid",
-      gridTemplateColumns: "repeat(2, 1fr)",
-      gap: "10px",
+      gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+      gap: "15px",
       marginTop: "20px",
       width: "100%",
+      "@media (max-width: 768px)": {
+        gridTemplateColumns: "repeat(2, 1fr)",
+        gap: "10px",
+      },
     },
     storeItem: {
       border: "1px solid #00ff00",
@@ -66,17 +72,26 @@ export default function EggPriceTracker() {
       textAlign: "center",
     },
     storeName: {
-      fontSize: "16px",
+      fontSize: "20px",
       marginBottom: "10px",
+      "@media (max-width: 768px)": {
+        fontSize: "16px",
+      },
     },
     storePrice: {
-      fontSize: "24px",
+      fontSize: "28px",
       marginBottom: "5px",
+      "@media (max-width: 768px)": {
+        fontSize: "24px",
+      },
     },
     storeDate: {
-      fontSize: "12px",
+      fontSize: "14px",
       marginBottom: "10px",
       opacity: "0.8",
+      "@media (max-width: 768px)": {
+        fontSize: "12px",
+      },
     },
     buttonContainer: {
       display: "flex",
@@ -378,7 +393,7 @@ export default function EggPriceTracker() {
       <EggIndices regularPrice={regularAvgPrice} organicPrice={organicAvgPrice} />
 
       <div style={styles.section}>
-        <h2 style={styles.header}>MAJOR US RETAILERS</h2>
+        <h2 style={styles.header}>TODAY'S PRICES</h2>
 
         <div style={styles.buttonContainer}>
           <button
