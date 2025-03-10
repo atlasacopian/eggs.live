@@ -13,3 +13,13 @@ export const prisma =
 // In development, preserve the Prisma instance across hot reloads
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma
 
+// Helper function to safely execute Prisma queries
+export async function safeQuery<T>(queryFn: () => Promise<T>): Promise<T | null> {
+  try {
+    return await queryFn()
+  } catch (error) {
+    console.error("Database query error:", error)
+    return null
+  }
+}
+
