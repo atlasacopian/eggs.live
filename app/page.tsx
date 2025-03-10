@@ -1,8 +1,8 @@
-import { PriceDisplay } from "@/components/price-display"
 import Link from "next/link"
+import { PriceDisplay } from "@/components/price-display"
+import { PriceChart } from "@/components/price-chart"
 
 async function getStores() {
-  // Use server-side fetch to get stores data
   try {
     const response = await fetch(
       `${process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000"}/api/stores`,
@@ -18,7 +18,6 @@ async function getStores() {
 }
 
 async function getPrices() {
-  // Use server-side fetch to get prices data
   try {
     const response = await fetch(
       `${process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000"}/api/prices`,
@@ -33,11 +32,34 @@ async function getPrices() {
   }
 }
 
+// Mock historical data for the chart
+const getHistoricalData = () => {
+  const today = new Date()
+  const data = []
+
+  for (let i = 30; i >= 0; i--) {
+    const date = new Date(today)
+    date.setDate(date.getDate() - i)
+
+    // Generate some realistic price fluctuations
+    const regularPrice = 3.5 + Math.sin(i / 5) * 0.5 + Math.random() * 0.2
+    const organicPrice = 5.99 + Math.sin(i / 5) * 0.7 + Math.random() * 0.3
+
+    data.push({
+      date: date.toISOString().split("T")[0],
+      regular: regularPrice.toFixed(2),
+      organic: organicPrice.toFixed(2),
+    })
+  }
+
+  return data
+}
+
 export default async function Home() {
   const stores = await getStores()
   const prices = await getPrices()
+  const historicalData = getHistoricalData()
 
-  // Calculate average prices for regular and organic eggs
   const regularPrices = prices.filter((price) => price.eggType === "regular")
   const organicPrices = prices.filter((price) => price.eggType === "organic")
 
@@ -52,26 +74,35 @@ export default async function Home() {
       : 0
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-4 md:p-8">
-      <div className="w-full max-w-5xl">
-        <h1 className="text-4xl font-bold mb-8 text-center">🥚 Egg Price Tracker</h1>
+    <main className="min-h-screen bg-black text-[#00FF00] p-4 md:p-8 font-mono antialiased">
+      <div className="max-w-6xl mx-auto space-y-6">
+        <h1 className="text-4xl font-bold [text-shadow:_0_0_10px] flex items-center gap-3">🥚 Egg Price Tracker</h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-black text-green-400 p-6 rounded-lg font-mono">
-            <h2 className="text-xl mb-4">Today's Average Egg Price</h2>
-            <PriceDisplay price={avgRegularPrice} label="Regular Eggs" />
-            <p className="text-sm mt-2">Based on {regularPrices.length} stores</p>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <section className="space-y-2">
+            <h2 className="text-2xl [text-shadow:_0_0_5px]">Today's Average Egg Price</h2>
+            <PriceDisplay price={avgRegularPrice} change={0.12} />
+            <div className="text-xl">Regular Eggs</div>
+            <div className="text-sm opacity-80">Based on {regularPrices.length} stores</div>
+          </section>
 
-          <div className="bg-black text-green-400 p-6 rounded-lg font-mono">
-            <h2 className="text-xl mb-4">Today's Average Organic Egg Price</h2>
-            <PriceDisplay price={avgOrganicPrice} label="Organic Eggs" />
-            <p className="text-sm mt-2">Based on {organicPrices.length} stores</p>
-          </div>
+          <section className="space-y-2">
+            <h2 className="text-2xl [text-shadow:_0_0_5px]">Today's Average Organic Egg Price</h2>
+            <PriceDisplay price={avgOrganicPrice} change={-0.08} />
+            <div className="text-xl">Organic Eggs</div>
+            <div className="text-sm opacity-80">Based on {organicPrices.length} stores</div>
+          </section>
         </div>
 
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-4">Today's Prices by Store</h2>
+        <section className="mt-8">
+          <h2 className="text-2xl [text-shadow:_0_0_5px] mb-4">Price History (30 Days)</h2>
+          <div className="h-[300px] w-full">
+            <PriceChart data={historicalData} />
+          </div>
+        </section>
+
+        <section className="mt-8 space-y-4">
+          <h2 className="text-2xl [text-shadow:_0_0_5px]">Today's Prices by Store</h2>
 
           {stores.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -84,27 +115,25 @@ export default async function Home() {
                   <Link
                     key={store.id}
                     href={`/stores/${store.id}`}
-                    className="bg-black text-green-400 p-4 rounded-lg font-mono hover:bg-gray-900 transition-colors"
+                    className="border border-[#00FF00]/30 p-4 hover:bg-[#00FF00]/10 transition-colors"
                   >
-                    <h3 className="text-lg font-bold mb-2">{store.name}</h3>
-                    {regularPrice && <p>Regular: ${Number.parseFloat(regularPrice.price).toFixed(2)}</p>}
-                    {organicPrice && <p>Organic: ${Number.parseFloat(organicPrice.price).toFixed(2)}</p>}
-                    {!regularPrice && !organicPrice && <p>No price data available</p>}
+                    <h3 className="text-xl mb-2">{store.name}</h3>
+                    {regularPrice && <div>Regular: ${Number.parseFloat(regularPrice.price).toFixed(2)}</div>}
+                    {organicPrice && <div>Organic: ${Number.parseFloat(organicPrice.price).toFixed(2)}</div>}
+                    {!regularPrice && !organicPrice && <div>No price data available</div>}
                   </Link>
                 )
               })}
             </div>
           ) : (
-            <div className="bg-black text-green-400 p-6 rounded-lg font-mono">
-              <p>No store data available. Please run the scraper.</p>
-            </div>
+            <div>No store data available. Please run the scraper.</div>
           )}
-        </div>
+        </section>
 
-        <div className="text-center">
+        <div className="mt-6">
           <Link
             href="/stores"
-            className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            className="text-blue-400 hover:text-blue-300 hover:underline transition-colors inline-block"
           >
             View All Stores
           </Link>
