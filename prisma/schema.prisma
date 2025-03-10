@@ -1,6 +1,4 @@
 // prisma/schema.prisma
-// Database schema for egg price tracking
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,70 +8,31 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Store {
+  id      String     @id
+  name    String
+  website String
+  prices  EggPrice[]
+}
+
 model EggPrice {
-  id            Int      @id @default(autoincrement())
-  retailer      String
-  storeId       String
-  state         String
-  city          String?
-  zip           String?
-  regularPrice  Float?   // Price of 12-count regular eggs
-  organicPrice  Float?   // Price of 12-count organic eggs
-  sampleSize    Int      @default(1)  // How many products were averaged
-  scrapedAt     DateTime
-  createdAt     DateTime @default(now())
+  id      String   @id @default(cuid())
+  storeId String
+  price   Float
+  date    DateTime
+  eggType String   // "regular" or "organic"
+  store   Store    @relation(fields: [storeId], references: [id])
 
-  @@index([retailer, state])
-  @@index([scrapedAt])
+  @@index([storeId])
+  @@index([date])
 }
 
-model RetailerAverage {
-  id            Int      @id @default(autoincrement())
-  retailer      String
-  eggType       String   // "REGULAR" or "ORGANIC"
-  averagePrice  Float
-  dataPoints    Int      // Number of stores used in calculation
-  statesCovered Int      // Number of states with data
-  calculatedAt  DateTime
-  createdAt     DateTime @default(now())
+model AveragePrice {
+  id         String   @id @default(cuid())
+  price      Float
+  date       DateTime
+  storeCount Int
+  eggType    String   // "regular" or "organic"
 
-  @@index([retailer, eggType])
-  @@index([calculatedAt])
-}
-
-model StateAverage {
-  id            Int      @id @default(autoincrement())
-  state         String
-  eggType       String   // "REGULAR" or "ORGANIC"
-  averagePrice  Float
-  storesSampled Int      // Number of stores in this state
-  calculatedAt  DateTime
-  createdAt     DateTime @default(now())
-
-  @@index([state, eggType])
-  @@index([calculatedAt])
-}
-
-model NationalAverage {
-  id            Int      @id @default(autoincrement())
-  eggType       String   // "REGULAR" or "ORGANIC"
-  averagePrice  Float
-  retailerCount Int      // Number of retailers in average
-  statesCovered Int      // Number of states with data
-  calculatedAt  DateTime
-  createdAt     DateTime @default(now())
-
-  @@index([eggType])
-  @@index([calculatedAt])
-}
-
-model ScrapingJob {
-  id            Int      @id @default(autoincrement())
-  startTime     DateTime
-  endTime       DateTime
-  totalAttempts Int
-  successful    Int
-  failed        Int
-  statsJson     String   // Detailed stats as JSON
-  createdAt     DateTime @default(now())
+  @@unique([date, eggType])
 }
