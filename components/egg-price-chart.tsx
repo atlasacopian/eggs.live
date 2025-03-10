@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import EggChart from "./egg-chart"
 
 interface EggPriceChartProps {
@@ -8,10 +8,16 @@ interface EggPriceChartProps {
     date: string
     price: number
   }>
+  eggType: string
 }
 
-export default function EggPriceChart({ historicalData }: EggPriceChartProps) {
-  const [eggType, setEggType] = useState("REGULAR")
+export default function EggPriceChart({ historicalData, eggType }: EggPriceChartProps) {
+  const [chartType, setChartType] = useState(eggType)
+
+  // Update chart type when eggType prop changes
+  useEffect(() => {
+    setChartType(eggType)
+  }, [eggType])
 
   const styles = {
     section: {
@@ -22,6 +28,11 @@ export default function EggPriceChart({ historicalData }: EggPriceChartProps) {
       marginBottom: "15px",
       fontWeight: "normal" as const,
       textShadow: "0 0 5px rgba(0, 255, 0, 0.5)",
+    },
+    subtitle: {
+      fontSize: "16px",
+      marginBottom: "20px",
+      opacity: "0.8",
     },
     buttonContainer: {
       display: "flex",
@@ -47,24 +58,25 @@ export default function EggPriceChart({ historicalData }: EggPriceChartProps) {
 
   return (
     <div style={styles.section}>
-      <h2 style={styles.header}>PRICE HISTORY (1 YEAR)</h2>
+      <h2 style={styles.header}>US PRICE HISTORY (1 YEAR)</h2>
+      <div style={styles.subtitle}>AVERAGE PRICE PER DOZEN EGGS</div>
 
       <div style={styles.buttonContainer}>
         <button
           style={{
             ...styles.button,
-            ...(eggType === "REGULAR" ? styles.activeButton : {}),
+            ...(chartType === "REGULAR" ? styles.activeButton : {}),
           }}
-          onClick={() => setEggType("REGULAR")}
+          onClick={() => setChartType("REGULAR")}
         >
           REGULAR
         </button>
         <button
           style={{
             ...styles.button,
-            ...(eggType === "ORGANIC" ? styles.activeButton : {}),
+            ...(chartType === "ORGANIC" ? styles.activeButton : {}),
           }}
-          onClick={() => setEggType("ORGANIC")}
+          onClick={() => setChartType("ORGANIC")}
         >
           ORGANIC
         </button>
