@@ -19,6 +19,8 @@ export default function EggChart({ data, title, dataSource }: EggChartProps) {
   const styles = {
     wrapper: {
       width: "100%",
+      maxWidth: "800px",
+      margin: "0 auto",
       overflowX: "hidden",
       padding: "0 10px",
     },
@@ -51,8 +53,8 @@ export default function EggChart({ data, title, dataSource }: EggChartProps) {
     },
   }
 
-  // Reverse the data array to show increasing trend
-  const reversedData = [...data].reverse()
+  // Sort data chronologically
+  const sortedData = [...data].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
   return (
     <div style={styles.wrapper}>
@@ -102,7 +104,7 @@ export default function EggChart({ data, title, dataSource }: EggChartProps) {
         </div>
 
         {/* Graph points and lines */}
-        {reversedData.map((point, index) => {
+        {sortedData.map((point, index) => {
           const x = 50 + (index / (data.length - 1)) * (100 - 10) + "%"
           const y = 100 - ((point.price - minPrice) / priceRange) * 100 + "%"
 
@@ -131,7 +133,7 @@ export default function EggChart({ data, title, dataSource }: EggChartProps) {
                     transformOrigin: "left bottom",
                     rotate:
                       Math.atan2(
-                        ((reversedData[index + 1].price - minPrice) / priceRange) * 100 -
+                        ((sortedData[index + 1].price - minPrice) / priceRange) * 100 -
                           ((point.price - minPrice) / priceRange) * 100,
                         100 / (data.length - 1),
                       ) + "rad",
