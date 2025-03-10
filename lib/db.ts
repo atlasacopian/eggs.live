@@ -24,7 +24,19 @@ export async function safeQuery<T>(queryFn: () => Promise<T>): Promise<T | null>
   } finally {
     // Explicitly disconnect in production to release the connection back to the pool
     if (process.env.NODE_ENV === "production") {
-      await prisma.$disconnect();
+      try {
+        await prisma.$disconnect();
+      } catch (e) {
+        console.error("Error disconnecting from database:", e);
+      }
     }
   }
 }
+
+// Example usage:
+// const data = await safeQuery(() => prisma.user.findMany());
+// if (data) {
+//   // Use the data
+// } else {
+//   // Handle the error case
+// }
