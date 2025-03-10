@@ -1,36 +1,15 @@
 import { PrismaClient } from "@prisma/client"
 
-declare global {
-  var prisma: PrismaClient | undefined
-}
+// Create a single instance of Prisma Client
+const globalForPrisma = global as unknown as { prisma: PrismaClient }
 
-let prisma: PrismaClient | undefined
-
-if (process.env.NODE_ENV === "production") {
-  prisma = new PrismaClient({
-    log: ["error"],
-    errorFormat: "pretty",
-  })
-} else {
-  if (!global.prisma) {
-    global.prisma = new PrismaClient({
-      log: ["error"],
-      errorFormat: "pretty",
-    })
-  }
-  prisma = global.prisma as PrismaClient
-}
-
-// Test the connection immediately
-prisma
-  .$connect()
-  .then(() => {
-    console.log("Database connection successful")
-  })
-  .catch((e) => {
-    console.error("Database connection failed:", e)
-    // Don't throw here, let the application handle the error gracefully
+// Check if we already have a Prisma instance to avoid multiple instances during hot reloading
+export const prisma =
+  globalForPrisma.prisma ||
+  new PrismaClient({
+    log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
   })
 
-export { prisma }
+// In development, preserve the Prisma instance across hot reloads
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma
 
