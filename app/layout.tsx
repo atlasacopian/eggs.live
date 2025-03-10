@@ -14,7 +14,18 @@ export default function RootLayout({
           sizes="32x32"
         />
       </head>
-      <body>{children}</body>
+      <body
+        style={{
+          margin: 0,
+          padding: 0,
+          backgroundColor: "#000",
+          minHeight: "100vh",
+          width: "100%",
+          overflowX: "hidden",
+        }}
+      >
+        {children}
+      </body>
     </html>
   )
 }
