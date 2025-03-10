@@ -13,7 +13,7 @@ export default function EggPriceTracker() {
       backgroundColor: "#000",
       color: "#00ff00",
       fontFamily: "monospace",
-      padding: "20px",
+      padding: "20px 0",
       lineHeight: "1.3",
       minHeight: "100vh",
       textAlign: "center",
@@ -26,19 +26,21 @@ export default function EggPriceTracker() {
       fontSize: "36px",
       marginBottom: "15px",
       fontWeight: "normal",
-      textShadow: "0 0 5px rgba(0, 255, 0, 0.5)",
+      textShadow: "0 0 10px rgba(0, 255, 0, 0.5)",
     },
     subheader: {
       fontSize: "18px",
       marginBottom: "30px",
       fontWeight: "normal",
+      opacity: "0.8",
     },
     section: {
       marginBottom: "40px",
       width: "100%",
-      padding: "0 10px",
       maxWidth: "1200px",
       margin: "0 auto",
+      padding: "0 20px",
+      boxSizing: "border-box" as const,
     },
     button: {
       backgroundColor: "#000",
@@ -49,55 +51,82 @@ export default function EggPriceTracker() {
       cursor: "pointer",
       fontFamily: "monospace",
       fontSize: "16px",
+      transition: "all 0.3s ease",
+      textShadow: "0 0 5px rgba(0, 255, 0, 0.3)",
     },
     activeButton: {
       backgroundColor: "#00ff00",
       color: "#000",
+      boxShadow: "0 0 10px rgba(0, 255, 0, 0.5)",
     },
     storesContainer: {
       display: "grid",
-      gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
-      gap: "15px",
+      gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+      gap: "20px",
       marginTop: "20px",
       width: "100%",
-      "@media (max-width: 768px)": {
+      "@media (max-width: 600px)": {
         gridTemplateColumns: "repeat(2, 1fr)",
         gap: "10px",
+        padding: "0 10px",
       },
     },
     storeItem: {
       border: "1px solid #00ff00",
-      padding: "15px",
-      borderRadius: "5px",
+      padding: "20px",
+      borderRadius: "4px",
       textAlign: "center",
+      backgroundColor: "rgba(0, 255, 0, 0.05)",
+      boxShadow: "0 0 10px rgba(0, 255, 0, 0.1)",
+      transition: "all 0.3s ease",
+      "&:hover": {
+        boxShadow: "0 0 15px rgba(0, 255, 0, 0.2)",
+      },
     },
     storeName: {
-      fontSize: "20px",
+      fontSize: "18px",
       marginBottom: "10px",
-      "@media (max-width: 768px)": {
+      opacity: "0.9",
+      "@media (max-width: 600px)": {
         fontSize: "16px",
       },
     },
     storePrice: {
-      fontSize: "28px",
-      marginBottom: "5px",
-      "@media (max-width: 768px)": {
+      fontSize: "32px",
+      marginBottom: "10px",
+      textShadow: "0 0 10px rgba(0, 255, 0, 0.5)",
+      "@media (max-width: 600px)": {
         fontSize: "24px",
       },
     },
-    storeDate: {
+    updateInfo: {
       fontSize: "14px",
-      marginBottom: "10px",
-      opacity: "0.8",
-      "@media (max-width: 768px)": {
-        fontSize: "12px",
-      },
+      opacity: "0.7",
+      marginTop: "10px",
+      marginBottom: "20px",
     },
     buttonContainer: {
       display: "flex",
       justifyContent: "center",
       flexWrap: "wrap",
       marginBottom: "15px",
+      gap: "10px",
+    },
+    priceChange: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontSize: "16px",
+      "@media (max-width: 600px)": {
+        fontSize: "14px",
+      },
+    },
+    priceChangeArrow: {
+      marginRight: "8px",
+      fontSize: "20px",
+      "@media (max-width: 600px)": {
+        fontSize: "16px",
+      },
     },
   }
 
@@ -387,13 +416,16 @@ export default function EggPriceTracker() {
 
   return (
     <div style={styles.container}>
-      <h1 style={styles.header}>eggs.live</h1>
-      <h2 style={styles.subheader}>US EGG PRICES PER DOZEN</h2>
+      <div style={styles.section}>
+        <h1 style={styles.header}>eggs.live</h1>
+        <h2 style={styles.subheader}>US EGG PRICES PER DOZEN</h2>
 
-      <EggIndices regularPrice={regularAvgPrice} organicPrice={organicAvgPrice} />
+        <EggIndices regularPrice={regularAvgPrice} organicPrice={organicAvgPrice} />
+      </div>
 
       <div style={styles.section}>
         <h2 style={styles.header}>TODAY'S PRICES</h2>
+        <div style={styles.updateInfo}>UPDATED: 3/8/2025</div>
 
         <div style={styles.buttonContainer}>
           <button
@@ -442,25 +474,20 @@ export default function EggPriceTracker() {
             <div key={store.id} style={styles.storeItem}>
               <div style={styles.storeName}>{store.name}</div>
               <div style={styles.storePrice}>${store.price.toFixed(2)}</div>
-              <div style={styles.storeDate}>UPDATED: {store.date}</div>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: "15px",
-                }}
-              >
+              <div style={styles.priceChange}>
                 <span
                   style={{
-                    marginRight: "8px",
-                    fontSize: "16px",
+                    ...styles.priceChangeArrow,
                     color: store.change >= 0 ? "#00ff00" : "#ff0000",
                   }}
                 >
                   {store.change >= 0 ? "↑" : "↓"}
                 </span>
-                <span>
+                <span
+                  style={{
+                    color: store.change >= 0 ? "#00ff00" : "#ff0000",
+                  }}
+                >
                   {store.change >= 0 ? "+" : ""}
                   {store.change.toFixed(2)} ({store.change >= 0 ? "+" : ""}
                   {store.changePercent.toFixed(1)}%)
@@ -471,7 +498,9 @@ export default function EggPriceTracker() {
         </div>
       </div>
 
-      <EggPriceChart historicalData={historicalData} eggType={eggType} />
+      <div style={styles.section}>
+        <EggPriceChart historicalData={historicalData} eggType={eggType} />
+      </div>
     </div>
   )
 }
