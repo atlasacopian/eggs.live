@@ -53,22 +53,43 @@ export default function EggPriceTracker() {
       fontSize: "16px",
       transition: "all 0.3s ease",
       textShadow: "0 0 5px rgba(0, 255, 0, 0.3)",
+      minWidth: "120px",
     },
     activeButton: {
       backgroundColor: "#00ff00",
       color: "#000",
       boxShadow: "0 0 10px rgba(0, 255, 0, 0.5)",
     },
+    sortButton: {
+      backgroundColor: "#000",
+      color: "#00ff00",
+      border: "1px solid #00ff00",
+      padding: "8px 20px",
+      margin: "0 5px 5px 0",
+      cursor: "pointer",
+      fontFamily: "monospace",
+      fontSize: "16px",
+      transition: "all 0.3s ease",
+      minWidth: "120px",
+    },
+    activeSortButton: {
+      backgroundColor: "#00ff00",
+      color: "#000",
+      boxShadow: "0 0 10px rgba(0, 255, 0, 0.5)",
+    },
     storesContainer: {
       display: "grid",
-      gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+      gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
       gap: "20px",
       marginTop: "20px",
       width: "100%",
-      "@media (max-width: 600px)": {
+      "@media (max-width: 768px)": {
+        gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+        gap: "15px",
+      },
+      "@media (max-width: 480px)": {
         gridTemplateColumns: "repeat(2, 1fr)",
         gap: "10px",
-        padding: "0 10px",
       },
     },
     storeItem: {
@@ -243,6 +264,46 @@ export default function EggPriceTracker() {
       changePercent: 3.1,
       eggType: "REGULAR",
     },
+    {
+      id: "food4less-regular",
+      storeId: "food4less",
+      name: "FOOD 4 LESS",
+      price: 2.99,
+      date: "3/8/2025",
+      change: -0.15,
+      changePercent: -4.8,
+      eggType: "REGULAR",
+    },
+    {
+      id: "albertsons-regular",
+      storeId: "albertsons",
+      name: "ALBERTSONS",
+      price: 3.59,
+      date: "3/8/2025",
+      change: 0.05,
+      changePercent: 1.4,
+      eggType: "REGULAR",
+    },
+    {
+      id: "meijer-regular",
+      storeId: "meijer",
+      name: "MEIJER",
+      price: 3.19,
+      date: "3/8/2025",
+      change: -0.1,
+      changePercent: -3.0,
+      eggType: "REGULAR",
+    },
+    {
+      id: "heb-regular",
+      storeId: "heb",
+      name: "H-E-B",
+      price: 3.39,
+      date: "3/8/2025",
+      change: 0.0,
+      changePercent: 0.0,
+      eggType: "REGULAR",
+    },
 
     // Organic eggs
     {
@@ -355,6 +416,46 @@ export default function EggPriceTracker() {
       changePercent: 0.0,
       eggType: "ORGANIC",
     },
+    {
+      id: "food4less-organic",
+      storeId: "food4less",
+      name: "FOOD 4 LESS",
+      price: 5.29,
+      date: "3/8/2025",
+      change: -0.25,
+      changePercent: -4.5,
+      eggType: "ORGANIC",
+    },
+    {
+      id: "albertsons-organic",
+      storeId: "albertsons",
+      name: "ALBERTSONS",
+      price: 6.09,
+      date: "3/8/2025",
+      change: -0.2,
+      changePercent: -3.2,
+      eggType: "ORGANIC",
+    },
+    {
+      id: "meijer-organic",
+      storeId: "meijer",
+      name: "MEIJER",
+      price: 5.69,
+      date: "3/8/2025",
+      change: -0.15,
+      changePercent: -2.6,
+      eggType: "ORGANIC",
+    },
+    {
+      id: "heb-organic",
+      storeId: "heb",
+      name: "H-E-B",
+      price: 5.89,
+      date: "3/8/2025",
+      change: 0.0,
+      changePercent: 0.0,
+      eggType: "ORGANIC",
+    },
   ]
 
   // USDA historical price data for graph (1 year)
@@ -394,7 +495,8 @@ export default function EggPriceTracker() {
   const stores = storeData.filter((store) => store.eggType === eggType)
 
   // Filter and sort stores
-  const filteredStores = stores.filter((store) => store.name.toLowerCase().includes(""))
+  // No filtering by name - show all stores for the selected egg type
+  const filteredStores = stores
 
   const sortedStores = [...filteredStores].sort((a, b) => {
     if (sortBy === "PRICE") {
@@ -403,6 +505,12 @@ export default function EggPriceTracker() {
       return a.name.localeCompare(b.name)
     }
   })
+
+  // For debugging
+  console.log(
+    `Displaying ${sortedStores.length} ${eggType} egg stores:`,
+    sortedStores.map((s) => s.name),
+  )
 
   // Calculate average prices
   const regularEggs = storeData.filter((store) => store.eggType === "REGULAR")
@@ -418,7 +526,7 @@ export default function EggPriceTracker() {
     <div style={styles.container}>
       <div style={styles.section}>
         <h1 style={styles.header}>eggs.live</h1>
-        <h2 style={styles.subheader}>US EGG PRICES PER DOZEN</h2>
+        <h2 style={styles.subheader}>AVERAGE US EGG PRICES PER DOZEN</h2>
 
         <EggIndices regularPrice={regularAvgPrice} organicPrice={organicAvgPrice} />
       </div>
@@ -451,21 +559,21 @@ export default function EggPriceTracker() {
         <div style={styles.buttonContainer}>
           <button
             style={{
-              ...styles.button,
-              ...(sortBy === "STORE" ? styles.activeButton : {}),
+              ...styles.sortButton,
+              ...(sortBy === "STORE" ? styles.activeSortButton : {}),
             }}
             onClick={() => setSortBy("STORE")}
           >
-            STORE ▲
+            {sortBy === "STORE" ? "STORE ▼" : "STORE ▲"}
           </button>
           <button
             style={{
-              ...styles.button,
-              ...(sortBy === "PRICE" ? styles.activeButton : {}),
+              ...styles.sortButton,
+              ...(sortBy === "PRICE" ? styles.activeSortButton : {}),
             }}
             onClick={() => setSortBy("PRICE")}
           >
-            PRICE
+            {sortBy === "PRICE" ? "PRICE ▼" : "PRICE ▲"}
           </button>
         </div>
 
