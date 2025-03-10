@@ -44,12 +44,34 @@ export async function GET() {
       )
     `)
 
-    // Define stores
+    // Define all stores
     const stores = [
+      // Existing stores
       { id: "walmart", name: "Walmart", website: "https://www.walmart.com" },
       { id: "kroger", name: "Kroger", website: "https://www.kroger.com" },
       { id: "target", name: "Target", website: "https://www.target.com" },
       { id: "food4less", name: "Food 4 Less", website: "https://www.food4less.com" },
+      { id: "albertsons", name: "Albertsons", website: "https://www.albertsons.com" },
+      { id: "aldi", name: "Aldi", website: "https://www.aldi.us" },
+      { id: "costco", name: "Costco", website: "https://www.costco.com" },
+      { id: "heb", name: "HEB", website: "https://www.heb.com" },
+      { id: "meijer", name: "Meijer", website: "https://www.meijer.com" },
+      { id: "publix", name: "Publix", website: "https://www.publix.com" },
+      { id: "safeway", name: "Safeway", website: "https://www.safeway.com" },
+      { id: "sprouts", name: "Sprouts", website: "https://www.sprouts.com" },
+      { id: "traderjoes", name: "Trader Joe's", website: "https://www.traderjoes.com" },
+      { id: "wegmans", name: "Wegmans", website: "https://www.wegmans.com" },
+      { id: "wholefoods", name: "Whole Foods", website: "https://www.wholefoodsmarket.com" },
+
+      // Missing stores
+      { id: "erewhon", name: "Erewhon", website: "https://www.erewhonmarket.com" },
+      { id: "foodlion", name: "Food Lion", website: "https://www.foodlion.com" },
+      { id: "gianteagle", name: "Giant Eagle", website: "https://www.gianteagle.com" },
+      { id: "ralphs", name: "Ralphs", website: "https://www.ralphs.com" },
+      { id: "shoprite", name: "ShopRite", website: "https://www.shoprite.com" },
+      { id: "stopandshop", name: "Stop & Shop", website: "https://www.stopandshop.com" },
+      { id: "vons", name: "Vons", website: "https://www.vons.com" },
+      { id: "winndixie", name: "Winn-Dixie", website: "https://www.winndixie.com" },
     ]
 
     // Insert stores
@@ -74,21 +96,34 @@ export async function GET() {
       }
     }
 
-    // Add sample egg prices
+    // Add sample egg prices for today
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     const formattedDate = today.toISOString().split("T")[0]
 
-    const samplePrices = [
-      { storeId: "walmart", price: 3.49, date: formattedDate, eggType: "regular" },
-      { storeId: "walmart", price: 5.99, date: formattedDate, eggType: "organic" },
-      { storeId: "kroger", price: 3.79, date: formattedDate, eggType: "regular" },
-      { storeId: "kroger", price: 6.29, date: formattedDate, eggType: "organic" },
-      { storeId: "target", price: 3.99, date: formattedDate, eggType: "regular" },
-      { storeId: "target", price: 6.49, date: formattedDate, eggType: "organic" },
-      { storeId: "food4less", price: 3.29, date: formattedDate, eggType: "regular" },
-      { storeId: "food4less", price: 5.79, date: formattedDate, eggType: "organic" },
-    ]
+    // Sample prices for all stores
+    const samplePrices = []
+
+    // Generate sample prices for all stores
+    for (const store of stores) {
+      // Regular eggs (price between $2.79 and $4.49)
+      const regularPrice = (Math.random() * (4.49 - 2.79) + 2.79).toFixed(2)
+      samplePrices.push({
+        storeId: store.id,
+        price: Number.parseFloat(regularPrice),
+        date: formattedDate,
+        eggType: "regular",
+      })
+
+      // Organic eggs (price between $4.99 and $7.49)
+      const organicPrice = (Math.random() * (7.49 - 4.99) + 4.99).toFixed(2)
+      samplePrices.push({
+        storeId: store.id,
+        price: Number.parseFloat(organicPrice),
+        date: formattedDate,
+        eggType: "organic",
+      })
+    }
 
     // Insert egg prices
     const priceResults = []
