@@ -1,28 +1,31 @@
 import { NextResponse } from "next/server"
 import { Pool } from "pg"
 
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url)
+  const eggType = searchParams.get("eggType")
+
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
   })
 
   try {
-    // Get today's date at midnight
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const formattedDate = today.toISOString().split("T")[0]
-
-    // Fetch all prices for today with store information
-    const result = await pool.query(
-      `
-      SELECT ep.*, s.name as store_name, s.website as store_website
+    let query = `
+      SELECT ep.id, ep."storeId", ep.price, ep.date, ep."eggType", s.name as store_name, s.website as store_website
       FROM egg_prices ep
-      JOIN stores s ON ep.\"storeId\" = s.id
-      WHERE ep.date = $1
-      ORDER BY s.name ASC, ep.\"eggType\" ASC
-    `,
-      [formattedDate],
-    )
+      JOIN stores s ON ep."storeId" = s.id
+      WHERE s.id != 'costco' -- Exclude Costco
+    `
+
+    const params = []
+    if (eggType) {
+      query += ` AND ep."eggType" = $1`
+      params.push(eggType)
+    }
+
+    query += ` ORDER BY s.name ASC`
+
+    const result = await pool.query(query, params)
 
     await pool.end()
 
@@ -43,7 +46,7 @@ export async function GET() {
     return NextResponse.json(
       {
         success: false,
-        error: "Failed to fetch prices",
+        error: "Failed to fetch price data",
       },
       { status: 500 },
     )
