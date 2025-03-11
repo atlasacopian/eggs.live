@@ -1,98 +1,80 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import EggChart from "./egg-chart"
+import { useEffect, useState } from "react"
 
-interface DataPoint {
+interface PriceData {
   date: string
   price: number
+  storeCount: number
 }
 
 interface EggPriceChartProps {
-  historicalData: DataPoint[]
   eggType: string
 }
 
-export default function EggPriceChart({ historicalData, eggType }: EggPriceChartProps) {
-  const [chartType, setChartType] = useState(eggType)
+export function EggPriceChart({ eggType }: EggPriceChartProps) {
+  const [priceData, setPriceData] = useState<PriceData[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // Update chart type when eggType prop changes
   useEffect(() => {
-    setChartType(eggType)
+    async function fetchHistoricalPrices() {
+      try {
+        setLoading(true)
+        const response = await fetch(`/api/historical-prices?eggType=${eggType}`)
+        const data = await response.json()
+
+        if (!data.success) {
+          throw new Error(data.error || "Failed to fetch historical prices")
+        }
+
+        setPriceData(data.prices || [])
+        setError(null)
+      } catch (err) {
+        console.error("Error fetching historical prices:", err)
+        setError("Failed to load historical price data")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchHistoricalPrices()
   }, [eggType])
 
-  const styles = {
-    section: {
-      marginBottom: "40px",
-    },
-    header: {
-      fontSize: "36px",
-      marginBottom: "15px",
-      fontWeight: "normal" as const,
-      textShadow: "0 0 5px rgba(0, 255, 0, 0.5)",
-    },
-    subtitle: {
-      fontSize: "16px",
-      marginBottom: "20px",
-      opacity: "0.8",
-    },
-    buttonContainer: {
-      display: "flex",
-      justifyContent: "center",
-      flexWrap: "wrap" as const,
-      marginBottom: "15px",
-    },
-    button: {
-      backgroundColor: "#000",
-      color: "#00ff00",
-      border: "1px solid #00ff00",
-      padding: "8px 20px",
-      margin: "0 5px 5px 0",
-      cursor: "pointer",
-      fontFamily: "monospace",
-      fontSize: "16px",
-    },
-    activeButton: {
-      backgroundColor: "#00ff00",
-      color: "#000",
-    },
+  if (loading) {
+    return <div className="flex justify-center items-center h-64">Loading price history...</div>
   }
 
-  const displayType = chartType.charAt(0).toUpperCase() + chartType.slice(1)
+  if (error) {
+    return <div className="flex justify-center items-center h-64 text-red-500">{error}</div>
+  }
 
+  if (priceData.length === 0) {
+    return <div className="flex justify-center items-center h-64">No historical price data available</div>
+  }
+
+  // For simplicity, we'll just show the data as a table
+  // In a real app, you'd want to use a charting library like Chart.js or Recharts
   return (
-    <div style={styles.section}>
-      <h2 style={styles.header}>US PRICE HISTORY (1 YEAR)</h2>
-      <div style={styles.subtitle}>AVERAGE PRICE PER DOZEN EGGS</div>
-
-      <div style={styles.buttonContainer}>
-        <button
-          style={{
-            ...styles.button,
-            ...(chartType === "regular" ? styles.activeButton : {}),
-          }}
-          onClick={() => setChartType("regular")}
-        >
-          REGULAR
-        </button>
-        <button
-          style={{
-            ...styles.button,
-            ...(chartType === "organic" ? styles.activeButton : {}),
-          }}
-          onClick={() => setChartType("organic")}
-        >
-          ORGANIC
-        </button>
-      </div>
-
-      {historicalData.length > 0 ? (
-        <EggChart data={historicalData} dataSource="USDA Agricultural Marketing Service" />
-      ) : (
-        <div style={{ fontSize: "18px", margin: "40px 0", color: "#00ff00" }}>
-          NO HISTORICAL DATA AVAILABLE FOR {displayType.toUpperCase()} EGGS
-        </div>
-      )}
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b">
+            <th className="text-left py-2">Date</th>
+            <th className="text-right py-2">Price</th>
+            <th className="text-right py-2">Stores</th>
+          </tr>
+        </thead>
+        <tbody>
+          {priceData.map((item, index) => (
+            <tr key={index} className="border-b">
+              <td className="py-2">{new Date(item.date).toLocaleDateString()}</td>
+              <td className="text-right py-2">${item.price.toFixed(2)}</td>
+              <td className="text-right py-2">{item.storeCount}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   )
 }
