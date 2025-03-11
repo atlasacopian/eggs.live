@@ -1,8 +1,8 @@
 import { scrapeStore, savePrices } from "./egg-scraper"
 import { Pool } from "pg"
 
-export async function runDailyScraping() {
-  console.log("Starting daily egg price scraping...")
+export async function scrapeAllStores() {
+  console.log("Starting egg price scraping for all stores...")
 
   // Define all stores to scrape
   const stores = [
@@ -74,7 +74,7 @@ export async function runDailyScraping() {
   // Calculate and store average prices
   await calculateAveragePrices()
 
-  console.log(`Daily scraping completed. Successful: ${successCount}/${stores.length}`)
+  console.log(`Scraping completed. Successful: ${successCount}/${stores.length}`)
 
   return {
     success: true,
@@ -82,6 +82,10 @@ export async function runDailyScraping() {
     totalStores: stores.length,
     results,
   }
+}
+
+export async function runDailyScraping() {
+  return await scrapeAllStores()
 }
 
 async function calculateAveragePrices() {
