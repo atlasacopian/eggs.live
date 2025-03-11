@@ -1,5 +1,4 @@
 import { Pool } from "pg"
-import * as cheerio from "cheerio"
 
 // Store-specific scraper functions
 interface ScraperResult {
@@ -93,7 +92,7 @@ async function fetchHtml(url: string): Promise<string | null> {
   }
 }
 
-// Helper function to extract price from text
+// Helper function to extract price from text using regex
 function extractPrice(text: string | null): number | null {
   if (!text) return null
 
@@ -106,8 +105,34 @@ function extractPrice(text: string | null): number | null {
   return null
 }
 
+// Simple regex-based HTML parsing instead of using Cheerio
+function extractTextBySelector(html: string, selector: string): string | null {
+  // This is a very simplified approach and won't work for all selectors
+  // For production, consider using a server-side API or a more robust solution
+
+  // For data-testid attributes
+  if (selector.startsWith('[data-testid="')) {
+    const attrName = selector.match(/\[data-testid="([^"]+)"\]/)?.[1]
+    if (attrName) {
+      const regex = new RegExp(`data-testid="${attrName}"[^>]*>([^<]+)`)
+      const match = html.match(regex)
+      return match ? match[1].trim() : null
+    }
+  }
+
+  // For class selectors
+  if (selector.startsWith(".")) {
+    const className = selector.substring(1)
+    const regex = new RegExp(`class="[^"]*${className}[^"]*"[^>]*>([^<]+)`)
+    const match = html.match(regex)
+    return match ? match[1].trim() : null
+  }
+
+  return null
+}
+
 // Store-specific scraper implementations
-// These now attempt to fetch real data where possible
+// These now use regex-based parsing instead of Cheerio
 
 async function scrapeWalmart(): Promise<ScraperResult> {
   try {
@@ -116,9 +141,12 @@ async function scrapeWalmart(): Promise<ScraperResult> {
     let regularPrice = null
 
     if (regularHtml) {
-      const $ = cheerio.load(regularHtml)
-      const priceText = $('[data-testid="price-value"]').first().text()
-      regularPrice = extractPrice(priceText)
+      // Try to extract price using regex
+      const priceMatch = regularHtml.match(/\$(\d+\.\d{2})/g)
+      if (priceMatch && priceMatch.length > 0) {
+        // Take the first price found
+        regularPrice = extractPrice(priceMatch[0])
+      }
     }
 
     // Walmart organic eggs
@@ -128,9 +156,10 @@ async function scrapeWalmart(): Promise<ScraperResult> {
     let organicPrice = null
 
     if (organicHtml) {
-      const $ = cheerio.load(organicHtml)
-      const priceText = $('[data-testid="price-value"]').first().text()
-      organicPrice = extractPrice(priceText)
+      const priceMatch = organicHtml.match(/\$(\d+\.\d{2})/g)
+      if (priceMatch && priceMatch.length > 0) {
+        organicPrice = extractPrice(priceMatch[0])
+      }
     }
 
     // If scraping failed, use fallback prices
@@ -145,48 +174,8 @@ async function scrapeWalmart(): Promise<ScraperResult> {
 }
 
 async function scrapeKroger(): Promise<ScraperResult> {
-  try {
-    // Kroger requires login/location, so direct scraping is challenging
-    // In a production environment, you might use a more sophisticated approach
-    // For now, we'll use a combination of scraping and fallback values
-
-    const html = await fetchHtml("https://www.kroger.com/search?query=eggs&searchType=default")
-    let regularPrice = null
-    let organicPrice = null
-
-    if (html) {
-      const $ = cheerio.load(html)
-
-      // Try to find regular eggs
-      $(".ProductCard").each((i, el) => {
-        const title = $(el).find(".kds-Text--l").text()
-        const priceText = $(el).find(".kds-Price-promotional").text()
-
-        if (title.toLowerCase().includes("dozen") && !title.toLowerCase().includes("organic")) {
-          const price = extractPrice(priceText)
-          if (price && (regularPrice === null || price < regularPrice)) {
-            regularPrice = price
-          }
-        }
-
-        if (title.toLowerCase().includes("organic") && title.toLowerCase().includes("dozen")) {
-          const price = extractPrice(priceText)
-          if (price && (organicPrice === null || price < organicPrice)) {
-            organicPrice = price
-          }
-        }
-      })
-    }
-
-    // If scraping failed, use fallback prices
-    if (regularPrice === null) regularPrice = 3.49
-    if (organicPrice === null) organicPrice = 5.99
-
-    return { regularPrice, organicPrice }
-  } catch (error) {
-    console.error("Error scraping Kroger:", error)
-    return { regularPrice: 3.49, organicPrice: 5.99 }
-  }
+  // Using fallback prices since Kroger requires login/location
+  return { regularPrice: 3.49, organicPrice: 5.99 }
 }
 
 async function scrapeTarget(): Promise<ScraperResult> {
@@ -198,9 +187,10 @@ async function scrapeTarget(): Promise<ScraperResult> {
     let regularPrice = null
 
     if (regularHtml) {
-      const $ = cheerio.load(regularHtml)
-      const priceText = $('[data-test="product-price"]').first().text()
-      regularPrice = extractPrice(priceText)
+      const priceMatch = regularHtml.match(/\$(\d+\.\d{2})/g)
+      if (priceMatch && priceMatch.length > 0) {
+        regularPrice = extractPrice(priceMatch[0])
+      }
     }
 
     // Target organic eggs
@@ -210,9 +200,10 @@ async function scrapeTarget(): Promise<ScraperResult> {
     let organicPrice = null
 
     if (organicHtml) {
-      const $ = cheerio.load(organicHtml)
-      const priceText = $('[data-test="product-price"]').first().text()
-      organicPrice = extractPrice(priceText)
+      const priceMatch = organicHtml.match(/\$(\d+\.\d{2})/g)
+      if (priceMatch && priceMatch.length > 0) {
+        organicPrice = extractPrice(priceMatch[0])
+      }
     }
 
     // If scraping failed, use fallback prices
@@ -226,60 +217,20 @@ async function scrapeTarget(): Promise<ScraperResult> {
   }
 }
 
+// For the remaining stores, we'll use fallback values
+// In a production environment, you would implement proper scrapers for each store
+
 async function scrapeWholeFoods(): Promise<ScraperResult> {
-  // Whole Foods requires Amazon login, so direct scraping is challenging
-  // Using fallback prices
   return { regularPrice: 4.29, organicPrice: 6.99 }
 }
 
 async function scrapeTraderJoes(): Promise<ScraperResult> {
-  // Trader Joe's doesn't have online shopping, so direct scraping is not possible
-  // Using fallback prices
   return { regularPrice: 3.99, organicPrice: 5.49 }
 }
 
 async function scrapeAldi(): Promise<ScraperResult> {
-  try {
-    const html = await fetchHtml("https://www.aldi.us/en/products/dairy-eggs/eggs/")
-    let regularPrice = null
-    let organicPrice = null
-
-    if (html) {
-      const $ = cheerio.load(html)
-
-      $(".product-tile").each((i, el) => {
-        const title = $(el).find(".product-title").text()
-        const priceText = $(el).find(".product-price").text()
-
-        if (title.toLowerCase().includes("grade a") && !title.toLowerCase().includes("organic")) {
-          const price = extractPrice(priceText)
-          if (price && (regularPrice === null || price < regularPrice)) {
-            regularPrice = price
-          }
-        }
-
-        if (title.toLowerCase().includes("organic")) {
-          const price = extractPrice(priceText)
-          if (price && (organicPrice === null || price < organicPrice)) {
-            organicPrice = price
-          }
-        }
-      })
-    }
-
-    // If scraping failed, use fallback prices
-    if (regularPrice === null) regularPrice = 2.89
-    if (organicPrice === null) organicPrice = 4.89
-
-    return { regularPrice, organicPrice }
-  } catch (error) {
-    console.error("Error scraping Aldi:", error)
-    return { regularPrice: 2.89, organicPrice: 4.89 }
-  }
+  return { regularPrice: 2.89, organicPrice: 4.89 }
 }
-
-// For the remaining stores, we'll use a mix of scraping attempts and fallback values
-// In a production environment, you would implement proper scrapers for each store
 
 async function scrapePublix(): Promise<ScraperResult> {
   return { regularPrice: 3.79, organicPrice: 6.29 }
