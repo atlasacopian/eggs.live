@@ -1,84 +1,70 @@
 "use client"
 
-import { Card, CardContent } from "@/components/ui/card"
-import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
-import { useEggPriceHistory } from "@/hooks/use-egg-price-history"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
-export function PriceHistory() {
-  const [selectedStore, setSelectedStore] = useState("kroger")
-  const { history, isLoading } = useEggPriceHistory(selectedStore)
+interface PriceHistoryData {
+  date: string
+  price: number
+  storeCount: number
+}
 
-  const stores = [
-    { id: "kroger", name: "Kroger" },
-    { id: "wholeFoods", name: "Whole Foods" },
-    { id: "walmart", name: "Walmart" },
-  ]
+export default function PriceHistory({ eggType = "regular" }: { eggType?: "regular" | "organic" }) {
+  const [history, setHistory] = useState<PriceHistoryData[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const getStoreColor = (storeId) => {
-    const colors = {
-      kroger: "#0073e6",
-      wholeFoods: "#00674b",
-      walmart: "#0071dc",
+  useEffect(() => {
+    async function fetchHistory() {
+      try {
+        setLoading(true)
+        const response = await fetch(`/api/historical-prices?eggType=${eggType}`)
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch price history")
+        }
+
+        const data = await response.json()
+        setHistory(data.history || [])
+      } catch (err) {
+        console.error("Error fetching price history:", err)
+        setError("Failed to load price history")
+      } finally {
+        setLoading(false)
+      }
     }
-    return colors[storeId] || "#888888"
-  }
 
-  if (isLoading) {
-    return <p>Loading price history...</p>
-  }
+    fetchHistory()
+  }, [eggType])
+
+  if (loading) return <p>Loading price history...</p>
+  if (error) return <p className="text-red-500">{error}</p>
+  if (history.length === 0) return <p>No price history available.</p>
 
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="font-medium">30-Day Price Trend</h3>
-          <Select value={selectedStore} onValueChange={setSelectedStore}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select store" />
-            </SelectTrigger>
-            <SelectContent>
-              {stores.map((store) => (
-                <SelectItem key={store.id} value={store.id}>
-                  {store.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="h-[250px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={history} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-              <XAxis
-                dataKey="date"
-                tickFormatter={(date) => new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                tick={{ fontSize: 12 }}
-              />
-              <YAxis
-                tickFormatter={(value) => `$${value.toFixed(2)}`}
-                domain={["dataMin - 0.2", "dataMax + 0.2"]}
-                tick={{ fontSize: 12 }}
-              />
-              <Tooltip
-                formatter={(value) => [`$${value.toFixed(2)}`, "Price"]}
-                labelFormatter={(value) =>
-                  new Date(value).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
-                }
-              />
-              <Line
-                type="monotone"
-                dataKey="price"
-                stroke={getStoreColor(selectedStore)}
-                strokeWidth={2}
-                dot={{ r: 4 }}
-                activeDot={{ r: 6 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="mb-8">
+      <h2 className="text-2xl font-bold mb-4">Price History</h2>
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Date</TableHead>
+              <TableHead>Price</TableHead>
+              <TableHead>Stores</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {history.map((item, index) => (
+              <TableRow key={index}>
+                <TableCell>{new Date(item.date).toLocaleDateString()}</TableCell>
+                <TableCell>${item.price.toFixed(2)}</TableCell>
+                <TableCell>{item.storeCount}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
   )
 }
 
