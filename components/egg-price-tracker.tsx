@@ -674,6 +674,22 @@ export default function EggPriceTracker() {
     },
   ]
 
+  // Search for any Costco entries in the placeholderStoreData array
+  // and remove them if found
+  const costcoRegularIndex = placeholderStoreData.findIndex(
+    (item) => item.storeId === "costco" && item.eggType === "REGULAR",
+  )
+  if (costcoRegularIndex !== -1) {
+    placeholderStoreData.splice(costcoRegularIndex, 1)
+  }
+
+  const costcoOrganicIndex = placeholderStoreData.findIndex(
+    (item) => item.storeId === "costco" && item.eggType === "ORGANIC",
+  )
+  if (costcoOrganicIndex !== -1) {
+    placeholderStoreData.splice(costcoOrganicIndex, 1)
+  }
+
   // USDA historical price data for graph (1 year)
   const regularHistoricalData = [
     { date: "3/10/2024", price: 2.93 },
