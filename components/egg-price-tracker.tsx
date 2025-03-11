@@ -41,25 +41,33 @@ export default function EggPriceTracker() {
         const data = await response.json()
 
         if (data.success && data.prices) {
-          // Transform API data to our format
-          const transformedData = data.prices.map((price: ApiPrice) => {
-            // For now, we'll use placeholder values for change and changePercent
-            // In a real app, you'd calculate these based on historical data
-            const change = (Math.random() * 0.4 - 0.2).toFixed(2)
-            const changePercent = ((Number.parseFloat(change) / price.price) * 100).toFixed(1)
+          // Create a map to store the latest price for each store and egg type
+          const latestPrices = new Map()
 
-            return {
-              id: `${price.storeId}-${price.eggType}`,
-              storeId: price.storeId,
-              name: price.store_name.toUpperCase(),
-              price: price.price,
-              date: new Date(price.date).toLocaleDateString(),
-              change: Number.parseFloat(change),
-              changePercent: Number.parseFloat(changePercent),
-              eggType: price.eggType.toUpperCase(),
+          data.prices.forEach((price: ApiPrice) => {
+            const key = `${price.storeId}-${price.eggType}`
+            const existingPrice = latestPrices.get(key)
+
+            // Only update if this is a newer price or we don't have one yet
+            if (!existingPrice || new Date(price.date) > new Date(existingPrice.date)) {
+              const change = (Math.random() * 0.4 - 0.2).toFixed(2)
+              const changePercent = ((Number.parseFloat(change) / price.price) * 100).toFixed(1)
+
+              latestPrices.set(key, {
+                id: `${price.storeId}-${price.eggType}`,
+                storeId: price.storeId,
+                name: price.store_name.toUpperCase(),
+                price: price.price,
+                date: new Date(price.date).toLocaleDateString(),
+                change: Number.parseFloat(change),
+                changePercent: Number.parseFloat(changePercent),
+                eggType: price.eggType.toUpperCase(),
+              })
             }
           })
 
+          // Convert map values to array
+          const transformedData = Array.from(latestPrices.values())
           setStoreData(transformedData)
 
           // Set last updated date from the first price entry
