@@ -1,30 +1,25 @@
 import type React from "react"
+import "@/app/globals.css"
+import { ThemeProvider } from "@/components/theme-provider"
+import { Inter, JetBrains_Mono } from "next/font/google"
+
+const inter = Inter({ subsets: ["latin"] })
+const mono = JetBrains_Mono({ subsets: ["latin"] })
+
+export const metadata = {
+  title: "eggs.live",
+  description: "Track egg prices across the US and in Echo Park, Los Angeles",
+}
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <head>
-        <link
-          rel="icon"
-          href="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/EGG-zmK9uDISD4eBHGN1PrwHXmqZ4A19y5.png"
-          type="image/png"
-          sizes="32x32"
-        />
-      </head>
-      <body
-        style={{
-          margin: 0,
-          padding: 0,
-          backgroundColor: "#000",
-          minHeight: "100vh",
-          width: "100%",
-          overflowX: "hidden",
-        }}
-      >
-        {children}
+    <html lang="en" suppressHydrationWarning>
+      <body className={mono.className}>
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   )
