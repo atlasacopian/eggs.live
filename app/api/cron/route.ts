@@ -1,37 +1,29 @@
-import { NextResponse } from "next/server";
-import { scheduleDailyScraping } from "@/lib/scrapers/daily-scraping";
+import { NextResponse } from "next/server"
+import { scrapeAllStores } from "@/lib/scrapers/daily-scraping"
 
 export async function GET(request: Request) {
+  // Check for authorization header
+  const authHeader = request.headers.get("authorization")
+
+  if (!authHeader || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 })
+  }
+
   try {
-    const { searchParams } = new URL(request.url);
-    const apiKey = searchParams.get("key");
+    // Run the scraper for all stores
+    const result = await scrapeAllStores()
 
-    // Verify API key
-    if (apiKey !== process.env.SCRAPER_API_KEY_2) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Run the daily scraping
-    const result = await scheduleDailyScraping();
-
-    return NextResponse.json({
-      success: true,
-      message: "Cron job completed successfully",
-      result,
-    });
+    return NextResponse.json(result)
   } catch (error) {
-    console.error("Cron job error:", error);
+    console.error("Cron job error:", error)
+
     return NextResponse.json(
       {
         success: false,
-        error: "Failed to run cron job",
+        error: error instanceof Error ? error.message : String(error),
       },
-      { status: 500 }
-    );
+      { status: 500 },
+    )
   }
 }
 
-// Add POST method to allow webhook access
-export async function POST(request: Request) {
-  return GET(request);
-}
