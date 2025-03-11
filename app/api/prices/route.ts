@@ -11,11 +11,13 @@ export async function GET(request: Request) {
 
   try {
     let query = `
-      SELECT ep.id, ep."storeId", ep.price, ep.date, ep."eggType", s.name as store_name, s.website as store_website
-      FROM egg_prices ep
-      JOIN stores s ON ep."storeId" = s.id
-      WHERE s.id != 'costco' -- Exclude Costco
-    `
+    SELECT ep.id, ep."storeId", ep.price, ep.date, ep."eggType", s.name as store_name, s.website as store_website
+    FROM egg_prices ep
+    JOIN stores s ON ep."storeId" = s.id
+    WHERE s.id != 'costco' -- Exclude Costco
+    AND s.name NOT LIKE '%TEST%' -- Exclude test entries
+    AND s.name NOT LIKE '%test%'
+  `
 
     const params = []
     if (eggType) {
