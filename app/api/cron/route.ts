@@ -10,10 +10,13 @@ export async function GET(request: Request) {
   }
 
   try {
-    // Run the scraper for all stores
     const result = await scrapeAllStores()
 
-    return NextResponse.json(result)
+    return NextResponse.json({
+      success: true,
+      message: "Cron job completed successfully",
+      ...result,
+    })
   } catch (error) {
     console.error("Cron job error:", error)
 
