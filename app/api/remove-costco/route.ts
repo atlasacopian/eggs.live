@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
 import { Pool } from "pg"
 
-export async function GET() {
+// Change from GET to POST since we're modifying data
+export async function POST(request: Request) {
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
   })
@@ -11,38 +12,38 @@ export async function GET() {
 
     // First, delete any egg prices associated with Costco
     const deleteEggPricesResult = await pool.query(`
-      DELETE FROM egg_prices
-      WHERE "storeId" = 'costco'
-    `)
+    DELETE FROM egg_prices
+    WHERE "storeId" = 'costco'
+  `)
 
     console.log(`Deleted ${deleteEggPricesResult.rowCount} egg price records for Costco`)
 
     // Then, delete the Costco store entry
     const deleteStoreResult = await pool.query(`
-      DELETE FROM stores
-      WHERE id = 'costco'
-    `)
+    DELETE FROM stores
+    WHERE id = 'costco'
+  `)
 
     console.log(`Deleted ${deleteStoreResult.rowCount} store records for Costco`)
 
     // Recalculate average prices after removing Costco
     const recalculateAverages = await pool.query(`
-      WITH avg_data AS (
-        SELECT 
-          date, 
-          "eggType", 
-          AVG(price) as avg_price,
-          COUNT(*) as store_count
-        FROM egg_prices
-        GROUP BY date, "eggType"
-      )
-      UPDATE average_prices ap
-      SET 
-        price = ad.avg_price,
-        "storeCount" = ad.store_count
-      FROM avg_data ad
-      WHERE ap.date = ad.date AND ap."eggType" = ad."eggType"
-    `)
+    WITH avg_data AS (
+      SELECT 
+        date, 
+        "eggType", 
+        AVG(price) as avg_price,
+        COUNT(*) as store_count
+      FROM egg_prices
+      GROUP BY date, "eggType"
+    )
+    UPDATE average_prices ap
+    SET 
+      price = ad.avg_price,
+      "storeCount" = ad.store_count
+    FROM avg_data ad
+    WHERE ap.date = ad.date AND ap."eggType" = ad."eggType"
+  `)
 
     console.log(`Recalculated ${recalculateAverages.rowCount} average price records`)
 
