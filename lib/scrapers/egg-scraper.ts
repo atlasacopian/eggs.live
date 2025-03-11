@@ -90,15 +90,6 @@ async function targetScraper(): Promise<{ regularPrice: number | null; organicPr
   }
 }
 
-async function traderjoesScraper(): Promise<{ regularPrice: number | null; organicPrice: number | null }> {
-  // Placeholder logic - replace with actual scraping
-  console.log("Running Trader Joe's scraper...")
-  return {
-    regularPrice: Math.random() * 5 + 2,
-    organicPrice: Math.random() * 8 + 4,
-  }
-}
-
 async function walmartScraper(): Promise<{ regularPrice: number | null; organicPrice: number | null }> {
   // Placeholder logic - replace with actual scraping
   console.log("Running Walmart scraper...")
@@ -129,8 +120,8 @@ async function wholefoodsScraper(): Promise<{ regularPrice: number | null; organ
 async function erewhonScraper(): Promise<{ regularPrice: number | null; organicPrice: number | null }> {
   console.log("Running Erewhon scraper...")
   return {
-    regularPrice: Math.random() * 5 + 2,
-    organicPrice: Math.random() * 8 + 4,
+    regularPrice: Math.random() * 5 + 4, // Higher base price for Erewhon
+    organicPrice: Math.random() * 8 + 8, // Higher organic price for Erewhon
   }
 }
 
@@ -206,6 +197,14 @@ async function harristeeterScraper(): Promise<{ regularPrice: number | null; org
   }
 }
 
+async function smartfinalScraper(): Promise<{ regularPrice: number | null; organicPrice: number | null }> {
+  console.log("Running Smart & Final scraper...")
+  return {
+    regularPrice: Math.random() * 4 + 2.5, // Slightly lower price range
+    organicPrice: Math.random() * 6 + 5, // Slightly lower organic price range
+  }
+}
+
 const scrapers: { [key: string]: () => Promise<{ regularPrice: number | null; organicPrice: number | null }> } = {
   albertsons: albertsonsScraper,
   aldi: aldiScraper,
@@ -217,7 +216,6 @@ const scrapers: { [key: string]: () => Promise<{ regularPrice: number | null; or
   safeway: safewayScraper,
   sprouts: sproutsScraper,
   target: targetScraper,
-  traderjoes: traderjoesScraper,
   walmart: walmartScraper,
   wegmans: wegmansScraper,
   wholefoods: wholefoodsScraper,
@@ -231,6 +229,7 @@ const scrapers: { [key: string]: () => Promise<{ regularPrice: number | null; or
   winndixie: winndixieScraper,
   weismarkets: weismarketsScraper,
   harristeeter: harristeeterScraper,
+  smartfinal: smartfinalScraper, // Added Smart & Final scraper
 }
 
 export async function scrapeStore(
@@ -272,9 +271,9 @@ export async function savePrices(
       const regularId = `${storeId}-${formattedDate}-regular`
       await pool.query(
         `INSERT INTO egg_prices (id, "storeId", price, date, "eggType") 
-         VALUES ($1, $2, $3, $4, $5) 
-         ON CONFLICT ("storeId", date, "eggType") DO UPDATE 
-         SET price = $3`,
+       VALUES ($1, $2, $3, $4, $5) 
+       ON CONFLICT ("storeId", date, "eggType") DO UPDATE 
+       SET price = $3`,
         [regularId, storeId, regularPrice, formattedDate, "regular"],
       )
     } else {
@@ -283,9 +282,9 @@ export async function savePrices(
       const regularId = `${storeId}-${formattedDate}-regular`
       await pool.query(
         `INSERT INTO egg_prices (id, "storeId", price, date, "eggType") 
-         VALUES ($1, $2, NULL, $3, $4) 
-         ON CONFLICT ("storeId", date, "eggType") DO UPDATE 
-         SET price = NULL`,
+       VALUES ($1, $2, NULL, $3, $4) 
+       ON CONFLICT ("storeId", date, "eggType") DO UPDATE 
+       SET price = NULL`,
         [regularId, storeId, formattedDate, "regular"],
       )
     }
@@ -294,9 +293,9 @@ export async function savePrices(
       const organicId = `${storeId}-${formattedDate}-organic`
       await pool.query(
         `INSERT INTO egg_prices (id, "storeId", price, date, "eggType") 
-         VALUES ($1, $2, $3, $4, $5) 
-         ON CONFLICT ("storeId", date, "eggType") DO UPDATE 
-         SET price = $3`,
+       VALUES ($1, $2, $3, $4, $5) 
+       ON CONFLICT ("storeId", date, "eggType") DO UPDATE 
+       SET price = $3`,
         [organicId, storeId, organicPrice, formattedDate, "organic"],
       )
     } else {
@@ -305,9 +304,9 @@ export async function savePrices(
       const organicId = `${storeId}-${formattedDate}-organic`
       await pool.query(
         `INSERT INTO egg_prices (id, "storeId", price, date, "eggType") 
-         VALUES ($1, $2, NULL, $3, $4) 
-         ON CONFLICT ("storeId", date, "eggType") DO UPDATE 
-         SET price = NULL`,
+       VALUES ($1, $2, NULL, $3, $4) 
+       ON CONFLICT ("storeId", date, "eggType") DO UPDATE 
+       SET price = NULL`,
         [organicId, storeId, formattedDate, "organic"],
       )
     }
