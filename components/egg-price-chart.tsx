@@ -42,33 +42,33 @@ export function EggPriceChart({ eggType }: EggPriceChartProps) {
   }, [eggType])
 
   if (loading) {
-    return <div className="flex justify-center items-center h-64 text-gray-500">Loading price history...</div>
+    return <div className="flex justify-center items-center h-48 text-gray-500">Loading price history...</div>
   }
 
   if (error) {
-    return <div className="flex justify-center items-center h-64 text-red-500">{error}</div>
+    return <div className="flex justify-center items-center h-48 text-red-500">{error}</div>
   }
 
   if (priceData.length === 0) {
-    return <div className="flex justify-center items-center h-64 text-gray-500">No historical price data available</div>
+    return <div className="flex justify-center items-center h-48 text-gray-500">No historical price data available</div>
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full">
+    <div className="overflow-hidden rounded-lg border">
+      <table className="w-full border-collapse text-sm">
         <thead>
-          <tr className="border-b">
-            <th className="text-left py-3 font-medium">Date</th>
-            <th className="text-right py-3 font-medium">Price</th>
-            <th className="text-right py-3 font-medium">Stores</th>
+          <tr className="bg-gray-50 border-b">
+            <th className="px-4 py-3 text-left font-medium text-gray-500">Date</th>
+            <th className="px-4 py-3 text-right font-medium text-gray-500">Price</th>
+            <th className="px-4 py-3 text-right font-medium text-gray-500">Stores</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y">
           {priceData.map((item, index) => (
-            <tr key={index} className="border-b">
-              <td className="py-3">{new Date(item.date).toLocaleDateString()}</td>
-              <td className="text-right py-3 font-mono">${item.price.toFixed(2)}</td>
-              <td className="text-right py-3">{item.storeCount}</td>
+            <tr key={index} className="hover:bg-gray-50">
+              <td className="px-4 py-3">{new Date(item.date).toLocaleDateString()}</td>
+              <td className="px-4 py-3 text-right font-mono">${item.price.toFixed(2)}</td>
+              <td className="px-4 py-3 text-right">{item.storeCount}</td>
             </tr>
           ))}
         </tbody>
