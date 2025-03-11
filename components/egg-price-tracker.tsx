@@ -8,7 +8,7 @@ interface Store {
   id: string
   storeId: string
   name: string
-  price: number
+  price: number | null
   date: string
   change: number
   changePercent: number
@@ -18,7 +18,7 @@ interface Store {
 interface ApiPrice {
   id: string
   storeId: string
-  price: number
+  price: number | null
   date: string
   eggType: string
   store_name: string
@@ -50,7 +50,7 @@ export default function EggPriceTracker() {
             // Only update if this is a newer price or we don't have one yet
             if (!existingPrice || new Date(price.date) > new Date(existingPrice.date)) {
               const change = (Math.random() * 0.4 - 0.2).toFixed(2)
-              const changePercent = ((Number.parseFloat(change) / price.price) * 100).toFixed(1)
+              const changePercent = price.price ? ((Number.parseFloat(change) / price.price) * 100).toFixed(1) : "0.0"
 
               latestPrices.set(key, {
                 id: `${price.storeId}-${price.eggType}`,
@@ -162,6 +162,11 @@ export default function EggPriceTracker() {
       fontSize: "32px",
       marginBottom: "10px",
       textShadow: "0 0 10px rgba(0, 255, 0, 0.5)",
+    },
+    noData: {
+      fontSize: "24px",
+      color: "#ff0000",
+      marginBottom: "10px",
     },
     updateInfo: {
       fontSize: "14px",
@@ -745,16 +750,31 @@ export default function EggPriceTracker() {
   // Filter and sort stores by price (highest to lowest)
   const filteredStores = stores.filter((store) => store.name.toLowerCase().includes(""))
 
-  const sortedStores = [...filteredStores].sort((a, b) => b.price - a.price)
+  // Sort stores by price (highest to lowest), handling null prices
+  const sortedStores = [...filteredStores].sort((a, b) => {
+    // If both prices are null, sort by name
+    if (a.price === null && b.price === null) {
+      return a.name.localeCompare(b.name)
+    }
 
-  // Calculate average prices
-  const regularEggs = storeData.filter((store) => store.eggType === "REGULAR")
-  const organicEggs = storeData.filter((store) => store.eggType === "ORGANIC")
+    // If only a's price is null, put it at the end
+    if (a.price === null) return 1
+
+    // If only b's price is null, put it at the end
+    if (b.price === null) return -1
+
+    // Otherwise sort by price (highest to lowest)
+    return b.price - a.price
+  })
+
+  // Calculate average prices (excluding null prices)
+  const regularEggs = storeData.filter((store) => store.eggType === "REGULAR" && store.price !== null)
+  const organicEggs = storeData.filter((store) => store.eggType === "ORGANIC" && store.price !== null)
 
   const regularAvgPrice =
-    regularEggs.length > 0 ? regularEggs.reduce((sum, store) => sum + store.price, 0) / regularEggs.length : 0
+    regularEggs.length > 0 ? regularEggs.reduce((sum, store) => sum + (store.price || 0), 0) / regularEggs.length : 0
   const organicAvgPrice =
-    organicEggs.length > 0 ? organicEggs.reduce((sum, store) => sum + store.price, 0) / organicEggs.length : 0
+    organicEggs.length > 0 ? organicEggs.reduce((sum, store) => sum + (store.price || 0), 0) / organicEggs.length : 0
 
   // Get the correct historical data based on egg type
   const historicalData = eggType === "REGULAR" ? regularHistoricalData : organicHistoricalData
@@ -802,26 +822,33 @@ export default function EggPriceTracker() {
             {sortedStores.map((store) => (
               <div key={store.id} style={styles.storeItem}>
                 <div style={styles.storeName}>{store.name}</div>
-                <div style={styles.storePrice}>${store.price.toFixed(2)}</div>
-                <div style={styles.priceChange}>
-                  <span
-                    style={{
-                      ...styles.priceChangeArrow,
-                      color: store.change >= 0 ? "#00ff00" : "#ff0000",
-                    }}
-                  >
-                    {store.change >= 0 ? "↑" : "↓"}
-                  </span>
-                  <span
-                    style={{
-                      color: store.change >= 0 ? "#00ff00" : "#ff0000",
-                    }}
-                  >
-                    {store.change >= 0 ? "+" : ""}
-                    {store.change.toFixed(2)} ({store.change >= 0 ? "+" : ""}
-                    {store.changePercent.toFixed(1)}%)
-                  </span>
-                </div>
+
+                {store.price !== null ? (
+                  <>
+                    <div style={styles.storePrice}>${store.price.toFixed(2)}</div>
+                    <div style={styles.priceChange}>
+                      <span
+                        style={{
+                          ...styles.priceChangeArrow,
+                          color: store.change >= 0 ? "#00ff00" : "#ff0000",
+                        }}
+                      >
+                        {store.change >= 0 ? "↑" : "↓"}
+                      </span>
+                      <span
+                        style={{
+                          color: store.change >= 0 ? "#00ff00" : "#ff0000",
+                        }}
+                      >
+                        {store.change >= 0 ? "+" : ""}
+                        {store.change.toFixed(2)} ({store.change >= 0 ? "+" : ""}
+                        {store.changePercent.toFixed(1)}%)
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <div style={styles.noData}>NO DATA FOUND</div>
+                )}
               </div>
             ))}
           </div>
