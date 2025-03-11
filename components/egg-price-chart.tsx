@@ -3,11 +3,13 @@
 import { useState, useEffect } from "react"
 import EggChart from "./egg-chart"
 
+interface DataPoint {
+  date: string
+  price: number
+}
+
 interface EggPriceChartProps {
-  historicalData: Array<{
-    date: string
-    price: number
-  }>
+  historicalData: DataPoint[]
   eggType: string
 }
 
@@ -56,6 +58,8 @@ export default function EggPriceChart({ historicalData, eggType }: EggPriceChart
     },
   }
 
+  const displayType = chartType.charAt(0).toUpperCase() + chartType.slice(1)
+
   return (
     <div style={styles.section}>
       <h2 style={styles.header}>US PRICE HISTORY (1 YEAR)</h2>
@@ -65,24 +69,30 @@ export default function EggPriceChart({ historicalData, eggType }: EggPriceChart
         <button
           style={{
             ...styles.button,
-            ...(chartType === "REGULAR" ? styles.activeButton : {}),
+            ...(chartType === "regular" ? styles.activeButton : {}),
           }}
-          onClick={() => setChartType("REGULAR")}
+          onClick={() => setChartType("regular")}
         >
           REGULAR
         </button>
         <button
           style={{
             ...styles.button,
-            ...(chartType === "ORGANIC" ? styles.activeButton : {}),
+            ...(chartType === "organic" ? styles.activeButton : {}),
           }}
-          onClick={() => setChartType("ORGANIC")}
+          onClick={() => setChartType("organic")}
         >
           ORGANIC
         </button>
       </div>
 
-      <EggChart data={historicalData} dataSource="USDA Agricultural Marketing Service" />
+      {historicalData.length > 0 ? (
+        <EggChart data={historicalData} dataSource="USDA Agricultural Marketing Service" />
+      ) : (
+        <div style={{ fontSize: "18px", margin: "40px 0", color: "#00ff00" }}>
+          NO HISTORICAL DATA AVAILABLE FOR {displayType.toUpperCase()} EGGS
+        </div>
+      )}
     </div>
   )
 }
