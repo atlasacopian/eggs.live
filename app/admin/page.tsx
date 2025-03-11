@@ -6,21 +6,19 @@ export default function AdminPage() {
   const [status, setStatus] = useState<string>("")
   const [isLoading, setIsLoading] = useState(false)
 
-  async function cleanupCostco() {
+  async function cleanupData(endpoint: string, action: string) {
     try {
       setIsLoading(true)
-      setStatus("Cleaning up Costco data...")
+      setStatus(`${action}...`)
 
-      const response = await fetch("/api/remove-costco", {
+      const response = await fetch(endpoint, {
         method: "POST",
       })
 
       const data = await response.json()
 
       if (data.success) {
-        setStatus(
-          `Success! ${data.message}. Removed ${data.deletedPrices} price records and ${data.deletedStore} store records.`,
-        )
+        setStatus(`Success! ${data.message}`)
       } else {
         setStatus(`Error: ${data.error || "Unknown error"}`)
       }
@@ -56,21 +54,37 @@ export default function AdminPage() {
       >
         <h2 style={{ fontSize: "24px", marginBottom: "20px" }}>DATABASE CLEANUP</h2>
 
-        <button
-          onClick={cleanupCostco}
-          disabled={isLoading}
-          style={{
-            backgroundColor: isLoading ? "#333" : "#000",
-            color: "#00ff00",
-            border: "1px solid #00ff00",
-            padding: "12px 24px",
-            fontSize: "18px",
-            cursor: isLoading ? "not-allowed" : "pointer",
-            marginBottom: "20px",
-          }}
-        >
-          {isLoading ? "CLEANING..." : "REMOVE COSTCO DATA"}
-        </button>
+        <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+          <button
+            onClick={() => cleanupData("/api/remove-costco", "Removing Costco data")}
+            disabled={isLoading}
+            style={{
+              backgroundColor: isLoading ? "#333" : "#000",
+              color: "#00ff00",
+              border: "1px solid #00ff00",
+              padding: "12px 24px",
+              fontSize: "18px",
+              cursor: isLoading ? "not-allowed" : "pointer",
+            }}
+          >
+            {isLoading ? "CLEANING..." : "REMOVE COSTCO DATA"}
+          </button>
+
+          <button
+            onClick={() => cleanupData("/api/remove-test-data", "Removing test data")}
+            disabled={isLoading}
+            style={{
+              backgroundColor: isLoading ? "#333" : "#000",
+              color: "#00ff00",
+              border: "1px solid #00ff00",
+              padding: "12px 24px",
+              fontSize: "18px",
+              cursor: isLoading ? "not-allowed" : "pointer",
+            }}
+          >
+            {isLoading ? "CLEANING..." : "REMOVE TEST DATA"}
+          </button>
+        </div>
 
         {status && (
           <div
