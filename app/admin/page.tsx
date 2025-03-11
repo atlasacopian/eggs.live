@@ -30,12 +30,12 @@ export default function AdminPage() {
     }
   }
 
-  async function triggerScraper() {
+  async function triggerScraper(endpoint: string, action: string) {
     try {
       setIsLoading(true)
-      setStatus("Scraping egg prices...")
+      setStatus(`${action}...`)
 
-      const response = await fetch("/api/scrape-now", {
+      const response = await fetch(endpoint, {
         method: "POST",
       })
 
@@ -53,7 +53,11 @@ export default function AdminPage() {
       const data = await response.json()
 
       if (data.success) {
-        setStatus(`Success! Scraped ${data.scrapedCount} prices on ${data.date}`)
+        if (endpoint.includes("scrape-la")) {
+          setStatus(`Success! Scraped ${data.storeCount} LA stores on ${data.date}`)
+        } else {
+          setStatus(`Success! Scraped ${data.scrapedCount} prices on ${data.date}`)
+        }
       } else {
         setStatus(`Error: ${data.error || "Failed to scrape prices"}`)
       }
@@ -122,7 +126,7 @@ export default function AdminPage() {
           </button>
 
           <button
-            onClick={triggerScraper}
+            onClick={() => triggerScraper("/api/scrape-now", "Scraping all stores")}
             disabled={isLoading}
             style={{
               backgroundColor: isLoading ? "#333" : "#000",
@@ -134,7 +138,22 @@ export default function AdminPage() {
               marginTop: "20px",
             }}
           >
-            {isLoading ? "SCRAPING..." : "SCRAPE EGG PRICES NOW"}
+            {isLoading ? "SCRAPING..." : "SCRAPE ALL STORES"}
+          </button>
+
+          <button
+            onClick={() => triggerScraper("/api/scrape-la", "Scraping LA stores")}
+            disabled={isLoading}
+            style={{
+              backgroundColor: isLoading ? "#333" : "#000",
+              color: "#00ff00",
+              border: "1px solid #00ff00",
+              padding: "12px 24px",
+              fontSize: "18px",
+              cursor: isLoading ? "not-allowed" : "pointer",
+            }}
+          >
+            {isLoading ? "SCRAPING..." : "SCRAPE LA STORES"}
           </button>
         </div>
 
