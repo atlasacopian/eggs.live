@@ -29,6 +29,29 @@ export default function AdminPage() {
     }
   }
 
+  async function triggerScraper() {
+    try {
+      setIsLoading(true)
+      setStatus("Scraping egg prices...")
+
+      const response = await fetch("/api/scrape-now", {
+        method: "POST",
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setStatus(`Success! Scraped ${data.scrapedCount} prices on ${data.date}`)
+      } else {
+        setStatus(`Error: ${data.error || "Unknown error"}`)
+      }
+    } catch (error) {
+      setStatus(`Error: ${error instanceof Error ? error.message : "Unknown error"}`)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <div
       style={{
@@ -83,6 +106,22 @@ export default function AdminPage() {
             }}
           >
             {isLoading ? "CLEANING..." : "REMOVE TEST DATA"}
+          </button>
+
+          <button
+            onClick={triggerScraper}
+            disabled={isLoading}
+            style={{
+              backgroundColor: isLoading ? "#333" : "#000",
+              color: "#00ff00",
+              border: "1px solid #00ff00",
+              padding: "12px 24px",
+              fontSize: "18px",
+              cursor: isLoading ? "not-allowed" : "pointer",
+              marginTop: "20px",
+            }}
+          >
+            {isLoading ? "SCRAPING..." : "SCRAPE EGG PRICES NOW"}
           </button>
         </div>
 
