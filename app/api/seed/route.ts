@@ -12,37 +12,37 @@ export async function GET() {
 
     // Create stores table if it doesn't exist
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS stores (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        website TEXT NOT NULL
-      )
-    `)
+    CREATE TABLE IF NOT EXISTS stores (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      website TEXT NOT NULL
+    )
+  `)
 
     // Create egg_prices table if it doesn't exist
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS egg_prices (
-        id TEXT PRIMARY KEY,
-        "storeId" TEXT NOT NULL,
-        price FLOAT NOT NULL,
-        date DATE NOT NULL,
-        "eggType" TEXT NOT NULL,
-        UNIQUE("storeId", date, "eggType"),
-        FOREIGN KEY ("storeId") REFERENCES stores(id)
-      )
-    `)
+    CREATE TABLE IF NOT EXISTS egg_prices (
+      id TEXT PRIMARY KEY,
+      "storeId" TEXT NOT NULL,
+      price FLOAT NOT NULL,
+      date DATE NOT NULL,
+      "eggType" TEXT NOT NULL,
+      UNIQUE("storeId", date, "eggType"),
+      FOREIGN KEY ("storeId") REFERENCES stores(id)
+    )
+  `)
 
     // Create average_prices table if it doesn't exist
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS average_prices (
-        id TEXT PRIMARY KEY,
-        date DATE NOT NULL,
-        price FLOAT NOT NULL,
-        "storeCount" INTEGER NOT NULL,
-        "eggType" TEXT NOT NULL,
-        UNIQUE(date, "eggType")
-      )
-    `)
+    CREATE TABLE IF NOT EXISTS average_prices (
+      id TEXT PRIMARY KEY,
+      date DATE NOT NULL,
+      price FLOAT NOT NULL,
+      "storeCount" INTEGER NOT NULL,
+      "eggType" TEXT NOT NULL,
+      UNIQUE(date, "eggType")
+    )
+  `)
 
     // Define all stores (existing + new ones)
     const stores = [
@@ -58,7 +58,6 @@ export async function GET() {
       { id: "safeway", name: "Safeway", website: "https://www.safeway.com" },
       { id: "sprouts", name: "Sprouts", website: "https://www.sprouts.com" },
       { id: "target", name: "Target", website: "https://www.target.com" },
-      { id: "traderjoes", name: "Trader Joe's", website: "https://www.traderjoes.com" },
       { id: "walmart", name: "Walmart", website: "https://www.walmart.com" },
       { id: "wegmans", name: "Wegmans", website: "https://www.wegmans.com" },
       { id: "wholefoods", name: "Whole Foods", website: "https://www.wholefoodsmarket.com" },
@@ -72,10 +71,11 @@ export async function GET() {
       { id: "stopandshop", name: "Stop & Shop", website: "https://www.stopandshop.com" },
       { id: "vons", name: "Vons", website: "https://www.vons.com" },
       { id: "winndixie", name: "Winn-Dixie", website: "https://www.winndixie.com" },
-
-      // Add Weis Markets and Harris Teeter
       { id: "weismarkets", name: "Weis Markets", website: "https://www.weismarkets.com" },
       { id: "harristeeter", name: "Harris Teeter", website: "https://www.harristeeter.com" },
+
+      // Add Smart & Final
+      { id: "smartfinal", name: "Smart & Final", website: "https://www.smartandfinal.com" },
     ]
 
     // Insert stores
@@ -84,9 +84,9 @@ export async function GET() {
       try {
         await pool.query(
           `INSERT INTO stores (id, name, website) 
-           VALUES ($1, $2, $3) 
-           ON CONFLICT (id) DO UPDATE 
-           SET name = $2, website = $3`,
+         VALUES ($1, $2, $3) 
+         ON CONFLICT (id) DO UPDATE 
+         SET name = $2, website = $3`,
           [store.id, store.name, store.website],
         )
         storeResults.push({ store: store.id, status: "success" })
@@ -115,9 +115,30 @@ export async function GET() {
 
     // Add prices for all stores
     for (const store of stores) {
+      // Adjust price ranges based on store
+      let regularMin = 2.99
+      let regularMax = 4.49
+      let organicMin = 5.49
+      let organicMax = 7.99
+
+      // Special pricing for Erewhon (higher)
+      if (store.id === "erewhon") {
+        regularMin = 5.99
+        regularMax = 7.99
+        organicMin = 8.99
+        organicMax = 12.99
+      }
+      // Special pricing for Smart & Final (lower)
+      else if (store.id === "smartfinal") {
+        regularMin = 2.79
+        regularMax = 4.29
+        organicMin = 5.79
+        organicMax = 7.49
+      }
+
       samplePrices.push(
-        { storeId: store.id, price: randomPrice(2.99, 4.49), date: formattedDate, eggType: "regular" },
-        { storeId: store.id, price: randomPrice(5.49, 7.99), date: formattedDate, eggType: "organic" },
+        { storeId: store.id, price: randomPrice(regularMin, regularMax), date: formattedDate, eggType: "regular" },
+        { storeId: store.id, price: randomPrice(organicMin, organicMax), date: formattedDate, eggType: "organic" },
       )
     }
 
@@ -128,9 +149,9 @@ export async function GET() {
         const id = `${price.storeId}-${price.date}-${price.eggType}`
         await pool.query(
           `INSERT INTO egg_prices (id, "storeId", price, date, "eggType") 
-           VALUES ($1, $2, $3, $4, $5) 
-           ON CONFLICT ("storeId", date, "eggType") DO UPDATE 
-           SET price = $3`,
+         VALUES ($1, $2, $3, $4, $5) 
+         ON CONFLICT ("storeId", date, "eggType") DO UPDATE 
+         SET price = $3`,
           [id, price.storeId, price.price, price.date, price.eggType],
         )
         priceResults.push({ price: `${price.storeId}-${price.eggType}`, status: "success" })
@@ -153,8 +174,8 @@ export async function GET() {
         // Calculate average price for this egg type
         const avgResult = await pool.query(
           `SELECT AVG(price) as avg_price, COUNT(*) as store_count 
-           FROM egg_prices 
-           WHERE date = $1 AND "eggType" = $2`,
+         FROM egg_prices 
+         WHERE date = $1 AND "eggType" = $2`,
           [formattedDate, eggType],
         )
 
@@ -166,9 +187,9 @@ export async function GET() {
           const id = `${formattedDate}-${eggType}`
           await pool.query(
             `INSERT INTO average_prices (id, date, price, "storeCount", "eggType") 
-             VALUES ($1, $2, $3, $4, $5) 
-             ON CONFLICT (date, "eggType") DO UPDATE 
-             SET price = $3, "storeCount" = $4`,
+           VALUES ($1, $2, $3, $4, $5) 
+           ON CONFLICT (date, "eggType") DO UPDATE 
+           SET price = $3, "storeCount" = $4`,
             [id, formattedDate, avgPrice, storeCount, eggType],
           )
 
