@@ -77,8 +77,8 @@ export default function EggPriceTracker() {
         }
       } catch (error) {
         console.error("Error fetching store data:", error)
-        // If API fails, use placeholder data
-        setStoreData(placeholderStoreData)
+        // If API fails, use filtered placeholder data
+        setStoreData(filteredPlaceholderData)
       } finally {
         setLoading(false)
       }
@@ -681,6 +681,9 @@ export default function EggPriceTracker() {
       eggType: "ORGANIC",
     },
   ]
+
+  // Filter out any test entries from placeholder data
+  const filteredPlaceholderData = placeholderStoreData.filter((item) => !item.name.toLowerCase().includes("test"))
 
   // Search for any Costco entries in the placeholderStoreData array
   // and remove them if found
