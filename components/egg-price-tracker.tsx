@@ -27,7 +27,6 @@ interface ApiPrice {
 
 export default function EggPriceTracker() {
   const [eggType, setEggType] = useState("REGULAR")
-  const [sortBy, setSortBy] = useState("STORE")
   const [storeData, setStoreData] = useState<Store[]>([])
   const [loading, setLoading] = useState(true)
   const [lastUpdated, setLastUpdated] = useState("")
@@ -190,6 +189,12 @@ export default function EggPriceTracker() {
     loadingText: {
       fontSize: "18px",
       margin: "40px 0",
+    },
+    sortInfo: {
+      fontSize: "14px",
+      opacity: "0.7",
+      marginTop: "10px",
+      marginBottom: "20px",
     },
   }
 
@@ -737,16 +742,10 @@ export default function EggPriceTracker() {
   // Filter stores by egg type
   const stores = storeData.filter((store) => store.eggType === eggType)
 
-  // Filter and sort stores
+  // Filter and sort stores by price (highest to lowest)
   const filteredStores = stores.filter((store) => store.name.toLowerCase().includes(""))
 
-  const sortedStores = [...filteredStores].sort((a, b) => {
-    if (sortBy === "PRICE") {
-      return a.price - b.price
-    } else {
-      return a.name.localeCompare(b.name)
-    }
-  })
+  const sortedStores = [...filteredStores].sort((a, b) => b.price - a.price)
 
   // Calculate average prices
   const regularEggs = storeData.filter((store) => store.eggType === "REGULAR")
@@ -794,26 +793,7 @@ export default function EggPriceTracker() {
           </button>
         </div>
 
-        <div style={styles.buttonContainer}>
-          <button
-            style={{
-              ...styles.button,
-              ...(sortBy === "STORE" ? styles.activeButton : {}),
-            }}
-            onClick={() => setSortBy("STORE")}
-          >
-            STORE ▲
-          </button>
-          <button
-            style={{
-              ...styles.button,
-              ...(sortBy === "PRICE" ? styles.activeButton : {}),
-            }}
-            onClick={() => setSortBy("PRICE")}
-          >
-            PRICE
-          </button>
-        </div>
+        <div style={styles.sortInfo}>SORTED BY HIGHEST PRICE</div>
 
         {loading ? (
           <div style={styles.loadingText}>Loading store data...</div>
