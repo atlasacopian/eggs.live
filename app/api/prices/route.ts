@@ -1,62 +1,58 @@
 import { NextResponse } from "next/server"
-import { Pool } from "pg"
+import prisma from "@/lib/prisma"
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const eggType = searchParams.get("eggType") || "regular"
-  const storeId = searchParams.get("storeId")
-
-  const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-  })
-
   try {
-    let query = `
-      SELECT ep.id, ep."storeId", ep.price, ep.date, ep."eggType"
-      FROM egg_prices ep
-      WHERE ep."eggType" = $1
-    `
-
-    const params = [eggType]
-
-    if (storeId) {
-      query += ` AND ep."storeId" = $2`
-      params.push(storeId)
-    }
-
-    // Get today's date at midnight
+    // Get the current date in YYYY-MM-DD format
     const today = new Date()
     today.setHours(0, 0, 0, 0)
-    const formattedDate = today.toISOString().split("T")[0]
 
-    query += ` AND ep.date = $${params.length + 1}`
-    params.push(formattedDate)
+    // Query for today's prices
+    const prices = await prisma.egg_prices.findMany({
+      where: {
+        date: {
+          gte: today,
+        },
+        price: {
+          gt: 0, // Ensure we only get valid prices
+        },
+      },
+      include: {
+        store: true,
+      },
+    })
 
-    const result = await pool.query(query, params)
+    // Calculate average prices
+    let regularTotal = 0
+    let regularCount = 0
+    let organicTotal = 0
+    let organicCount = 0
 
-    await pool.end()
+    prices.forEach((price) => {
+      if (price.eggType === "regular") {
+        regularTotal += price.price
+        regularCount++
+      } else if (price.eggType === "organic") {
+        organicTotal += price.price
+        organicCount++
+      }
+    })
+
+    const regularAverage = regularCount > 0 ? regularTotal / regularCount : 0
+    const organicAverage = organicCount > 0 ? organicTotal / organicCount : 0
 
     return NextResponse.json({
-      success: true,
-      prices: result.rows,
+      prices,
+      averages: {
+        regular: regularAverage,
+        organic: organicAverage,
+        regularCount,
+        organicCount,
+      },
     })
   } catch (error) {
     console.error("Error fetching prices:", error)
-
-    // Make sure to close the pool even on error
-    try {
-      await pool.end()
-    } catch (closeError) {
-      console.error("Error closing pool:", closeError)
-    }
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Failed to fetch price data",
-      },
-      { status: 500 },
-    )
+    return NextResponse.json({ error: "Failed to fetch prices" }, { status: 500 })
   }
 }
 
