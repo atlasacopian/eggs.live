@@ -49,7 +49,7 @@ export async function GET() {
       // Existing stores
       { id: "albertsons", name: "Albertsons", website: "https://www.albertsons.com" },
       { id: "aldi", name: "Aldi", website: "https://www.aldi.us" },
-      { id: "costco", name: "Costco", website: "https://www.costco.com" },
+      // Remove Costco
       { id: "food4less", name: "Food 4 Less", website: "https://www.food4less.com" },
       { id: "heb", name: "HEB", website: "https://www.heb.com" },
       { id: "kroger", name: "Kroger", website: "https://www.kroger.com" },
@@ -72,6 +72,10 @@ export async function GET() {
       { id: "stopandshop", name: "Stop & Shop", website: "https://www.stopandshop.com" },
       { id: "vons", name: "Vons", website: "https://www.vons.com" },
       { id: "winndixie", name: "Winn-Dixie", website: "https://www.winndixie.com" },
+
+      // Add Weis Markets and Harris Teeter
+      { id: "weismarkets", name: "Weis Markets", website: "https://www.weismarkets.com" },
+      { id: "harristeeter", name: "Harris Teeter", website: "https://www.harristeeter.com" },
     ]
 
     // Insert stores
