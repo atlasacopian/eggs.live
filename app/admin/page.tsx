@@ -18,12 +18,13 @@ export default function AdminPage() {
       const data = await response.json()
 
       if (data.success) {
-        setStatus(`Success! ${data.message}`)
+        setStatus(`Success! ${data.message || "Operation completed"}`)
       } else {
         setStatus(`Error: ${data.error || "Unknown error"}`)
       }
     } catch (error) {
-      setStatus(`Error: ${error instanceof Error ? error.message : "Unknown error"}`)
+      console.error("API Error:", error)
+      setStatus(`Error: Failed to complete operation. Please check console for details.`)
     } finally {
       setIsLoading(false)
     }
@@ -38,15 +39,27 @@ export default function AdminPage() {
         method: "POST",
       })
 
+      if (!response.ok) {
+        const errorText = await response.text()
+        try {
+          const errorJson = JSON.parse(errorText)
+          setStatus(`Error: ${errorJson.error || "Failed to scrape prices"}`)
+        } catch {
+          setStatus(`Error: ${errorText || "Failed to scrape prices"}`)
+        }
+        return
+      }
+
       const data = await response.json()
 
       if (data.success) {
         setStatus(`Success! Scraped ${data.scrapedCount} prices on ${data.date}`)
       } else {
-        setStatus(`Error: ${data.error || "Unknown error"}`)
+        setStatus(`Error: ${data.error || "Failed to scrape prices"}`)
       }
     } catch (error) {
-      setStatus(`Error: ${error instanceof Error ? error.message : "Unknown error"}`)
+      console.error("Scraping Error:", error)
+      setStatus(`Error: Failed to scrape prices. Please check console for details.`)
     } finally {
       setIsLoading(false)
     }
