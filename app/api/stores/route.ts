@@ -8,7 +8,8 @@ export async function GET() {
 
   try {
     const result = await pool.query(`
-      SELECT * FROM stores 
+      SELECT * FROM stores
+      WHERE id != 'costco' -- Exclude Costco
       ORDER BY name ASC
     `)
 
