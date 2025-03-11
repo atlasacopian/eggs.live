@@ -4,7 +4,7 @@ import { Pool } from "pg"
 const storeIds = [
   "albertsons",
   "aldi",
-  "costco",
+  // Remove Costco
   "food4less",
   "heb",
   "kroger",
@@ -25,6 +25,8 @@ const storeIds = [
   "stopandshop",
   "vons",
   "winndixie",
+  "weismarkets", // Add Weis Markets
+  "harristeeter", // Add Harris Teeter
 ]
 
 // Function to generate a random price within a range
