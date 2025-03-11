@@ -1,51 +1,42 @@
 import { NextResponse } from "next/server"
-import { Pool } from "pg"
+import prisma from "@/lib/prisma"
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const eggType = searchParams.get("eggType") || "regular"
-  const days = Number.parseInt(searchParams.get("days") || "30", 10)
-
-  const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-  })
-
   try {
-    // Get prices for the last X days
-    const result = await pool.query(
-      `
-      SELECT date, price, "storeCount"
-      FROM average_prices
-      WHERE "eggType" = $1
-      AND date >= CURRENT_DATE - INTERVAL '${days} days'
-      ORDER BY date ASC
-    `,
-      [eggType],
-    )
+    const { searchParams } = new URL(request.url)
+    const eggType = searchParams.get("eggType") || "regular"
 
-    await pool.end()
+    // Get daily averages for the last 30 days
+    const thirtyDaysAgo = new Date()
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
-    return NextResponse.json({
-      success: true,
-      prices: result.rows,
-    })
+    // Query for daily averages
+    const dailyPrices = await prisma.$queryRaw`
+      SELECT 
+        DATE(date) as day,
+        AVG(price) as avg_price,
+        COUNT(DISTINCT store_id) as store_count
+      FROM egg_prices
+      WHERE 
+        date >= ${thirtyDaysAgo} AND
+        price > 0 AND
+        "eggType" = ${eggType}
+      GROUP BY DATE(date)
+      ORDER BY day DESC
+      LIMIT 30
+    `
+
+    // Format the response
+    const history = (dailyPrices as any[]).map((day) => ({
+      date: day.day,
+      price: Number.parseFloat(day.avg_price),
+      storeCount: Number.parseInt(day.store_count),
+    }))
+
+    return NextResponse.json({ history })
   } catch (error) {
     console.error("Error fetching historical prices:", error)
-
-    // Make sure to close the pool even on error
-    try {
-      await pool.end()
-    } catch (closeError) {
-      console.error("Error closing pool:", closeError)
-    }
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Failed to fetch historical price data",
-      },
-      { status: 500 },
-    )
+    return NextResponse.json({ error: "Failed to fetch historical prices" }, { status: 500 })
   }
 }
 
