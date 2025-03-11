@@ -12,61 +12,61 @@ export async function POST(request: Request) {
     // First, get all test store IDs
     const testStoresResult = await pool.query(`
     SELECT id FROM stores 
-    WHERE name LIKE '%TEST%' 
-    OR name LIKE '%test%'
+    WHERE LOWER(name) LIKE '%test%'
   `)
 
     const testStoreIds = testStoresResult.rows.map((row) => row.id)
 
-    // Delete egg prices for test stores
-    const deleteEggPricesResult = await pool.query(
-      `
-    DELETE FROM egg_prices
-    WHERE "storeId" = ANY($1)
-  `,
-      [testStoreIds],
-    )
+    if (testStoreIds.length > 0) {
+      // Delete egg prices for test stores
+      const deleteEggPricesResult = await pool.query(
+        `
+      DELETE FROM egg_prices
+      WHERE "storeId" = ANY($1)
+    `,
+        [testStoreIds],
+      )
 
-    console.log(`Deleted ${deleteEggPricesResult.rowCount} egg price records for test stores`)
+      console.log(`Deleted ${deleteEggPricesResult.rowCount} egg price records for test stores`)
 
-    // Delete test store entries
-    const deleteStoresResult = await pool.query(`
-    DELETE FROM stores
-    WHERE name LIKE '%TEST%'
-    OR name LIKE '%test%'
-  `)
+      // Delete test store entries
+      const deleteStoresResult = await pool.query(`
+      DELETE FROM stores
+      WHERE LOWER(name) LIKE '%test%'
+    `)
 
-    console.log(`Deleted ${deleteStoresResult.rowCount} test store records`)
+      console.log(`Deleted ${deleteStoresResult.rowCount} test store records`)
 
-    // Recalculate average prices
-    const recalculateAverages = await pool.query(`
-    WITH avg_data AS (
-      SELECT 
-        date, 
-        "eggType", 
-        AVG(price) as avg_price,
-        COUNT(*) as store_count
-      FROM egg_prices
-      GROUP BY date, "eggType"
-    )
-    UPDATE average_prices ap
-    SET 
-      price = ad.avg_price,
-      "storeCount" = ad.store_count
-    FROM avg_data ad
-    WHERE ap.date = ad.date AND ap."eggType" = ad."eggType"
-  `)
+      // Recalculate average prices
+      const recalculateAverages = await pool.query(`
+      WITH avg_data AS (
+        SELECT 
+          date, 
+          "eggType", 
+          AVG(price) as avg_price,
+          COUNT(*) as store_count
+        FROM egg_prices
+        GROUP BY date, "eggType"
+      )
+      UPDATE average_prices ap
+      SET 
+        price = ad.avg_price,
+        "storeCount" = ad.store_count
+      FROM avg_data ad
+      WHERE ap.date = ad.date AND ap."eggType" = ad."eggType"
+    `)
 
-    console.log(`Recalculated ${recalculateAverages.rowCount} average price records`)
+      console.log(`Recalculated ${recalculateAverages.rowCount} average price records`)
+    } else {
+      console.log("No test stores found in database")
+    }
 
     await pool.end()
 
     return NextResponse.json({
       success: true,
-      message: "Test data successfully removed from database",
-      deletedPrices: deleteEggPricesResult.rowCount,
-      deletedStores: deleteStoresResult.rowCount,
-      updatedAverages: recalculateAverages.rowCount,
+      message: "Test data cleanup completed",
+      testStoresFound: testStoreIds.length,
     })
   } catch (error) {
     console.error("Error removing test data:", error)
