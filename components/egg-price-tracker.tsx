@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { EggPriceChart } from "./egg-price-chart"
 import { CurrentPrice } from "./current-price"
@@ -130,121 +130,112 @@ export function EggPriceTracker() {
   const featuredStores = sortedStores.filter((store) => featuredStoreIds.includes(store.id))
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-8">
       <Tabs defaultValue="nationwide" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="nationwide">Nationwide</TabsTrigger>
-          <TabsTrigger value="echo-park">Echo Park / Silver Lake</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 mb-8">
+          <TabsTrigger value="nationwide" className="egg-tab px-8 py-3 text-lg">
+            Nationwide
+          </TabsTrigger>
+          <TabsTrigger value="echo-park" className="egg-tab px-8 py-3 text-lg">
+            Echo Park / Silver Lake
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="nationwide" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Average {selectedEggType === "organic" ? "Organic" : "Regular"} Egg Price
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+        <TabsContent value="nationwide">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <Card className="price-card">
+              <CardContent className="p-6">
+                <h3 className="text-sm font-medium mb-2">
+                  Average {selectedEggType === "organic" ? "Organic" : "Regular"} Price
+                </h3>
                 <CurrentPrice price={averagePrice} />
-                <CardDescription>Based on {validPrices.length} stores nationwide</CardDescription>
+                <p className="text-sm text-gray-500 mt-2">Based on {validPrices.length} stores</p>
               </CardContent>
             </Card>
 
             {featuredStores.slice(0, 3).map((store) => (
-              <Card key={store.id}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{store.name}</CardTitle>
-                </CardHeader>
-                <CardContent>
+              <Card key={store.id} className="price-card">
+                <CardContent className="p-6">
+                  <h3 className="text-sm font-medium mb-2">{store.name}</h3>
                   <CurrentPrice price={store.price || 0} />
-                  <CardDescription>
-                    <a
-                      href={store.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-500 hover:underline"
-                    >
-                      Visit website
-                    </a>
-                  </CardDescription>
+                  <a
+                    href={store.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-black hover:underline mt-2 inline-block"
+                  >
+                    Visit website →
+                  </a>
                 </CardContent>
               </Card>
             ))}
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Card className="col-span-2">
-              <CardHeader>
-                <CardTitle>Egg Price History</CardTitle>
-              </CardHeader>
-              <CardContent className="px-2">
+          <div className="grid gap-6 mt-8 md:grid-cols-3">
+            <Card className="md:col-span-2">
+              <CardContent className="p-6">
+                <h3 className="text-lg font-medium mb-4">Price History</h3>
                 <EggPriceChart eggType={selectedEggType} />
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader>
-                <CardTitle>Egg Type</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col space-y-4">
+              <CardContent className="p-6">
+                <h3 className="text-lg font-medium mb-4">Egg Type</h3>
+                <div className="space-y-4">
                   <button
                     onClick={() => setSelectedEggType("regular")}
-                    className={`p-4 rounded-lg border ${
-                      selectedEggType === "regular"
-                        ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                        : "border-gray-200 dark:border-gray-800"
+                    className={`egg-type-button w-full p-4 rounded-lg border transition-all ${
+                      selectedEggType === "regular" ? "selected" : "hover:bg-gray-50"
                     }`}
                   >
                     <div className="font-medium">Regular Eggs</div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">Conventional, non-organic eggs</div>
+                    <div className="text-sm text-gray-500 mt-1">Conventional, non-organic eggs</div>
                   </button>
 
                   <button
                     onClick={() => setSelectedEggType("organic")}
-                    className={`p-4 rounded-lg border ${
-                      selectedEggType === "organic"
-                        ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                        : "border-gray-200 dark:border-gray-800"
+                    className={`egg-type-button w-full p-4 rounded-lg border transition-all ${
+                      selectedEggType === "organic" ? "selected" : "hover:bg-gray-50"
                     }`}
                   >
                     <div className="font-medium">Organic Eggs</div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">USDA certified organic eggs</div>
+                    <div className="text-sm text-gray-500 mt-1">USDA certified organic eggs</div>
                   </button>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>All Stores</CardTitle>
-              <CardDescription>
-                Current {selectedEggType === "organic" ? "organic" : "regular"} egg prices from stores across the US
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+          <Card className="mt-8">
+            <CardContent className="p-6">
+              <h3 className="text-lg font-medium mb-4">All Stores</h3>
+              <p className="text-sm text-gray-500 mb-6">
+                Current {selectedEggType === "organic" ? "organic" : "regular"} egg prices nationwide
+              </p>
+
               {loading ? (
-                <div className="text-center py-4">Loading store data...</div>
+                <div className="text-center py-8">Loading store data...</div>
               ) : error ? (
-                <div className="text-center text-red-500 py-4">{error}</div>
+                <div className="text-center text-red-500 py-8">{error}</div>
               ) : (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {sortedStores.map((store) => (
-                    <div key={store.id} className="flex justify-between items-center p-3 border rounded-lg">
-                      <div>
-                        <div className="font-medium">{store.name}</div>
-                        <a
-                          href={store.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-blue-500 hover:underline"
-                        >
-                          Visit website
-                        </a>
+                    <div key={store.id} className="price-card p-4 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <div className="font-medium">{store.name}</div>
+                          <a
+                            href={store.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-black hover:underline"
+                          >
+                            Visit website →
+                          </a>
+                        </div>
+                        <div className="text-xl font-bold">${store.price?.toFixed(2)}</div>
                       </div>
-                      <div className="text-xl font-bold">${store.price?.toFixed(2)}</div>
                     </div>
                   ))}
                 </div>
@@ -253,112 +244,70 @@ export function EggPriceTracker() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="echo-park" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Echo Park Average {selectedEggType === "organic" ? "Organic" : "Regular"} Egg Price
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+        <TabsContent value="echo-park">
+          {/* Similar structure as nationwide tab, but with Echo Park specific data */}
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <Card className="price-card">
+              <CardContent className="p-6">
+                <h3 className="text-sm font-medium mb-2">
+                  Echo Park Average {selectedEggType === "organic" ? "Organic" : "Regular"} Price
+                </h3>
                 <CurrentPrice price={echoAvgPrice} />
-                <CardDescription>Based on {echoStores.length} stores in Echo Park/Silver Lake</CardDescription>
+                <p className="text-sm text-gray-500 mt-2">Based on {echoStores.length} local stores</p>
               </CardContent>
             </Card>
 
             {formattedEchoStores.slice(0, 3).map((store) => (
-              <Card key={`${store.id}-${store.name}`}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{store.name}</CardTitle>
-                </CardHeader>
-                <CardContent>
+              <Card key={`${store.id}-${store.name}`} className="price-card">
+                <CardContent className="p-6">
+                  <h3 className="text-sm font-medium mb-2">{store.name}</h3>
                   <CurrentPrice price={store.price || 0} />
-                  <CardDescription>
-                    <a
-                      href={store.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-500 hover:underline"
-                    >
-                      Visit website
-                    </a>
-                  </CardDescription>
+                  <a
+                    href={store.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-black hover:underline mt-2 inline-block"
+                  >
+                    Visit website →
+                  </a>
                 </CardContent>
               </Card>
             ))}
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Echo Park / Silver Lake Stores</CardTitle>
-              <CardDescription>
-                Current {selectedEggType === "organic" ? "organic" : "regular"} egg prices in the Echo Park area
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+          <Card className="mt-8">
+            <CardContent className="p-6">
+              <h3 className="text-lg font-medium mb-4">Echo Park / Silver Lake Stores</h3>
+              <p className="text-sm text-gray-500 mb-6">
+                Current {selectedEggType === "organic" ? "organic" : "regular"} egg prices in the area
+              </p>
+
               {echoLoading ? (
-                <div className="text-center py-4">Loading Echo Park data...</div>
+                <div className="text-center py-8">Loading Echo Park data...</div>
               ) : (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {formattedEchoStores.map((store) => (
-                    <div
-                      key={`${store.id}-${store.name}`}
-                      className="flex justify-between items-center p-3 border rounded-lg"
-                    >
-                      <div>
-                        <div className="font-medium">{store.name}</div>
-                        <a
-                          href={store.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-blue-500 hover:underline"
-                        >
-                          Visit website
-                        </a>
+                    <div key={`${store.id}-${store.name}`} className="price-card p-4 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <div className="font-medium">{store.name}</div>
+                          <a
+                            href={store.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-black hover:underline"
+                          >
+                            Visit website →
+                          </a>
+                        </div>
+                        <div className="text-xl font-bold">${store.price?.toFixed(2)}</div>
                       </div>
-                      <div className="text-xl font-bold">${store.price?.toFixed(2)}</div>
                     </div>
                   ))}
                 </div>
               )}
             </CardContent>
           </Card>
-
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Card className="col-span-2">
-              <CardHeader>
-                <CardTitle>Egg Type</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col space-y-4">
-                  <button
-                    onClick={() => setSelectedEggType("regular")}
-                    className={`p-4 rounded-lg border ${
-                      selectedEggType === "regular"
-                        ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                        : "border-gray-200 dark:border-gray-800"
-                    }`}
-                  >
-                    <div className="font-medium">Regular Eggs</div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">Conventional, non-organic eggs</div>
-                  </button>
-
-                  <button
-                    onClick={() => setSelectedEggType("organic")}
-                    className={`p-4 rounded-lg border ${
-                      selectedEggType === "organic"
-                        ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                        : "border-gray-200 dark:border-gray-800"
-                    }`}
-                  >
-                    <div className="font-medium">Organic Eggs</div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">USDA certified organic eggs</div>
-                  </button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
         </TabsContent>
       </Tabs>
     </div>
