@@ -1,4 +1,3 @@
-import { JSDOM } from "jsdom"
 import { Pool } from "pg"
 
 // Store-specific scraper functions
@@ -73,8 +72,8 @@ export async function scrapeStore(storeId: string): Promise<ScraperResult> {
   }
 }
 
-// Helper function to fetch and parse HTML
-async function fetchAndParse(url: string): Promise<Document | null> {
+// Helper function to fetch HTML content
+async function fetchHtml(url: string): Promise<string | null> {
   try {
     const response = await fetch(url, {
       headers: {
@@ -87,9 +86,7 @@ async function fetchAndParse(url: string): Promise<Document | null> {
       throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`)
     }
 
-    const html = await response.text()
-    const dom = new JSDOM(html)
-    return dom.window.document
+    return await response.text()
   } catch (error) {
     console.error(`Error fetching ${url}:`, error)
     return null
@@ -118,7 +115,8 @@ async function scrapeWalmart(): Promise<ScraperResult> {
   await new Promise((resolve) => setTimeout(resolve, 500))
 
   // In a real implementation, we would fetch and parse the HTML
-  // const document = await fetchAndParse('https://www.walmart.com/ip/Great-Value-Large-White-Eggs-12-Count/145051970')
+  // const html = await fetchHtml('https://www.walmart.com/ip/Great-Value-Large-White-Eggs-12-Count/145051970')
+  // Then extract prices using regex or other string manipulation methods
 
   return {
     regularPrice: randomPrice(2.18, 2.48),
