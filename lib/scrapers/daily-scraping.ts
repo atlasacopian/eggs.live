@@ -1,10 +1,10 @@
 import { Pool } from "pg"
+import { scrapeStore, savePrices } from "./egg-scraper"
 
-// Define all store IDs
+// Define all store IDs - Costco completely removed
 const storeIds = [
   "albertsons",
   "aldi",
-  // Remove Costco
   "food4less",
   "heb",
   "kroger",
@@ -25,8 +25,8 @@ const storeIds = [
   "stopandshop",
   "vons",
   "winndixie",
-  "weismarkets", // Add Weis Markets
-  "harristeeter", // Add Harris Teeter
+  "weismarkets",
+  "harristeeter",
 ]
 
 // Function to generate a random price within a range
@@ -49,29 +49,48 @@ export async function scrapeAllStores() {
 
     // Scrape prices for all stores
     const scrapedPrices = []
+    const scrapingResults = []
 
     for (const storeId of storeIds) {
-      // In a real implementation, this would actually scrape the store's website
-      // For now, we'll generate random prices
-      const regularPrice = randomPrice(2.99, 4.49)
-      const organicPrice = randomPrice(5.49, 7.99)
+      try {
+        // Use the scraper to get prices
+        const result = await scrapeStore(storeId)
 
-      scrapedPrices.push(
-        { storeId, price: regularPrice, date: formattedDate, eggType: "regular" },
-        { storeId, price: organicPrice, date: formattedDate, eggType: "organic" },
-      )
-    }
+        if (result.regularPrice !== null) {
+          scrapedPrices.push({
+            storeId,
+            price: result.regularPrice,
+            date: formattedDate,
+            eggType: "regular",
+          })
+        }
 
-    // Insert scraped prices
-    for (const price of scrapedPrices) {
-      const id = `${price.storeId}-${price.date}-${price.eggType}`
-      await pool.query(
-        `INSERT INTO egg_prices (id, "storeId", price, date, "eggType") 
-         VALUES ($1, $2, $3, $4, $5) 
-         ON CONFLICT ("storeId", date, "eggType") DO UPDATE 
-         SET price = $3`,
-        [id, price.storeId, price.price, price.date, price.eggType],
-      )
+        if (result.organicPrice !== null) {
+          scrapedPrices.push({
+            storeId,
+            price: result.organicPrice,
+            date: formattedDate,
+            eggType: "organic",
+          })
+        }
+
+        // Save prices to database
+        await savePrices(storeId, result.regularPrice, result.organicPrice)
+
+        scrapingResults.push({
+          storeId,
+          status: "success",
+          regularPrice: result.regularPrice,
+          organicPrice: result.organicPrice,
+        })
+      } catch (error) {
+        console.error(`Error scraping ${storeId}:`, error)
+        scrapingResults.push({
+          storeId,
+          status: "error",
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
     }
 
     // Calculate and store average prices
@@ -109,6 +128,7 @@ export async function scrapeAllStores() {
       message: "Daily scraping completed successfully",
       scrapedCount: scrapedPrices.length,
       date: formattedDate,
+      results: scrapingResults,
     }
   } catch (error) {
     console.error("Scraping error:", error)
