@@ -1,863 +1,366 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import EggIndices from "./egg-indices"
-import EggPriceChart from "./egg-price-chart"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { EggPriceChart } from "./egg-price-chart"
+import { CurrentPrice } from "./current-price"
 
 interface Store {
   id: string
-  storeId: string
   name: string
-  price: number | null
-  date: string
-  change: number
-  changePercent: number
-  eggType: string
+  website: string
 }
 
-interface ApiPrice {
+interface Price {
   id: string
   storeId: string
-  price: number | null
+  price: number
   date: string
   eggType: string
-  store_name: string
-  store_website: string
 }
 
-export default function EggPriceTracker() {
-  const [eggType, setEggType] = useState("REGULAR")
-  const [storeData, setStoreData] = useState<Store[]>([])
-  const [loading, setLoading] = useState(true)
-  const [lastUpdated, setLastUpdated] = useState("")
+interface StoreWithPrice extends Store {
+  price: number | null
+}
 
-  // Fetch store data from API
+export function EggPriceTracker() {
+  const [stores, setStores] = useState<Store[]>([])
+  const [prices, setPrices] = useState<Price[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [selectedEggType, setSelectedEggType] = useState<string>("regular")
+  const [echoStores, setEchoStores] = useState<any[]>([])
+  const [echoAverages, setEchoAverages] = useState<any[]>([])
+  const [echoLoading, setEchoLoading] = useState(true)
+
+  // Fetch stores and prices
   useEffect(() => {
     async function fetchData() {
       try {
         setLoading(true)
-        const response = await fetch("/api/prices")
-        const data = await response.json()
 
-        if (data.success && data.prices) {
-          // Create a map to store the latest price for each store and egg type
-          const latestPrices = new Map()
+        // Fetch stores
+        const storesResponse = await fetch("/api/stores")
+        const storesData = await storesResponse.json()
 
-          data.prices.forEach((price: ApiPrice) => {
-            const key = `${price.storeId}-${price.eggType}`
-            const existingPrice = latestPrices.get(key)
-
-            // Only update if this is a newer price or we don't have one yet
-            if (!existingPrice || new Date(price.date) > new Date(existingPrice.date)) {
-              const change = (Math.random() * 0.4 - 0.2).toFixed(2)
-              const changePercent = price.price ? ((Number.parseFloat(change) / price.price) * 100).toFixed(1) : "0.0"
-
-              latestPrices.set(key, {
-                id: `${price.storeId}-${price.eggType}`,
-                storeId: price.storeId,
-                name: price.store_name.toUpperCase(),
-                price: price.price,
-                date: new Date(price.date).toLocaleDateString(),
-                change: Number.parseFloat(change),
-                changePercent: Number.parseFloat(changePercent),
-                eggType: price.eggType.toUpperCase(),
-              })
-            }
-          })
-
-          // Convert map values to array
-          const transformedData = Array.from(latestPrices.values())
-          setStoreData(transformedData)
-
-          // Set last updated date from the first price entry
-          if (data.prices.length > 0) {
-            setLastUpdated(new Date(data.prices[0].date).toLocaleDateString())
-          }
+        if (!storesData.success) {
+          throw new Error(storesData.error || "Failed to fetch stores")
         }
-      } catch (error) {
-        console.error("Error fetching store data:", error)
-        // If API fails, use filtered placeholder data
-        setStoreData(filteredPlaceholderData)
+
+        // Fetch prices
+        const pricesResponse = await fetch(`/api/prices?eggType=${selectedEggType}`)
+        const pricesData = await pricesResponse.json()
+
+        if (!pricesData.success) {
+          throw new Error(pricesData.error || "Failed to fetch prices")
+        }
+
+        // Fetch Echo Park prices
+        const echoResponse = await fetch(`/api/echo-park-prices?eggType=${selectedEggType}`)
+        const echoData = await echoResponse.json()
+
+        if (echoData.success) {
+          setEchoStores(echoData.prices || [])
+          setEchoAverages(echoData.averages || [])
+        }
+
+        setStores(storesData.stores)
+        setPrices(pricesData.prices)
+        setError(null)
+      } catch (err) {
+        console.error("Error fetching data:", err)
+        setError("Failed to load egg price data. Please try again later.")
       } finally {
         setLoading(false)
+        setEchoLoading(false)
       }
     }
 
     fetchData()
-  }, [])
+  }, [selectedEggType])
 
-  const styles = {
-    container: {
-      backgroundColor: "#000",
-      color: "#00ff00",
-      fontFamily: "monospace",
-      padding: "20px 0",
-      lineHeight: "1.3",
-      minHeight: "100vh",
-      textAlign: "center" as const,
-      width: "100%",
-      maxWidth: "100vw",
-      margin: "0 auto",
-      overflowX: "hidden" as const,
-    },
-    header: {
-      fontSize: "36px",
-      marginBottom: "15px",
-      fontWeight: "normal" as const,
-      textShadow: "0 0 10px rgba(0, 255, 0, 0.5)",
-    },
-    subheader: {
-      fontSize: "18px",
-      marginBottom: "30px",
-      fontWeight: "normal" as const,
-      opacity: "0.8",
-    },
-    section: {
-      marginBottom: "40px",
-      width: "100%",
-      maxWidth: "1200px",
-      margin: "0 auto",
-      padding: "0 20px",
-      boxSizing: "border-box" as const,
-    },
-    button: {
-      backgroundColor: "#000",
-      color: "#00ff00",
-      border: "1px solid #00ff00",
-      padding: "8px 20px",
-      margin: "0 5px 5px 0",
-      cursor: "pointer",
-      fontFamily: "monospace",
-      fontSize: "16px",
-      transition: "all 0.3s ease",
-      textShadow: "0 0 5px rgba(0, 255, 0, 0.3)",
-    },
-    activeButton: {
-      backgroundColor: "#00ff00",
-      color: "#000",
-      boxShadow: "0 0 10px rgba(0, 255, 0, 0.5)",
-    },
-    storesContainer: {
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
-      gap: "20px",
-      marginTop: "20px",
-      width: "100%",
-    },
-    storeItem: {
-      border: "1px solid #00ff00",
-      padding: "20px",
-      borderRadius: "4px",
-      textAlign: "center" as const,
-      backgroundColor: "rgba(0, 255, 0, 0.05)",
-      boxShadow: "0 0 10px rgba(0, 255, 0, 0.1)",
-      transition: "all 0.3s ease",
-    },
-    storeName: {
-      fontSize: "18px",
-      marginBottom: "10px",
-      opacity: "0.9",
-    },
-    storePrice: {
-      fontSize: "32px",
-      marginBottom: "10px",
-      textShadow: "0 0 10px rgba(0, 255, 0, 0.5)",
-    },
-    noData: {
-      fontSize: "24px",
-      color: "#ff0000",
-      marginBottom: "10px",
-    },
-    updateInfo: {
-      fontSize: "14px",
-      opacity: "0.7",
-      marginTop: "10px",
-      marginBottom: "20px",
-    },
-    buttonContainer: {
-      display: "flex",
-      justifyContent: "center",
-      flexWrap: "wrap" as const,
-      marginBottom: "15px",
-      gap: "10px",
-    },
-    priceChange: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontSize: "16px",
-    },
-    priceChangeArrow: {
-      marginRight: "8px",
-      fontSize: "20px",
-    },
-    loadingText: {
-      fontSize: "18px",
-      margin: "40px 0",
-    },
-    sortInfo: {
-      fontSize: "14px",
-      opacity: "0.7",
-      marginTop: "10px",
-      marginBottom: "20px",
-    },
-  }
+  // Combine stores with their prices
+  const storesWithPrices: StoreWithPrice[] = stores
+    .map((store) => {
+      const price = prices.find((p) => p.storeId === store.id)
+      return {
+        ...store,
+        price: price ? price.price : null,
+      }
+    })
+    .filter((store) => store.price !== null) // Only show stores with prices
 
-  // Placeholder data in case API fails
-  const placeholderStoreData = [
-    // Regular eggs
-    {
-      id: "walmart-regular",
-      storeId: "walmart",
-      name: "WALMART",
-      price: 2.28,
-      date: "3/10/2025",
-      change: -0.17,
-      changePercent: -6.9,
-      eggType: "REGULAR",
-    },
-    {
-      id: "kroger-regular",
-      storeId: "kroger",
-      name: "KROGER",
-      price: 3.49,
-      date: "3/10/2025",
-      change: 0.05,
-      changePercent: 1.4,
-      eggType: "REGULAR",
-    },
-    {
-      id: "target-regular",
-      storeId: "target",
-      name: "TARGET",
-      price: 3.59,
-      date: "3/10/2025",
-      change: 0.1,
-      changePercent: 2.9,
-      eggType: "REGULAR",
-    },
-    {
-      id: "wholefoods-regular",
-      storeId: "wholefoods",
-      name: "WHOLE FOODS",
-      price: 4.29,
-      date: "3/10/2025",
-      change: 0.15,
-      changePercent: 3.6,
-      eggType: "REGULAR",
-    },
-    {
-      id: "traderjoes-regular",
-      storeId: "traderjoes",
-      name: "TRADER JOE'S",
-      price: 3.99,
-      date: "3/10/2025",
-      change: 0.0,
-      changePercent: 0.0,
-      eggType: "REGULAR",
-    },
-    {
-      id: "aldi-regular",
-      storeId: "aldi",
-      name: "ALDI",
-      price: 2.89,
-      date: "3/10/2025",
-      change: -0.1,
-      changePercent: -3.3,
-      eggType: "REGULAR",
-    },
-    {
-      id: "publix-regular",
-      storeId: "publix",
-      name: "PUBLIX",
-      price: 3.79,
-      date: "3/10/2025",
-      change: 0.2,
-      changePercent: 5.6,
-      eggType: "REGULAR",
-    },
-    {
-      id: "safeway-regular",
-      storeId: "safeway",
-      name: "SAFEWAY",
-      price: 3.69,
-      date: "3/10/2025",
-      change: 0.0,
-      changePercent: 0.0,
-      eggType: "REGULAR",
-    },
-    {
-      id: "wegmans-regular",
-      storeId: "wegmans",
-      name: "WEGMANS",
-      price: 3.49,
-      date: "3/10/2025",
-      change: -0.2,
-      changePercent: -5.4,
-      eggType: "REGULAR",
-    },
-    {
-      id: "shoprite-regular",
-      storeId: "shoprite",
-      name: "SHOPRITE",
-      price: 3.29,
-      date: "3/10/2025",
-      change: 0.1,
-      changePercent: 3.1,
-      eggType: "REGULAR",
-    },
-    // Add more stores for regular eggs
-    {
-      id: "albertsons-regular",
-      storeId: "albertsons",
-      name: "ALBERTSONS",
-      price: 3.59,
-      date: "3/10/2025",
-      change: 0.05,
-      changePercent: 1.4,
-      eggType: "REGULAR",
-    },
-    {
-      id: "heb-regular",
-      storeId: "heb",
-      name: "H-E-B", // Updated to H-E-B
-      price: 3.39,
-      date: "3/10/2025",
-      change: -0.1,
-      changePercent: -2.9,
-      eggType: "REGULAR",
-    },
-    {
-      id: "meijer-regular",
-      storeId: "meijer",
-      name: "MEIJER",
-      price: 3.29,
-      date: "3/10/2025",
-      change: 0.0,
-      changePercent: 0.0,
-      eggType: "REGULAR",
-    },
-    {
-      id: "sprouts-regular",
-      storeId: "sprouts",
-      name: "SPROUTS",
-      price: 3.99,
-      date: "3/10/2025",
-      change: 0.15,
-      changePercent: 3.9,
-      eggType: "REGULAR",
-    },
-    {
-      id: "food4less-regular",
-      storeId: "food4less",
-      name: "FOOD 4 LESS",
-      price: 2.99,
-      date: "3/10/2025",
-      change: -0.05,
-      changePercent: -1.6,
-      eggType: "REGULAR",
-    },
-    {
-      id: "erewhon-regular",
-      storeId: "erewhon",
-      name: "EREWHON",
-      price: 5.99,
-      date: "3/10/2025",
-      change: 0.0,
-      changePercent: 0.0,
-      eggType: "REGULAR",
-    },
-    {
-      id: "foodlion-regular",
-      storeId: "foodlion",
-      name: "FOOD LION",
-      price: 3.19,
-      date: "3/10/2025",
-      change: -0.1,
-      changePercent: -3.0,
-      eggType: "REGULAR",
-    },
-    {
-      id: "gianteagle-regular",
-      storeId: "gianteagle",
-      name: "GIANT EAGLE",
-      price: 3.49,
-      date: "3/10/2025",
-      change: 0.1,
-      changePercent: 2.9,
-      eggType: "REGULAR",
-    },
-    {
-      id: "ralphs-regular",
-      storeId: "ralphs",
-      name: "RALPHS",
-      price: 3.59,
-      date: "3/10/2025",
-      change: 0.05,
-      changePercent: 1.4,
-      eggType: "REGULAR",
-    },
-    {
-      id: "stopandshop-regular",
-      storeId: "stopandshop",
-      name: "STOP & SHOP",
-      price: 3.39,
-      date: "3/10/2025",
-      change: -0.1,
-      changePercent: -2.9,
-      eggType: "REGULAR",
-    },
-    {
-      id: "vons-regular",
-      storeId: "vons",
-      name: "VONS",
-      price: 3.69,
-      date: "3/10/2025",
-      change: 0.0,
-      changePercent: 0.0,
-      eggType: "REGULAR",
-    },
-    {
-      id: "winndixie-regular",
-      storeId: "winndixie",
-      name: "WINN-DIXIE",
-      price: 3.29,
-      date: "3/10/2025",
-      change: -0.05,
-      changePercent: -1.5,
-      eggType: "REGULAR",
-    },
-    {
-      id: "weismarkets-regular",
-      storeId: "weismarkets",
-      name: "WEIS MARKETS",
-      price: 3.49,
-      date: "3/10/2025",
-      change: -0.05,
-      changePercent: -1.4,
-      eggType: "REGULAR",
-    },
-    {
-      id: "harristeeter-regular",
-      storeId: "harristeeter",
-      name: "HARRIS TEETER",
-      price: 3.69,
-      date: "3/10/2025",
-      change: 0.1,
-      changePercent: 2.8,
-      eggType: "REGULAR",
-    },
-
-    // Organic eggs
-    {
-      id: "walmart-organic",
-      storeId: "walmart",
-      name: "WALMART",
-      price: 4.98,
-      date: "3/10/2025",
-      change: -0.22,
-      changePercent: -4.2,
-      eggType: "ORGANIC",
-    },
-    {
-      id: "kroger-organic",
-      storeId: "kroger",
-      name: "KROGER",
-      price: 5.99,
-      date: "3/10/2025",
-      change: 0.0,
-      changePercent: 0.0,
-      eggType: "ORGANIC",
-    },
-    {
-      id: "target-organic",
-      storeId: "target",
-      name: "TARGET",
-      price: 5.89,
-      date: "3/10/2025",
-      change: -0.1,
-      changePercent: -1.7,
-      eggType: "ORGANIC",
-    },
-    {
-      id: "wholefoods-organic",
-      storeId: "wholefoods",
-      name: "WHOLE FOODS",
-      price: 6.99,
-      date: "3/10/2025",
-      change: 0.0,
-      changePercent: 0.0,
-      eggType: "ORGANIC",
-    },
-    {
-      id: "traderjoes-organic",
-      storeId: "traderjoes",
-      name: "TRADER JOE'S",
-      price: 5.49,
-      date: "3/10/2025",
-      change: -0.5,
-      changePercent: -8.3,
-      eggType: "ORGANIC",
-    },
-    {
-      id: "aldi-organic",
-      storeId: "aldi",
-      name: "ALDI",
-      price: 4.89,
-      date: "3/10/2025",
-      change: -0.1,
-      changePercent: -2.0,
-      eggType: "ORGANIC",
-    },
-    {
-      id: "publix-organic",
-      storeId: "publix",
-      name: "PUBLIX",
-      price: 6.29,
-      date: "3/10/2025",
-      change: 0.0,
-      changePercent: 0.0,
-      eggType: "ORGANIC",
-    },
-    {
-      id: "safeway-organic",
-      storeId: "safeway",
-      name: "SAFEWAY",
-      price: 6.19,
-      date: "3/10/2025",
-      change: -0.3,
-      changePercent: -4.6,
-      eggType: "ORGANIC",
-    },
-    {
-      id: "wegmans-organic",
-      storeId: "wegmans",
-      name: "WEGMANS",
-      price: 5.79,
-      date: "3/10/2025",
-      change: -0.2,
-      changePercent: -3.3,
-      eggType: "ORGANIC",
-    },
-    {
-      id: "shoprite-organic",
-      storeId: "shoprite",
-      name: "SHOPRITE",
-      price: 5.99,
-      date: "3/10/2025",
-      change: 0.0,
-      changePercent: 0.0,
-      eggType: "ORGANIC",
-    },
-    // Add more stores for organic eggs
-    {
-      id: "albertsons-organic",
-      storeId: "albertsons",
-      name: "ALBERTSONS",
-      price: 6.29,
-      date: "3/10/2025",
-      change: 0.1,
-      changePercent: 1.6,
-      eggType: "ORGANIC",
-    },
-    {
-      id: "heb-organic",
-      storeId: "heb",
-      name: "H-E-B", // Updated to H-E-B
-      price: 5.89,
-      date: "3/10/2025",
-      change: -0.2,
-      changePercent: -3.3,
-      eggType: "ORGANIC",
-    },
-    {
-      id: "meijer-organic",
-      storeId: "meijer",
-      name: "MEIJER",
-      price: 5.79,
-      date: "3/10/2025",
-      change: 0.0,
-      changePercent: 0.0,
-      eggType: "ORGANIC",
-    },
-    {
-      id: "sprouts-organic",
-      storeId: "sprouts",
-      name: "SPROUTS",
-      price: 6.49,
-      date: "3/10/2025",
-      change: 0.2,
-      changePercent: 3.2,
-      eggType: "ORGANIC",
-    },
-    {
-      id: "food4less-organic",
-      storeId: "food4less",
-      name: "FOOD 4 LESS",
-      price: 5.49,
-      date: "3/10/2025",
-      change: -0.1,
-      changePercent: -1.8,
-      eggType: "ORGANIC",
-    },
-    {
-      id: "erewhon-organic",
-      storeId: "erewhon",
-      name: "EREWHON",
-      price: 8.99,
-      date: "3/10/2025",
-      change: 0.0,
-      changePercent: 0.0,
-      eggType: "ORGANIC",
-    },
-    {
-      id: "foodlion-organic",
-      storeId: "foodlion",
-      name: "FOOD LION",
-      price: 5.69,
-      date: "3/10/2025",
-      change: -0.2,
-      changePercent: -3.4,
-      eggType: "ORGANIC",
-    },
-    {
-      id: "gianteagle-organic",
-      storeId: "gianteagle",
-      name: "GIANT EAGLE",
-      price: 5.99,
-      date: "3/10/2025",
-      change: 0.1,
-      changePercent: 1.7,
-      eggType: "ORGANIC",
-    },
-    {
-      id: "ralphs-organic",
-      storeId: "ralphs",
-      name: "RALPHS",
-      price: 6.19,
-      date: "3/10/2025",
-      change: 0.1,
-      changePercent: 1.6,
-      eggType: "ORGANIC",
-    },
-    {
-      id: "stopandshop-organic",
-      storeId: "stopandshop",
-      name: "STOP & SHOP",
-      price: 5.89,
-      date: "3/10/2025",
-      change: -0.15,
-      changePercent: -2.5,
-      eggType: "ORGANIC",
-    },
-    {
-      id: "vons-organic",
-      storeId: "vons",
-      name: "VONS",
-      price: 6.29,
-      date: "3/10/2025",
-      change: 0.0,
-      changePercent: 0.0,
-      eggType: "ORGANIC",
-    },
-    {
-      id: "winndixie-organic",
-      storeId: "winndixie",
-      name: "WINN-DIXIE",
-      price: 5.79,
-      date: "3/10/2025",
-      change: -0.1,
-      changePercent: -1.7,
-      eggType: "ORGANIC",
-    },
-    {
-      id: "weismarkets-organic",
-      storeId: "weismarkets",
-      name: "WEIS MARKETS",
-      price: 5.99,
-      date: "3/10/2025",
-      change: -0.1,
-      changePercent: -1.6,
-      eggType: "ORGANIC",
-    },
-    {
-      id: "harristeeter-organic",
-      storeId: "harristeeter",
-      name: "HARRIS TEETER",
-      price: 6.29,
-      date: "3/10/2025",
-      change: 0.15,
-      changePercent: 2.4,
-      eggType: "ORGANIC",
-    },
-  ]
-
-  // Filter out any test entries from placeholder data
-  const filteredPlaceholderData = placeholderStoreData.filter((item) => !item.name.toLowerCase().includes("test"))
-
-  // Search for any Costco entries in the placeholderStoreData array
-  // and remove them if found
-  const costcoRegularIndex = placeholderStoreData.findIndex(
-    (item) => item.storeId === "costco" && item.eggType === "REGULAR",
-  )
-  if (costcoRegularIndex !== -1) {
-    placeholderStoreData.splice(costcoRegularIndex, 1)
-  }
-
-  const costcoOrganicIndex = placeholderStoreData.findIndex(
-    (item) => item.storeId === "costco" && item.eggType === "ORGANIC",
-  )
-  if (costcoOrganicIndex !== -1) {
-    placeholderStoreData.splice(costcoOrganicIndex, 1)
-  }
-
-  // USDA historical price data for graph (1 year)
-  const regularHistoricalData = [
-    { date: "3/10/2024", price: 2.93 },
-    { date: "4/10/2024", price: 3.05 },
-    { date: "5/10/2024", price: 3.12 },
-    { date: "6/10/2024", price: 3.24 },
-    { date: "7/10/2024", price: 3.36 },
-    { date: "8/10/2024", price: 3.45 },
-    { date: "9/10/2024", price: 3.58 },
-    { date: "10/10/2024", price: 3.67 },
-    { date: "11/10/2024", price: 3.82 },
-    { date: "12/10/2024", price: 4.15 },
-    { date: "1/10/2025", price: 4.43 },
-    { date: "2/10/2025", price: 4.72 },
-    { date: "3/10/2025", price: 4.94 },
-  ]
-
-  const organicHistoricalData = [
-    { date: "3/10/2024", price: 4.98 },
-    { date: "4/10/2024", price: 5.12 },
-    { date: "5/10/2024", price: 5.25 },
-    { date: "6/10/2024", price: 5.38 },
-    { date: "7/10/2024", price: 5.52 },
-    { date: "8/10/2024", price: 5.67 },
-    { date: "9/10/2024", price: 5.83 },
-    { date: "10/10/2024", price: 5.99 },
-    { date: "11/10/2024", price: 6.15 },
-    { date: "12/10/2024", price: 6.32 },
-    { date: "1/10/2025", price: 6.49 },
-    { date: "2/10/2025", price: 6.53 },
-    { date: "3/10/2025", price: 6.38 },
-  ]
-
-  // Filter stores by egg type
-  const stores = storeData.filter((store) => store.eggType === eggType)
-
-  // Filter and sort stores by price (highest to lowest)
-  const filteredStores = stores.filter((store) => store.name.toLowerCase().includes(""))
-
-  // Sort stores by price (highest to lowest), handling null prices
-  const sortedStores = [...filteredStores].sort((a, b) => {
-    // If both prices are null, sort by name
-    if (a.price === null && b.price === null) {
-      return a.name.localeCompare(b.name)
-    }
-
-    // If only a's price is null, put it at the end
+  // Sort stores by price (lowest first)
+  const sortedStores = [...storesWithPrices].sort((a, b) => {
     if (a.price === null) return 1
-
-    // If only b's price is null, put it at the end
     if (b.price === null) return -1
-
-    // Otherwise sort by price (highest to lowest)
-    return b.price - a.price
+    return a.price - b.price
   })
 
-  // Calculate average prices (excluding null prices)
-  const regularEggs = storeData.filter((store) => store.eggType === "REGULAR" && store.price !== null)
-  const organicEggs = storeData.filter((store) => store.eggType === "ORGANIC" && store.price !== null)
+  // Calculate average price
+  const validPrices = prices.filter((p) => p.price !== null && p.price > 0).map((p) => p.price)
+  const averagePrice =
+    validPrices.length > 0 ? validPrices.reduce((sum, price) => sum + price, 0) / validPrices.length : 0
 
-  const regularAvgPrice =
-    regularEggs.length > 0 ? regularEggs.reduce((sum, store) => sum + (store.price || 0), 0) / regularEggs.length : 0
-  const organicAvgPrice =
-    organicEggs.length > 0 ? organicEggs.reduce((sum, store) => sum + (store.price || 0), 0) / organicEggs.length : 0
+  // Get Echo Park average for the selected egg type
+  const echoAverage = echoAverages.find((avg) => avg.eggType === selectedEggType)
+  const echoAvgPrice = echoAverage ? echoAverage.avgPrice : 0
 
-  // Get the correct historical data based on egg type
-  const historicalData = eggType === "REGULAR" ? regularHistoricalData : organicHistoricalData
+  // Format the Echo Park stores for display
+  const formattedEchoStores = echoStores
+    .map((store) => ({
+      id: store.storeId,
+      name: `${store.store_name} (${store.location})`,
+      price: store.price,
+      website: store.store_website,
+    }))
+    .sort((a, b) => a.price - b.price)
+
+  // Featured stores - make sure to include our new stores if they have data
+  const featuredStoreIds = [
+    "albertsons",
+    "food4less", // Replaced Trader Joe's with Food 4 Less
+    "ralphs",
+    "vons",
+    "smartfinal", // Added Smart & Final
+    "erewhon", // Added Erewhon
+  ]
+
+  const featuredStores = sortedStores.filter((store) => featuredStoreIds.includes(store.id))
 
   return (
-    <div style={styles.container}>
-      <div style={styles.section}>
-        <h1 style={styles.header}>eggs.live</h1>
-        <h2 style={styles.subheader}>US EGG PRICES PER DOZEN</h2>
+    <div className="space-y-4">
+      <Tabs defaultValue="nationwide" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="nationwide">Nationwide</TabsTrigger>
+          <TabsTrigger value="echo-park">Echo Park / Silver Lake</TabsTrigger>
+        </TabsList>
 
-        <EggIndices regularPrice={regularAvgPrice} organicPrice={organicAvgPrice} />
-      </div>
+        <TabsContent value="nationwide" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Average {selectedEggType === "organic" ? "Organic" : "Regular"} Egg Price
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CurrentPrice price={averagePrice} />
+                <CardDescription>Based on {validPrices.length} stores nationwide</CardDescription>
+              </CardContent>
+            </Card>
 
-      <div style={styles.section}>
-        <h2 style={styles.header}>TODAY'S PRICES</h2>
-        <div style={styles.updateInfo}>UPDATED: {lastUpdated || "3/10/2025"}</div>
-
-        <div style={styles.buttonContainer}>
-          <button
-            style={{
-              ...styles.button,
-              ...(eggType === "REGULAR" ? styles.activeButton : {}),
-            }}
-            onClick={() => setEggType("REGULAR")}
-          >
-            REGULAR
-          </button>
-          <button
-            style={{
-              ...styles.button,
-              ...(eggType === "ORGANIC" ? styles.activeButton : {}),
-            }}
-            onClick={() => setEggType("ORGANIC")}
-          >
-            ORGANIC
-          </button>
-        </div>
-
-        <div style={styles.sortInfo}>SORTED BY HIGHEST PRICE</div>
-
-        {loading ? (
-          <div style={styles.loadingText}>Loading store data...</div>
-        ) : (
-          <div style={styles.storesContainer}>
-            {sortedStores.map((store) => (
-              <div key={store.id} style={styles.storeItem}>
-                <div style={styles.storeName}>{store.name}</div>
-
-                {store.price !== null ? (
-                  <>
-                    <div style={styles.storePrice}>${store.price.toFixed(2)}</div>
-                    <div style={styles.priceChange}>
-                      <span
-                        style={{
-                          ...styles.priceChangeArrow,
-                          color: store.change >= 0 ? "#00ff00" : "#ff0000",
-                        }}
-                      >
-                        {store.change >= 0 ? "↑" : "↓"}
-                      </span>
-                      <span
-                        style={{
-                          color: store.change >= 0 ? "#00ff00" : "#ff0000",
-                        }}
-                      >
-                        {store.change >= 0 ? "+" : ""}
-                        {store.change.toFixed(2)} ({store.change >= 0 ? "+" : ""}
-                        {store.changePercent.toFixed(1)}%)
-                      </span>
-                    </div>
-                  </>
-                ) : (
-                  <div style={styles.noData}>NO DATA FOUND</div>
-                )}
-              </div>
+            {featuredStores.slice(0, 3).map((store) => (
+              <Card key={store.id}>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">{store.name}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CurrentPrice price={store.price || 0} />
+                  <CardDescription>
+                    <a
+                      href={store.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-500 hover:underline"
+                    >
+                      Visit website
+                    </a>
+                  </CardDescription>
+                </CardContent>
+              </Card>
             ))}
           </div>
-        )}
-      </div>
 
-      <div style={styles.section}>
-        <EggPriceChart historicalData={historicalData} eggType={eggType.toLowerCase()} />
-      </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <Card className="col-span-2">
+              <CardHeader>
+                <CardTitle>Egg Price History</CardTitle>
+              </CardHeader>
+              <CardContent className="px-2">
+                <EggPriceChart eggType={selectedEggType} />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Egg Type</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col space-y-4">
+                  <button
+                    onClick={() => setSelectedEggType("regular")}
+                    className={`p-4 rounded-lg border ${
+                      selectedEggType === "regular"
+                        ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                        : "border-gray-200 dark:border-gray-800"
+                    }`}
+                  >
+                    <div className="font-medium">Regular Eggs</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">Conventional, non-organic eggs</div>
+                  </button>
+
+                  <button
+                    onClick={() => setSelectedEggType("organic")}
+                    className={`p-4 rounded-lg border ${
+                      selectedEggType === "organic"
+                        ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                        : "border-gray-200 dark:border-gray-800"
+                    }`}
+                  >
+                    <div className="font-medium">Organic Eggs</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">USDA certified organic eggs</div>
+                  </button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>All Stores</CardTitle>
+              <CardDescription>
+                Current {selectedEggType === "organic" ? "organic" : "regular"} egg prices from stores across the US
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="text-center py-4">Loading store data...</div>
+              ) : error ? (
+                <div className="text-center text-red-500 py-4">{error}</div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {sortedStores.map((store) => (
+                    <div key={store.id} className="flex justify-between items-center p-3 border rounded-lg">
+                      <div>
+                        <div className="font-medium">{store.name}</div>
+                        <a
+                          href={store.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-blue-500 hover:underline"
+                        >
+                          Visit website
+                        </a>
+                      </div>
+                      <div className="text-xl font-bold">${store.price?.toFixed(2)}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="echo-park" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Echo Park Average {selectedEggType === "organic" ? "Organic" : "Regular"} Egg Price
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CurrentPrice price={echoAvgPrice} />
+                <CardDescription>Based on {echoStores.length} stores in Echo Park/Silver Lake</CardDescription>
+              </CardContent>
+            </Card>
+
+            {formattedEchoStores.slice(0, 3).map((store) => (
+              <Card key={`${store.id}-${store.name}`}>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">{store.name}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CurrentPrice price={store.price || 0} />
+                  <CardDescription>
+                    <a
+                      href={store.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-500 hover:underline"
+                    >
+                      Visit website
+                    </a>
+                  </CardDescription>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Echo Park / Silver Lake Stores</CardTitle>
+              <CardDescription>
+                Current {selectedEggType === "organic" ? "organic" : "regular"} egg prices in the Echo Park area
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {echoLoading ? (
+                <div className="text-center py-4">Loading Echo Park data...</div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {formattedEchoStores.map((store) => (
+                    <div
+                      key={`${store.id}-${store.name}`}
+                      className="flex justify-between items-center p-3 border rounded-lg"
+                    >
+                      <div>
+                        <div className="font-medium">{store.name}</div>
+                        <a
+                          href={store.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-blue-500 hover:underline"
+                        >
+                          Visit website
+                        </a>
+                      </div>
+                      <div className="text-xl font-bold">${store.price?.toFixed(2)}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <Card className="col-span-2">
+              <CardHeader>
+                <CardTitle>Egg Type</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col space-y-4">
+                  <button
+                    onClick={() => setSelectedEggType("regular")}
+                    className={`p-4 rounded-lg border ${
+                      selectedEggType === "regular"
+                        ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                        : "border-gray-200 dark:border-gray-800"
+                    }`}
+                  >
+                    <div className="font-medium">Regular Eggs</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">Conventional, non-organic eggs</div>
+                  </button>
+
+                  <button
+                    onClick={() => setSelectedEggType("organic")}
+                    className={`p-4 rounded-lg border ${
+                      selectedEggType === "organic"
+                        ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                        : "border-gray-200 dark:border-gray-800"
+                    }`}
+                  >
+                    <div className="font-medium">Organic Eggs</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">USDA certified organic eggs</div>
+                  </button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
