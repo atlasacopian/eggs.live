@@ -49,9 +49,9 @@ export async function GET() {
       // Existing stores
       { id: "albertsons", name: "Albertsons", website: "https://www.albertsons.com" },
       { id: "aldi", name: "Aldi", website: "https://www.aldi.us" },
-      // Remove Costco
+      // Costco is already removed
       { id: "food4less", name: "Food 4 Less", website: "https://www.food4less.com" },
-      { id: "heb", name: "HEB", website: "https://www.heb.com" },
+      { id: "heb", name: "H-E-B", website: "https://www.heb.com" }, // Updated to H-E-B
       { id: "kroger", name: "Kroger", website: "https://www.kroger.com" },
       { id: "meijer", name: "Meijer", website: "https://www.meijer.com" },
       { id: "publix", name: "Publix", website: "https://www.publix.com" },
