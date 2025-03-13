@@ -1,58 +1,55 @@
 import { NextResponse } from "next/server"
-import prisma from "@/lib/prisma"
+import { PrismaClient } from "@prisma/client"
 
 export const dynamic = "force-dynamic"
 
 export async function GET() {
   try {
-    // Check database connection
+    // Create a new Prisma client for this request
+    const prisma = new PrismaClient()
+
+    // Check database tables
     const tables = []
 
-    // Check store table
     try {
+      // Check store table
       const storeCount = await prisma.store.count()
-      tables.push({ name: "store", count: storeCount, status: "ok" })
-    } catch (error) {
-      tables.push({ name: "store", error: error.message, status: "error" })
-    }
+      tables.push({ name: "store", exists: true, count: storeCount })
 
-    // Check store_locations table
-    try {
+      // Check store_locations table
       const locationCount = await prisma.store_locations.count()
-      tables.push({ name: "store_locations", count: locationCount, status: "ok" })
-    } catch (error) {
-      tables.push({ name: "store_locations", error: error.message, status: "error" })
-    }
+      tables.push({ name: "store_locations", exists: true, count: locationCount })
 
-    // Check la_egg_prices table
-    try {
-      const priceCount = await prisma.la_egg_prices.count()
-      tables.push({ name: "la_egg_prices", count: priceCount, status: "ok" })
-    } catch (error) {
-      tables.push({ name: "la_egg_prices", error: error.message, status: "error" })
-    }
+      // Check la_egg_prices table
+      const laPriceCount = await prisma.la_egg_prices.count()
+      tables.push({ name: "la_egg_prices", exists: true, count: laPriceCount })
 
-    // Get database schema information if possible
-    let schema = null
-    try {
-      // This is PostgreSQL specific - adjust if using a different database
-      const schemaResult = await prisma.$queryRaw`
-        SELECT table_name, column_name, data_type 
-        FROM information_schema.columns 
+      // Check egg_prices table
+      const priceCount = await prisma.egg_prices.count()
+      tables.push({ name: "egg_prices", exists: true, count: priceCount })
+
+      // Get database schema information
+      const schema = await prisma.$queryRaw`
+        SELECT table_name, column_name, data_type, column_default, is_nullable
+        FROM information_schema.columns
         WHERE table_schema = 'public'
         ORDER BY table_name, ordinal_position
       `
-      schema = schemaResult
-    } catch (error) {
-      console.error("Error fetching schema:", error)
-    }
 
-    return NextResponse.json({
-      success: true,
-      tables,
-      schema,
-      timestamp: new Date().toISOString(),
-    })
+      // Disconnect the client
+      await prisma.$disconnect()
+
+      return NextResponse.json({
+        success: true,
+        tables,
+        schema,
+        timestamp: new Date().toISOString(),
+      })
+    } catch (error) {
+      // Make sure to disconnect on error
+      await prisma.$disconnect()
+      throw error
+    }
   } catch (error) {
     console.error("Database check error:", error)
     return NextResponse.json(
