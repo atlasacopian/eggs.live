@@ -1,51 +1,23 @@
 import { scrapeWithFirecrawl } from "./firecrawl-scraper"
 import prisma from "@/lib/prisma"
+import { getAllLAStoreLocations, getRepresentativeLAStoreLocations } from "../la-store-locations"
 
-// Store URLs for scraping - LA Metro focus
-// Added Whole Foods, Target, and Walmart as requested
-const LA_STORE_URLS = [
-  // Major national chains
-  { name: "Walmart", url: "https://www.walmart.com/search?q=eggs", zipCode: "90001" }, // South LA
-  { name: "Walmart", url: "https://www.walmart.com/search?q=eggs", zipCode: "91342" }, // San Fernando Valley
-  { name: "Target", url: "https://www.target.com/s?searchTerm=eggs", zipCode: "90017" }, // Downtown LA
-  { name: "Target", url: "https://www.target.com/s?searchTerm=eggs", zipCode: "91505" }, // Burbank
-  { name: "Whole Foods", url: "https://www.wholefoodsmarket.com/search?text=eggs", zipCode: "90046" }, // West Hollywood
-  { name: "Whole Foods", url: "https://www.wholefoodsmarket.com/search?text=eggs", zipCode: "90272" }, // Pacific Palisades
+// Update the scrapeAllStores function to use the new store locations:
 
-  // Regional chains
-  { name: "Ralphs", url: "https://www.ralphs.com/search?query=eggs", zipCode: "90026" }, // Echo Park
-  { name: "Ralphs", url: "https://www.ralphs.com/search?query=eggs", zipCode: "90045" }, // Westchester
-  { name: "Vons", url: "https://www.vons.com/shop/search-results.html?q=eggs", zipCode: "90026" }, // Silver Lake
-  { name: "Vons", url: "https://www.vons.com/shop/search-results.html?q=eggs", zipCode: "90036" }, // Mid-Wilshire
-  { name: "Albertsons", url: "https://www.albertsons.com/shop/search-results.html?q=eggs", zipCode: "90027" }, // Los Feliz
-  { name: "Albertsons", url: "https://www.albertsons.com/shop/search-results.html?q=eggs", zipCode: "91206" }, // Glendale
-  { name: "Food 4 Less", url: "https://www.food4less.com/search?query=eggs&searchType=natural", zipCode: "90011" }, // South LA
-  { name: "Food 4 Less", url: "https://www.food4less.com/search?query=eggs&searchType=natural", zipCode: "91331" }, // Pacoima
-
-  // Specialty/premium chains
-  { name: "Sprouts", url: "https://shop.sprouts.com/search?search_term=eggs", zipCode: "90034" }, // Palms
-  { name: "Sprouts", url: "https://shop.sprouts.com/search?search_term=eggs", zipCode: "91604" }, // Studio City
-  { name: "Erewhon", url: "https://www.erewhonmarket.com/search?q=eggs", zipCode: "90210" }, // Beverly Hills
-  { name: "Erewhon", url: "https://www.erewhonmarket.com/search?q=eggs", zipCode: "90049" }, // Brentwood
-  { name: "Gelson's", url: "https://www.gelsons.com/shop/search-results.html?q=eggs", zipCode: "90046" }, // Hollywood
-  { name: "Gelson's", url: "https://www.gelsons.com/shop/search-results.html?q=eggs", zipCode: "90077" }, // Bel Air
-
-  // Discount/value chains
-  { name: "Smart & Final", url: "https://www.smartandfinal.com/shop/search-results?q=eggs", zipCode: "90026" }, // Echo Park
-  { name: "Smart & Final", url: "https://www.smartandfinal.com/shop/search-results?q=eggs", zipCode: "90016" }, // Mid-City
-  { name: "Pavilions", url: "https://www.pavilions.com/shop/search-results.html?q=eggs", zipCode: "90064" }, // West LA
-  { name: "Pavilions", url: "https://www.pavilions.com/shop/search-results.html?q=eggs", zipCode: "91604" }, // Studio City
-]
-
-export async function scrapeAllStores() {
-  console.log("Starting LA egg price scraping...")
+export async function scrapeAllStores(useAllStores = false) {
+  console.log(`Starting LA egg price scraping (${useAllStores ? "all stores" : "representative stores"})...`)
 
   const results = []
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
+  // Get store locations - either all or representative sample
+  const storeLocations = useAllStores ? getAllLAStoreLocations() : getRepresentativeLAStoreLocations(50)
+
+  console.log(`Preparing to scrape ${storeLocations.length} store locations...`)
+
   // Scrape LA stores
-  for (const store of LA_STORE_URLS) {
+  for (const store of storeLocations) {
     try {
       // For stores with location-specific pricing, we need to set the zip code
       const storeUrl = store.url + (store.url.includes("?") ? "&" : "?") + `zipCode=${store.zipCode}`
@@ -81,10 +53,10 @@ export async function scrapeAllStores() {
           storeLocation = await prisma.store_locations.create({
             data: {
               store_id: storeRecord.id,
-              address: `Los Angeles area (${store.zipCode})`,
+              address: store.address,
               zipCode: store.zipCode,
-              latitude: null, // We could add actual coordinates later
-              longitude: null,
+              latitude: store.latitude || null,
+              longitude: store.longitude || null,
             },
           })
         }
@@ -126,3 +98,4 @@ export async function scrapeAllStores() {
 
   return results
 }
+
