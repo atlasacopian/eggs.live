@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server"
-import { scrapeAllStores, scrapeEchoParkStores } from "@/lib/scrapers/daily-scraping"
+
+// Tell Next.js this is a dynamic route
+export const dynamic = "force-dynamic"
 
 export async function GET(request: Request) {
   try {
@@ -11,21 +13,15 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Run the scrapers
-    console.log("Running daily egg price scraping...")
-
-    const nationwideResults = await scrapeAllStores()
-    const echoParkResults = await scrapeEchoParkStores()
-
+    // For now, just return a success message
+    // We'll implement the actual scraping later
     return NextResponse.json({
       success: true,
-      message: "Egg price scraping completed successfully",
-      nationwideResults,
-      echoParkResults,
+      message: "Cron job executed successfully",
     })
   } catch (error) {
     console.error("Error in cron job:", error)
-    return NextResponse.json({ error: "Failed to run scraping job" }, { status: 500 })
+    return NextResponse.json({ error: "Failed to run cron job" }, { status: 500 })
   }
 }
 
