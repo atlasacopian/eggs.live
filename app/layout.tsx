@@ -1,14 +1,13 @@
 import type React from "react"
-import "@/app/globals.css"
+import "./globals.css"
+import { Inter } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
-import { Inter, JetBrains_Mono } from "next/font/google"
 
 const inter = Inter({ subsets: ["latin"] })
-const mono = JetBrains_Mono({ subsets: ["latin"] })
 
 export const metadata = {
-  title: "eggs.live",
-  description: "Track egg prices across the US and in Echo Park, Los Angeles",
+  title: "eggs.live - Track Egg Prices in Los Angeles",
+  description: "Find the best egg prices near you in Los Angeles",
 }
 
 export default function RootLayout({
@@ -17,9 +16,11 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={mono.className}>
-        <ThemeProvider>{children}</ThemeProvider>
+    <html lang="en">
+      <body className={inter.className}>
+        <ThemeProvider attribute="class" defaultTheme="light">
+          <main className="min-h-screen bg-gradient-to-b from-amber-50 to-white">{children}</main>
+        </ThemeProvider>
       </body>
     </html>
   )
