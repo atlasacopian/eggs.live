@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 
+// Tell Next.js this is a dynamic route
+export const dynamic = "force-dynamic"
+
 export async function GET(request: Request) {
   try {
     // Get the current date in YYYY-MM-DD format
