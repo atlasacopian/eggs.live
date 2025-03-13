@@ -25,18 +25,8 @@ export async function GET(request: Request) {
     const apiKey = process.env.FIRECRAWL_API_KEY
     const storeUrl = "https://www.albertsons.com/shop/search-results.html?q=eggs"
 
-    // Simple extraction prompt
-    const extractionPrompt = `
-      Extract all egg prices from this page. For each egg product, provide:
-      1. The price (just the number, e.g. 3.99)
-      2. Whether it's organic or regular eggs
-      3. The package size (dozen, half-dozen, etc.)
-      
-      Format as JSON with an array of products.
-    `
-
-    // Call Firecrawl API
-    const response = await fetch("https://api.firecrawl.dev/extract", {
+    // Call Firecrawl API - using the correct endpoint
+    const response = await fetch("https://api.firecrawl.dev/api/v1/extract", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -44,19 +34,34 @@ export async function GET(request: Request) {
       },
       body: JSON.stringify({
         url: storeUrl,
-        prompt: extractionPrompt,
+        instructions: `
+          Extract all egg prices from this page. For each egg product, provide:
+          1. The price (just the number, e.g. 3.99)
+          2. Whether it's organic or regular eggs
+          3. The package size (dozen, half-dozen, etc.)
+        `,
       }),
     })
 
-    // Check response
+    // Log the response status and headers for debugging
+    console.log("Response status:", response.status)
+    console.log("Response headers:", Object.fromEntries(response.headers.entries()))
+
     if (!response.ok) {
       const errorText = await response.text()
       return NextResponse.json(
         {
           error: `Firecrawl API error (${response.status})`,
           details: errorText,
+          requestInfo: {
+            url: "https://api.firecrawl.dev/api/v1/extract",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer [HIDDEN]",
+            },
+          },
         },
-        { status: 500 },
+        { status: response.status },
       )
     }
 
@@ -68,10 +73,12 @@ export async function GET(request: Request) {
       result: result,
     })
   } catch (error) {
+    console.error("Full error:", error)
     return NextResponse.json(
       {
         error: "Test scrape failed",
         message: error.message,
+        stack: error.stack,
       },
       { status: 500 },
     )
