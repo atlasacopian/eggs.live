@@ -1,167 +1,139 @@
-import { scrapeStore, savePrices } from "./egg-scraper"
-import { Pool } from "pg"
+import { scrapeWithFirecrawl } from "./firecrawl-scraper"
+import prisma from "@/lib/prisma"
+
+// Store URLs for scraping
+const STORE_URLS = [
+  { name: "Food 4 Less", url: "https://www.food4less.com/search?query=eggs&searchType=natural" },
+  { name: "Albertsons", url: "https://www.albertsons.com/shop/search-results.html?q=eggs" },
+  { name: "H-E-B", url: "https://www.heb.com/search/results?Ntt=eggs" },
+  { name: "Meijer", url: "https://www.meijer.com/search.html?text=eggs" },
+  { name: "Sprouts", url: "https://shop.sprouts.com/search?search_term=eggs" },
+  { name: "Erewhon", url: "https://www.erewhonmarket.com/search?q=eggs" },
+  { name: "Food Lion", url: "https://shop.foodlion.com/search?search_term=eggs" },
+  { name: "Giant Eagle", url: "https://www.gianteagle.com/search?q=eggs" },
+  { name: "Ralphs", url: "https://www.ralphs.com/search?query=eggs" },
+  { name: "Shop Rite", url: "https://www.shoprite.com/sm/pickup/rsid/3000/results?q=eggs" },
+  { name: "Stop and Shop", url: "https://stopandshop.com/search?searchTerm=eggs" },
+  { name: "Vons", url: "https://www.vons.com/shop/search-results.html?q=eggs" },
+  { name: "Winn Dixie", url: "https://www.winndixie.com/search?q=eggs" },
+  { name: "Weis Markets", url: "https://www.weismarkets.com/search/products/eggs" },
+  { name: "Harris Teeter", url: "https://www.harristeeter.com/search?query=eggs" },
+]
+
+// Echo Park store URLs
+const ECHO_PARK_STORE_URLS = [
+  { name: "Food 4 Less", url: "https://www.food4less.com/search?query=eggs&searchType=natural", zipCode: "90026" },
+  { name: "Smart & Final", url: "https://www.smartandfinal.com/shop/search-results?q=eggs", zipCode: "90026" },
+  { name: "Gelson's", url: "https://www.gelsons.com/shop/search-results.html?q=eggs", zipCode: "90026" },
+  { name: "Pavilions", url: "https://www.pavilions.com/shop/search-results.html?q=eggs", zipCode: "90026" },
+]
 
 export async function scrapeAllStores() {
-  console.log("Starting egg price scraping for all stores...")
-
-  // Define all stores to scrape
-  const stores = [
-    "albertsons",
-    "aldi",
-    "food4less", // Replaced Trader Joe's with Food 4 Less
-    "heb",
-    "kroger",
-    "meijer",
-    "publix",
-    "safeway",
-    "sprouts",
-    "target",
-    "walmart",
-    "wegmans",
-    "wholefoods",
-    "erewhon", // Added Erewhon
-    "foodlion",
-    "gianteagle",
-    "ralphs",
-    "shoprite",
-    "stopandshop",
-    "vons",
-    "winndixie",
-    "weismarkets",
-    "harristeeter",
-    "smartfinal", // Added Smart & Final
-  ]
+  console.log("Starting daily egg price scraping...")
 
   const results = []
-  let successCount = 0
 
-  // Scrape each store
-  for (const storeId of stores) {
-    try {
-      console.log(`Scraping ${storeId}...`)
+  // Scrape nationwide stores
+  for (const store of STORE_URLS) {
+    const storeResults = await scrapeWithFirecrawl(store.url, store.name)
+    results.push({
+      store: store.name,
+      count: storeResults.length,
+    })
+  }
 
-      // Scrape the store
-      const { regularPrice, organicPrice } = await scrapeStore(storeId)
+  console.log("Nationwide scraping complete.")
 
-      // Save the prices
-      const success = await savePrices(storeId, regularPrice, organicPrice)
+  // Log the results
+  console.log("Scraping results:")
+  console.table(results)
 
-      if (success) {
-        successCount++
-        results.push({
-          store: storeId,
-          status: "success",
-          regularPrice,
-          organicPrice,
+  return results
+}
+
+export async function scrapeEchoParkStores() {
+  console.log("Starting Echo Park egg price scraping...")
+
+  const results = []
+
+  // Scrape Echo Park stores
+  for (const store of ECHO_PARK_STORE_URLS) {
+    // For stores with location-specific pricing, we need to set the zip code
+    const storeUrl = store.url + (store.url.includes("?") ? "&" : "?") + `zipCode=${store.zipCode}`
+
+    const storeResults = await scrapeWithFirecrawl(storeUrl, store.name)
+
+    // Save to echo_park_egg_prices table
+    if (storeResults.length > 0) {
+      // Find or create store location
+      let storeLocation = await prisma.store_locations.findFirst({
+        where: {
+          store: {
+            name: store.name,
+          },
+          zipCode: store.zipCode,
+        },
+        include: {
+          store: true,
+        },
+      })
+
+      if (!storeLocation) {
+        // Find or create the store first
+        let storeRecord = await prisma.store.findFirst({
+          where: { name: store.name },
         })
-      } else {
-        results.push({
-          store: storeId,
-          status: "error",
-          error: "Failed to save prices",
+
+        if (!storeRecord) {
+          storeRecord = await prisma.store.create({
+            data: { name: store.name },
+          })
+        }
+
+        // Create the store location
+        storeLocation = await prisma.store_locations.create({
+          data: {
+            store_id: storeRecord.id,
+            address: `Echo Park / Silver Lake area`,
+            zipCode: store.zipCode,
+            latitude: 34.0781, // Approximate coordinates for Echo Park
+            longitude: -118.2613,
+          },
+          include: {
+            store: true,
+          },
         })
       }
-    } catch (error) {
-      console.error(`Error scraping ${storeId}:`, error)
-      results.push({
-        store: storeId,
-        status: "error",
-        error: error instanceof Error ? error.message : String(error),
-      })
+
+      // Get today's date
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+
+      // Save each price to echo_park_egg_prices
+      for (const price of storeResults) {
+        await prisma.echo_park_egg_prices.create({
+          data: {
+            store_location_id: storeLocation.id,
+            price: price.price,
+            date: today,
+            eggType: price.eggType,
+          },
+        })
+      }
     }
+
+    results.push({
+      store: store.name,
+      count: storeResults.length,
+    })
   }
 
-  // Calculate and store average prices
-  await calculateAveragePrices()
+  console.log("Echo Park scraping complete.")
 
-  console.log(`Scraping completed. Successful: ${successCount}/${stores.length}`)
+  // Log the results
+  console.log("Echo Park scraping results:")
+  console.table(results)
 
-  return {
-    success: true,
-    scrapedCount: successCount,
-    totalStores: stores.length,
-    results,
-  }
-}
-
-export async function runDailyScraping() {
-  return await scrapeAllStores()
-}
-
-async function calculateAveragePrices() {
-  const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-  })
-
-  try {
-    // Get today's date at midnight
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const formattedDate = today.toISOString().split("T")[0]
-
-    // Calculate average for regular eggs
-    const regularResult = await pool.query(
-      `SELECT AVG(price) as avg_price, COUNT(*) as store_count 
-       FROM egg_prices 
-       WHERE date = $1 AND "eggType" = 'regular' AND price IS NOT NULL`,
-      [formattedDate],
-    )
-
-    const regularAvgPrice = Number.parseFloat(regularResult.rows[0].avg_price) || 0
-    const regularStoreCount = Number.parseInt(regularResult.rows[0].store_count) || 0
-
-    if (regularStoreCount > 0) {
-      const regularId = `${formattedDate}-regular`
-      await pool.query(
-        `INSERT INTO average_prices (id, date, price, "storeCount", "eggType") 
-         VALUES ($1, $2, $3, $4, $5) 
-         ON CONFLICT (date, "eggType") DO UPDATE 
-         SET price = $3, "storeCount" = $4`,
-        [regularId, formattedDate, regularAvgPrice, regularStoreCount, "regular"],
-      )
-    }
-
-    // Calculate average for organic eggs
-    const organicResult = await pool.query(
-      `SELECT AVG(price) as avg_price, COUNT(*) as store_count 
-       FROM egg_prices 
-       WHERE date = $1 AND "eggType" = 'organic' AND price IS NOT NULL`,
-      [formattedDate],
-    )
-
-    const organicAvgPrice = Number.parseFloat(organicResult.rows[0].avg_price) || 0
-    const organicStoreCount = Number.parseInt(organicResult.rows[0].store_count) || 0
-
-    if (organicStoreCount > 0) {
-      const organicId = `${formattedDate}-organic`
-      await pool.query(
-        `INSERT INTO average_prices (id, date, price, "storeCount", "eggType") 
-         VALUES ($1, $2, $3, $4, $5) 
-         ON CONFLICT (date, "eggType") DO UPDATE 
-         SET price = $3, "storeCount" = $4`,
-        [organicId, formattedDate, organicAvgPrice, organicStoreCount, "organic"],
-      )
-    }
-
-    await pool.end()
-
-    return {
-      regularAvgPrice,
-      regularStoreCount,
-      organicAvgPrice,
-      organicStoreCount,
-    }
-  } catch (error) {
-    console.error("Error calculating average prices:", error)
-
-    // Make sure to close the pool even on error
-    try {
-      await pool.end()
-    } catch (closeError) {
-      console.error("Error closing pool:", closeError)
-    }
-
-    return null
-  }
+  return results
 }
 
