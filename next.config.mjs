@@ -1,42 +1,22 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
+  // Disable automatic favicon generation
   images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**',
-      },
-    ],
-    unoptimized: true,
+    disableStaticImages: true,
   },
-  // Added this to ensure API routes work properly
-  async headers() {
-    return [
-      {
-        source: '/api/:path*',
-        headers: [
-          { key: 'Access-Control-Allow-Credentials', value: 'true' },
-          { key: 'Access-Control-Allow-Origin', value: '*' },
-          { key: 'Access-Control-Allow-Methods', value: 'GET,OPTIONS,PATCH,DELETE,POST,PUT' },
-          { key: 'Access-Control-Allow-Headers', value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version' },
-        ],
-      },
-    ]
-  },
-  // Ensure Playwright works properly
-  webpack: (config) => {
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      'playwright-core': false,
-    }
-    return config
-  },
+  // Other config options...
 }
 
 export default nextConfig
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  // Disable automatic favicon generation
+  images: {
+    disableStaticImages: true,
+  },
+  // Other config options...
+}
+
+export default nextConfig
+
