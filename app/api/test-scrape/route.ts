@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 
-// Tell Next.js this is a dynamic route
 export const dynamic = "force-dynamic"
 
 export async function GET(request: Request) {
@@ -28,8 +27,8 @@ export async function GET(request: Request) {
     const apiKey = process.env.FIRECRAWL_API_KEY
     const storeUrl = "https://www.albertsons.com/shop/search-results.html?q=eggs"
 
-    // Call Firecrawl API - using the correct endpoint
-    const response = await fetch("https://api.firecrawl.dev/api/v1/extract", {
+    // Call Firecrawl API - using the correct endpoint structure
+    const response = await fetch("https://api.firecrawl.dev/extract", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -37,17 +36,25 @@ export async function GET(request: Request) {
       },
       body: JSON.stringify({
         url: storeUrl,
-        instructions: `
-          Extract all egg prices from this page. For each egg product, provide:
-          1. The price (just the number, e.g. 3.99)
-          2. Whether it's organic or regular eggs
-          3. The package size (dozen, half-dozen, etc.)
-        `,
+        selector: ".product-item-v2",
+        fields: {
+          name: ".product-title",
+          price: ".product-price-amount",
+          type: {
+            selector: ".product-title",
+            transform: 'text => text.toLowerCase().includes("organic") ? "organic" : "regular"',
+          },
+          size: {
+            selector: ".product-title",
+            transform: 'text => text.match(/(d+)s*(?:dozen|doz|ct)/i)?.[1] || "12"',
+          },
+        },
       }),
     })
 
     // Log the response status and headers for debugging
     console.log("Response status:", response.status)
+    console.log("Response headers:", Object.fromEntries(response.headers.entries()))
 
     if (!response.ok) {
       const errorText = await response.text()
@@ -55,6 +62,13 @@ export async function GET(request: Request) {
         {
           error: `Firecrawl API error (${response.status})`,
           details: errorText,
+          requestInfo: {
+            url: "https://api.firecrawl.dev/extract",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer [HIDDEN]",
+            },
+          },
         },
         { status: response.status },
       )
@@ -73,6 +87,7 @@ export async function GET(request: Request) {
       {
         error: "Test scrape failed",
         message: error.message,
+        stack: error.stack,
       },
       { status: 500 },
     )
