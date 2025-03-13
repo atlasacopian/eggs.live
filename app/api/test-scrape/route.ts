@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server"
 
+// Tell Next.js this is a dynamic route
+export const dynamic = "force-dynamic"
+
 export async function GET(request: Request) {
   try {
     // Get the admin key from the URL
@@ -45,7 +48,6 @@ export async function GET(request: Request) {
 
     // Log the response status and headers for debugging
     console.log("Response status:", response.status)
-    console.log("Response headers:", Object.fromEntries(response.headers.entries()))
 
     if (!response.ok) {
       const errorText = await response.text()
@@ -53,13 +55,6 @@ export async function GET(request: Request) {
         {
           error: `Firecrawl API error (${response.status})`,
           details: errorText,
-          requestInfo: {
-            url: "https://api.firecrawl.dev/api/v1/extract",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: "Bearer [HIDDEN]",
-            },
-          },
         },
         { status: response.status },
       )
@@ -78,7 +73,6 @@ export async function GET(request: Request) {
       {
         error: "Test scrape failed",
         message: error.message,
-        stack: error.stack,
       },
       { status: 500 },
     )
