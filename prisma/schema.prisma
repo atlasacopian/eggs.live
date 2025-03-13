@@ -11,38 +11,34 @@ datasource db {
 }
 
 model store {
-  id                Int                 @id @default(autoincrement())
-  name              String
-  egg_prices        egg_prices[]
-  store_locations   store_locations[]
-}
-
-model egg_prices {
-  id        Int      @id @default(autoincrement())
-  store_id  Int
-  store     store    @relation(fields: [store_id], references: [id])
-  price     Float
-  date      DateTime
-  eggType   String   @default("regular")
+  id              Int               @id @default(autoincrement())
+  name            String
+  website         String?
+  store_locations store_locations[]
 }
 
 model store_locations {
-  id                    Int                     @id @default(autoincrement())
-  store_id              Int
-  store                 store                   @relation(fields: [store_id], references: [id])
-  address               String
-  zipCode               String
-  latitude              Float?
-  longitude             Float?
-  echo_park_egg_prices  echo_park_egg_prices[]
+  id         Int             @id @default(autoincrement())
+  store_id   Int
+  store      store           @relation(fields: [store_id], references: [id])
+  address    String?
+  zipCode    String
+  latitude   Float?
+  longitude  Float?
+  egg_prices la_egg_prices[]
+
+  @@index([zipCode])
 }
 
-model echo_park_egg_prices {
-  id                Int             @id @default(autoincrement())
+model la_egg_prices {
+  id               Int             @id @default(autoincrement())
   store_location_id Int
-  store_location    store_locations @relation(fields: [store_location_id], references: [id])
-  price             Float
-  date              DateTime
-  eggType           String          @default("regular")
+  store_location   store_locations @relation(fields: [store_location_id], references: [id])
+  price            Float
+  date             DateTime
+  eggType          String          @default("regular")
+
+  @@unique([store_location_id, date, eggType])
+  @@index([date])
 }
 
