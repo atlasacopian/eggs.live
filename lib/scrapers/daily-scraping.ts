@@ -87,7 +87,7 @@ export async function scrapeAllStores(useAllStores = false) {
         zipCode: store.zipCode,
         count: 0,
         success: false,
-        error: error.message,
+        error: error.message || "Unknown error",
       })
     }
   }
@@ -95,6 +95,9 @@ export async function scrapeAllStores(useAllStores = false) {
   console.log("LA scraping complete.")
   console.log("Scraping results:")
   console.table(results)
+  console.log(
+    `LA scraping complete. Successfully scraped ${results.filter((r) => r.success).length} out of ${results.length} stores.`,
+  )
 
   return results
 }
