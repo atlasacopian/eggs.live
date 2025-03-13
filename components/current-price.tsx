@@ -12,7 +12,10 @@ interface PriceData {
   prices: any[]
 }
 
-export function CurrentPrice({ eggType = "regular" }: { eggType?: "regular" | "organic" }) {
+export default function CurrentPrice({
+  eggType = "regular",
+  price,
+}: { eggType?: "regular" | "organic"; price?: number }) {
   const [priceData, setPriceData] = useState<PriceData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -37,40 +40,41 @@ export function CurrentPrice({ eggType = "regular" }: { eggType?: "regular" | "o
       }
     }
 
-    fetchPrices()
+    if (!price) {
+      fetchPrices()
 
-    // Refresh data every 5 minutes
-    const intervalId = setInterval(fetchPrices, 5 * 60 * 1000)
+      // Refresh data every 5 minutes
+      const intervalId = setInterval(fetchPrices, 5 * 60 * 1000)
 
-    return () => clearInterval(intervalId)
+      return () => clearInterval(intervalId)
+    }
   }, [])
 
   const formatPrice = (price: number) => {
-    return price ? `$${price.toFixed(2)}/dozen` : "$0.00/dozen"
+    return price ? `$${price.toFixed(2)}` : "$0.00"
   }
 
   const getStoreCount = () => {
     if (!priceData) return 0
-    return eggType === "regular" ? priceData.averages.regularCount : priceData.averages.organicCount
+    return eggType === "regular" ? priceData?.averages?.regularCount : priceData?.averages?.organicCount
   }
 
   const getAveragePrice = () => {
     if (!priceData) return 0
-    return eggType === "regular" ? priceData.averages.regular : priceData.averages.organic
+    return eggType === "regular" ? priceData?.averages?.regular : priceData?.averages?.organic
   }
+
+  const displayPrice = price !== undefined ? price : getAveragePrice()
 
   return (
     <div className="mb-8">
-      <h2 className="text-2xl font-bold mb-2">Average {eggType === "organic" ? "Organic" : "Regular"} Price</h2>
-
       {loading ? (
         <p className="text-3xl font-bold">Loading...</p>
       ) : error ? (
         <p className="text-red-500">{error}</p>
       ) : (
         <>
-          <p className="text-3xl font-bold">{formatPrice(getAveragePrice())}</p>
-          <p className="text-sm text-gray-500">Based on {getStoreCount()} stores</p>
+          <p className="text-3xl font-bold">{formatPrice(displayPrice)}</p>
         </>
       )}
     </div>
