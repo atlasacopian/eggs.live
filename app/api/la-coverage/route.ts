@@ -89,6 +89,7 @@ export async function GET(request: Request) {
       {
         success: false,
         error: "Failed to fetch LA coverage statistics",
+        message: error.message || "Unknown error",
       },
       { status: 500 },
     )
