@@ -6,7 +6,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Loader2 } from "lucide-react"
-import { useRouter } from "next/router"
+import { useRouter } from "next/navigation"
 
 export function EggSearch() {
   const [zipCode, setZipCode] = useState("")
@@ -18,10 +18,7 @@ export function EggSearch() {
     setLoading(true)
 
     // Navigate to results page with the zip code
-    router.push({
-      pathname: "/results",
-      query: { zipCode },
-    })
+    router.push(`/results?zipCode=${zipCode}`)
   }
 
   return (
