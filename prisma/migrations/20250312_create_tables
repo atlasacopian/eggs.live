@@ -1,0 +1,33 @@
+-- Create the store table
+CREATE TABLE IF NOT EXISTS "store" (
+  "id" SERIAL PRIMARY KEY,
+  "name" TEXT NOT NULL,
+  "website" TEXT
+);
+
+-- Create the store_locations table
+CREATE TABLE IF NOT EXISTS "store_locations" (
+  "id" SERIAL PRIMARY KEY,
+  "store_id" INTEGER NOT NULL,
+  "address" TEXT,
+  "zipCode" TEXT NOT NULL,
+  "latitude" DOUBLE PRECISION,
+  "longitude" DOUBLE PRECISION,
+  FOREIGN KEY ("store_id") REFERENCES "store"("id")
+);
+
+-- Create the la_egg_prices table
+CREATE TABLE IF NOT EXISTS "la_egg_prices" (
+  "id" SERIAL PRIMARY KEY,
+  "store_location_id" INTEGER NOT NULL,
+  "price" DOUBLE PRECISION NOT NULL,
+  "date" TIMESTAMP(3) NOT NULL,
+  "eggType" TEXT NOT NULL DEFAULT 'regular',
+  FOREIGN KEY ("store_location_id") REFERENCES "store_locations"("id"),
+  UNIQUE("store_location_id", "date", "eggType")
+);
+
+-- Add indexes for better query performance
+CREATE INDEX IF NOT EXISTS "la_egg_prices_date_idx" ON "la_egg_prices"("date");
+CREATE INDEX IF NOT EXISTS "store_locations_zipcode_idx" ON "store_locations"("zipCode");
+
