@@ -42,3 +42,14 @@ model la_egg_prices {
   @@index([date])
 }
 
+model egg_prices {
+  id               Int      @id @default(autoincrement())
+  store_location_id Int
+  price            Float
+  date             DateTime
+  eggType          String   @default("regular")
+
+  @@index([date])
+  @@index([store_location_id])
+}
+
