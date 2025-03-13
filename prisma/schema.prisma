@@ -25,7 +25,8 @@ model store_locations {
   zipCode    String
   latitude   Float?
   longitude  Float?
-  egg_prices la_egg_prices[]
+  la_egg_prices la_egg_prices[]
+  egg_prices egg_prices[]
 
   @@index([zipCode])
 }
@@ -43,12 +44,14 @@ model la_egg_prices {
 }
 
 model egg_prices {
-  id               Int      @id @default(autoincrement())
+  id               Int             @id @default(autoincrement())
   store_location_id Int
+  store_location   store_locations @relation(fields: [store_location_id], references: [id])
   price            Float
   date             DateTime
-  eggType          String   @default("regular")
+  eggType          String          @default("regular")
 
+  @@unique([store_location_id, date, eggType])
   @@index([date])
   @@index([store_location_id])
 }
