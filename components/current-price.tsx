@@ -12,7 +12,7 @@ interface PriceData {
   prices: any[]
 }
 
-export default function CurrentPrice({ eggType = "regular" }: { eggType?: "regular" | "organic" }) {
+export function CurrentPrice({ eggType = "regular" }: { eggType?: "regular" | "organic" }) {
   const [priceData, setPriceData] = useState<PriceData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
