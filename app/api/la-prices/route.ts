@@ -1,45 +1,13 @@
-import { NextResponse } from "next/server"
-import { scrapeAllStores } from "@/lib/scrapers/daily-scraping"
+import { LAPrices } from "@/components/la-prices"
 
-export const dynamic = "force-dynamic"
+export default function HomePage() {
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-4xl font-bold mb-2">eggs.live</h1>
+      <p className="text-xl text-gray-600 mb-8">Track egg prices across Los Angeles</p>
 
-export async function POST(request: Request) {
-  try {
-    // This endpoint is for manual testing, so we'll add some basic auth
-    const { searchParams } = new URL(request.url)
-    const key = searchParams.get("key")
-
-    if (key !== process.env.ADMIN_KEY) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    console.log("Manual LA scrape initiated")
-    const results = await scrapeAllStores()
-
-    // Count successful scrapes
-    const successCount = results.filter((r) => r.success && r.count > 0).length
-
-    return NextResponse.json({
-      success: true,
-      message: "Manual LA scrape completed",
-      date: new Date().toISOString(),
-      scrapedCount: successCount,
-      results: results,
-    })
-  } catch (error) {
-    console.error("Error in manual LA scrape:", error)
-    return NextResponse.json(
-      {
-        error: "Failed to run LA scraping job",
-        message: error.message,
-      },
-      { status: 500 },
-    )
-  }
-}
-
-// Also support GET for easier testing
-export async function GET(request: Request) {
-  return POST(request)
+      <LAPrices />
+    </div>
+  )
 }
 
