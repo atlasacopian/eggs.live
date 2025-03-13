@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
+  // Disable automatic favicon generation
+  images: {
+    disableStaticImages: true,
+  },
+  // Other config options...
 }
 
 export default nextConfig
