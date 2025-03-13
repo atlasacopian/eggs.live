@@ -1,117 +1,61 @@
 import { scrapeWithFirecrawl } from "./firecrawl-scraper"
 import prisma from "@/lib/prisma"
 
-// Store URLs for scraping
-const STORE_URLS = [
-  { name: "Food 4 Less", url: "https://www.food4less.com/search?query=eggs&searchType=natural" },
-  { name: "Albertsons", url: "https://www.albertsons.com/shop/search-results.html?q=eggs" },
-  { name: "H-E-B", url: "https://www.heb.com/search/results?Ntt=eggs" },
-  { name: "Meijer", url: "https://www.meijer.com/search.html?text=eggs" },
-  { name: "Sprouts", url: "https://shop.sprouts.com/search?search_term=eggs" },
-  { name: "Erewhon", url: "https://www.erewhonmarket.com/search?q=eggs" },
-  { name: "Food Lion", url: "https://shop.foodlion.com/search?search_term=eggs" },
-  { name: "Giant Eagle", url: "https://www.gianteagle.com/search?q=eggs" },
-  { name: "Ralphs", url: "https://www.ralphs.com/search?query=eggs" },
-  { name: "Shop Rite", url: "https://www.shoprite.com/sm/pickup/rsid/3000/results?q=eggs" },
-  { name: "Stop and Shop", url: "https://stopandshop.com/search?searchTerm=eggs" },
-  { name: "Vons", url: "https://www.vons.com/shop/search-results.html?q=eggs" },
-  { name: "Winn Dixie", url: "https://www.winndixie.com/search?q=eggs" },
-  { name: "Weis Markets", url: "https://www.weismarkets.com/search/products/eggs" },
-  { name: "Harris Teeter", url: "https://www.harristeeter.com/search?query=eggs" },
-]
+// Store URLs for scraping - LA Metro focus
+// Added Whole Foods, Target, and Walmart as requested
+const LA_STORE_URLS = [
+  // Major national chains
+  { name: "Walmart", url: "https://www.walmart.com/search?q=eggs", zipCode: "90001" }, // South LA
+  { name: "Walmart", url: "https://www.walmart.com/search?q=eggs", zipCode: "91342" }, // San Fernando Valley
+  { name: "Target", url: "https://www.target.com/s?searchTerm=eggs", zipCode: "90017" }, // Downtown LA
+  { name: "Target", url: "https://www.target.com/s?searchTerm=eggs", zipCode: "91505" }, // Burbank
+  { name: "Whole Foods", url: "https://www.wholefoodsmarket.com/search?text=eggs", zipCode: "90046" }, // West Hollywood
+  { name: "Whole Foods", url: "https://www.wholefoodsmarket.com/search?text=eggs", zipCode: "90272" }, // Pacific Palisades
 
-// Echo Park store URLs
-const ECHO_PARK_STORE_URLS = [
-  { name: "Food 4 Less", url: "https://www.food4less.com/search?query=eggs&searchType=natural", zipCode: "90026" },
-  { name: "Smart & Final", url: "https://www.smartandfinal.com/shop/search-results?q=eggs", zipCode: "90026" },
-  { name: "Gelson's", url: "https://www.gelsons.com/shop/search-results.html?q=eggs", zipCode: "90026" },
-  { name: "Pavilions", url: "https://www.pavilions.com/shop/search-results.html?q=eggs", zipCode: "90026" },
+  // Regional chains
+  { name: "Ralphs", url: "https://www.ralphs.com/search?query=eggs", zipCode: "90026" }, // Echo Park
+  { name: "Ralphs", url: "https://www.ralphs.com/search?query=eggs", zipCode: "90045" }, // Westchester
+  { name: "Vons", url: "https://www.vons.com/shop/search-results.html?q=eggs", zipCode: "90026" }, // Silver Lake
+  { name: "Vons", url: "https://www.vons.com/shop/search-results.html?q=eggs", zipCode: "90036" }, // Mid-Wilshire
+  { name: "Albertsons", url: "https://www.albertsons.com/shop/search-results.html?q=eggs", zipCode: "90027" }, // Los Feliz
+  { name: "Albertsons", url: "https://www.albertsons.com/shop/search-results.html?q=eggs", zipCode: "91206" }, // Glendale
+  { name: "Food 4 Less", url: "https://www.food4less.com/search?query=eggs&searchType=natural", zipCode: "90011" }, // South LA
+  { name: "Food 4 Less", url: "https://www.food4less.com/search?query=eggs&searchType=natural", zipCode: "91331" }, // Pacoima
+
+  // Specialty/premium chains
+  { name: "Sprouts", url: "https://shop.sprouts.com/search?search_term=eggs", zipCode: "90034" }, // Palms
+  { name: "Sprouts", url: "https://shop.sprouts.com/search?search_term=eggs", zipCode: "91604" }, // Studio City
+  { name: "Erewhon", url: "https://www.erewhonmarket.com/search?q=eggs", zipCode: "90210" }, // Beverly Hills
+  { name: "Erewhon", url: "https://www.erewhonmarket.com/search?q=eggs", zipCode: "90049" }, // Brentwood
+  { name: "Gelson's", url: "https://www.gelsons.com/shop/search-results.html?q=eggs", zipCode: "90046" }, // Hollywood
+  { name: "Gelson's", url: "https://www.gelsons.com/shop/search-results.html?q=eggs", zipCode: "90077" }, // Bel Air
+
+  // Discount/value chains
+  { name: "Smart & Final", url: "https://www.smartandfinal.com/shop/search-results?q=eggs", zipCode: "90026" }, // Echo Park
+  { name: "Smart & Final", url: "https://www.smartandfinal.com/shop/search-results?q=eggs", zipCode: "90016" }, // Mid-City
+  { name: "Pavilions", url: "https://www.pavilions.com/shop/search-results.html?q=eggs", zipCode: "90064" }, // West LA
+  { name: "Pavilions", url: "https://www.pavilions.com/shop/search-results.html?q=eggs", zipCode: "91604" }, // Studio City
 ]
 
 export async function scrapeAllStores() {
-  console.log("Starting daily egg price scraping...")
+  console.log("Starting LA egg price scraping...")
 
   const results = []
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
-  // Scrape nationwide stores
-  for (const store of STORE_URLS) {
-    try {
-      console.log(`Scraping ${store.name}...`)
-      const storeResults = await scrapeWithFirecrawl(store.url, store.name)
-
-      // Save results to database
-      if (storeResults.length > 0) {
-        // Find or create the store
-        let storeRecord = await prisma.store.findFirst({
-          where: { name: store.name },
-        })
-
-        if (!storeRecord) {
-          storeRecord = await prisma.store.create({
-            data: {
-              name: store.name,
-              website: store.url.split("/").slice(0, 3).join("/"),
-            },
-          })
-        }
-
-        // Save each price
-        for (const price of storeResults) {
-          await prisma.egg_prices.create({
-            data: {
-              store_id: storeRecord.id,
-              price: price.price,
-              date: today,
-              eggType: price.eggType,
-            },
-          })
-        }
-      }
-
-      results.push({
-        store: store.name,
-        count: storeResults.length,
-        success: true,
-      })
-    } catch (error) {
-      console.error(`Error scraping ${store.name}:`, error)
-      results.push({
-        store: store.name,
-        count: 0,
-        success: false,
-        error: error.message,
-      })
-    }
-  }
-
-  console.log("Nationwide scraping complete.")
-  console.log("Scraping results:")
-  console.table(results)
-
-  return results
-}
-
-export async function scrapeEchoParkStores() {
-  console.log("Starting Echo Park egg price scraping...")
-
-  const results = []
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-
-  // Scrape Echo Park stores
-  for (const store of ECHO_PARK_STORE_URLS) {
+  // Scrape LA stores
+  for (const store of LA_STORE_URLS) {
     try {
       // For stores with location-specific pricing, we need to set the zip code
       const storeUrl = store.url + (store.url.includes("?") ? "&" : "?") + `zipCode=${store.zipCode}`
 
-      console.log(`Scraping ${store.name} (Echo Park)...`)
+      console.log(`Scraping ${store.name} (${store.zipCode})...`)
       const storeResults = await scrapeWithFirecrawl(storeUrl, store.name)
 
-      // Save to echo_park_egg_prices table
+      // Save results to database
       if (storeResults.length > 0) {
-        // Find or create store location
+        // Find or create the store
         let storeRecord = await prisma.store.findFirst({
           where: { name: store.name },
         })
@@ -137,17 +81,17 @@ export async function scrapeEchoParkStores() {
           storeLocation = await prisma.store_locations.create({
             data: {
               store_id: storeRecord.id,
-              address: `Echo Park / Silver Lake area`,
+              address: `Los Angeles area (${store.zipCode})`,
               zipCode: store.zipCode,
-              latitude: 34.0781, // Approximate coordinates for Echo Park
-              longitude: -118.2613,
+              latitude: null, // We could add actual coordinates later
+              longitude: null,
             },
           })
         }
 
-        // Save each price to echo_park_egg_prices
+        // Save each price
         for (const price of storeResults) {
-          await prisma.echo_park_egg_prices.create({
+          await prisma.la_egg_prices.create({
             data: {
               store_location_id: storeLocation.id,
               price: price.price,
@@ -160,13 +104,15 @@ export async function scrapeEchoParkStores() {
 
       results.push({
         store: store.name,
+        zipCode: store.zipCode,
         count: storeResults.length,
         success: true,
       })
     } catch (error) {
-      console.error(`Error scraping ${store.name} (Echo Park):`, error)
+      console.error(`Error scraping ${store.name} (${store.zipCode}):`, error)
       results.push({
         store: store.name,
+        zipCode: store.zipCode,
         count: 0,
         success: false,
         error: error.message,
@@ -174,8 +120,8 @@ export async function scrapeEchoParkStores() {
     }
   }
 
-  console.log("Echo Park scraping complete.")
-  console.log("Echo Park scraping results:")
+  console.log("LA scraping complete.")
+  console.log("Scraping results:")
   console.table(results)
 
   return results
