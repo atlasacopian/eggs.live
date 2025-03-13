@@ -4,73 +4,76 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
+import { Loader2 } from "lucide-react"
 
-interface LAPriceData {
-  laAverage: number
-  chainAverages: Array<{
-    chain: string
-    avgPrice: number
-    storeCount: number
-    lowestPrice: number
-  }>
+interface SimplePriceData {
+  success: boolean
+  message?: string
+  error?: string
+  details?: string
+  eggType: string
+  priceCount: number
   prices: Array<{
     id: number
-    store: string
-    zipCode: string
-    address: string
     price: number
     date: string
+    storeLocationId: number
   }>
-  chains: string[]
 }
 
 export function LAPrices() {
-  const [priceData, setPriceData] = useState<LAPriceData | null>(null)
+  const [priceData, setPriceData] = useState<SimplePriceData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [eggType, setEggType] = useState<"regular" | "organic">("regular")
-  const [selectedChain, setSelectedChain] = useState<string | null>(null)
-  // Add a new filter for zip codes
-  const [selectedZipCode, setSelectedZipCode] = useState<string | null>(null)
 
-  // Update the useEffect to include the zip code filter
   useEffect(() => {
     async function fetchLAPrices() {
       try {
         setLoading(true)
+        setError(null)
 
-        let url = `/api/la-prices?eggType=${eggType}`
-        if (selectedZipCode) {
-          url += `&zipCode=${selectedZipCode}`
-        }
+        const url = `/api/la-prices?eggType=${eggType}`
+        console.log("Fetching prices from:", url)
 
         const response = await fetch(url)
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch LA prices")
+        // Log the raw response for debugging
+        const responseText = await response.text()
+        console.log("Raw API response:", responseText)
+
+        // Try to parse the response as JSON
+        let data
+        try {
+          data = JSON.parse(responseText)
+        } catch (jsonError) {
+          console.error("Failed to parse JSON response:", jsonError)
+          throw new Error(`Invalid JSON response: ${responseText.substring(0, 100)}...`)
         }
 
-        const data = await response.json()
+        // Check if the response indicates an error
+        if (!response.ok || !data.success) {
+          const errorMessage = data.message || data.error || `API error: ${response.status} ${response.statusText}`
+          console.error("API error:", errorMessage, data)
+          throw new Error(errorMessage)
+        }
+
         setPriceData(data)
       } catch (err) {
         console.error("Error fetching LA prices:", err)
-        setError("Failed to load price data")
+        setError(err.message || "Failed to load price data")
+        setPriceData(null)
       } finally {
         setLoading(false)
       }
     }
 
     fetchLAPrices()
-  }, [eggType, selectedZipCode])
+  }, [eggType])
 
   const formatPrice = (price: number) => {
     return price ? `$${price.toFixed(2)}` : "$0.00"
   }
-
-  // Update the filteredPrices to include zip code filtering
-  const filteredPrices = priceData?.prices
-    .filter((p) => (selectedChain ? p.store === selectedChain : true))
-    .filter((p) => (selectedZipCode ? p.zipCode === selectedZipCode : true))
 
   return (
     <div className="space-y-6">
@@ -82,103 +85,57 @@ export function LAPrices() {
       </Tabs>
 
       {loading ? (
-        <div className="text-center py-8">Loading Los Angeles egg prices...</div>
+        <div className="flex flex-col items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+          <p className="text-lg text-muted-foreground">Loading egg prices...</p>
+        </div>
       ) : error ? (
-        <div className="text-center text-red-500 py-8">{error}</div>
+        <div className="text-center py-8">
+          <p className="text-red-500 mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()}>Try Again</Button>
+        </div>
+      ) : !priceData || !priceData.prices || priceData.prices.length === 0 ? (
+        <div className="text-center py-8">
+          <p className="text-lg text-muted-foreground mb-4">No egg prices available for today</p>
+          <p className="text-sm text-muted-foreground mb-4">Try running the scraper first</p>
+          <Button onClick={() => window.location.reload()}>Refresh</Button>
+        </div>
       ) : (
         <>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">LA Average</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{formatPrice(priceData?.laAverage || 0)}</div>
-                <p className="text-xs text-muted-foreground">Based on {priceData?.prices.length || 0} stores</p>
-              </CardContent>
-            </Card>
-
-            {priceData?.chainAverages.slice(0, 3).map((chain) => (
-              <Card key={chain.chain}>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">{chain.chain}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{formatPrice(chain.avgPrice)}</div>
-                  <p className="text-xs text-muted-foreground">
-                    Lowest: {formatPrice(chain.lowestPrice)} ({chain.storeCount} stores)
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
           <Card>
             <CardHeader>
-              <CardTitle>Grocery Chains</CardTitle>
+              <CardTitle>Debug Information</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-wrap gap-2">
-                <Button variant={selectedChain === null ? "default" : "outline"} onClick={() => setSelectedChain(null)}>
-                  All Chains
-                </Button>
-
-                {priceData?.chains.map((chain) => (
-                  <Button
-                    key={chain}
-                    variant={selectedChain === chain ? "default" : "outline"}
-                    onClick={() => setSelectedChain(chain)}
-                  >
-                    {chain}
-                  </Button>
-                ))}
+              <p>
+                Found {priceData.priceCount} prices for {priceData.eggType} eggs
+              </p>
+              <div className="mt-4">
+                <h3 className="font-medium mb-2">Raw Price Data:</h3>
+                <div className="bg-muted p-4 rounded-md overflow-auto max-h-60">
+                  <pre className="text-xs">{JSON.stringify(priceData.prices, null, 2)}</pre>
+                </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Filter by Zip Code</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant={selectedZipCode === null ? "default" : "outline"}
-                  onClick={() => setSelectedZipCode(null)}
-                >
-                  All Zip Codes
-                </Button>
-
-                {[...new Set(priceData?.prices.map((p) => p.zipCode))].sort().map((zipCode) => (
-                  <Button
-                    key={zipCode}
-                    variant={selectedZipCode === zipCode ? "default" : "outline"}
-                    onClick={() => setSelectedZipCode(zipCode)}
-                  >
-                    {zipCode}
-                  </Button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Store Prices</CardTitle>
+              <CardTitle>Price List</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="rounded-md border">
                 <div className="grid grid-cols-12 border-b bg-muted/50 p-3 text-sm font-medium">
-                  <div className="col-span-4">Store</div>
-                  <div className="col-span-5">Location</div>
-                  <div className="col-span-3 text-right">Price</div>
+                  <div className="col-span-4">ID</div>
+                  <div className="col-span-4">Store Location ID</div>
+                  <div className="col-span-4 text-right">Price</div>
                 </div>
                 <div className="divide-y">
-                  {filteredPrices?.map((store) => (
-                    <div key={store.id} className="grid grid-cols-12 p-3 text-sm">
-                      <div className="col-span-4 font-medium">{store.store}</div>
-                      <div className="col-span-5 text-muted-foreground">{store.zipCode}</div>
-                      <div className="col-span-3 text-right font-medium">{formatPrice(store.price)}</div>
+                  {priceData.prices.map((price) => (
+                    <div key={price.id} className="grid grid-cols-12 p-3 text-sm">
+                      <div className="col-span-4 font-medium">{price.id}</div>
+                      <div className="col-span-4">{price.storeLocationId}</div>
+                      <div className="col-span-4 text-right font-medium">{formatPrice(price.price)}</div>
                     </div>
                   ))}
                 </div>
