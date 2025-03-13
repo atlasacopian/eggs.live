@@ -1,32 +1,31 @@
 import { NextResponse } from "next/server"
-import { scrapeAllStores } from "@/lib/scrapers/daily-scraping"
+import { scrapeAllStores, scrapeEchoParkStores } from "@/lib/scrapers/daily-scraping"
 
 export async function GET(request: Request) {
-  // Check for authorization header
-  const authHeader = request.headers.get("authorization")
-
-  if (!authHeader || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 })
-  }
-
   try {
-    const result = await scrapeAllStores()
+    // Verify the cron secret to ensure this is a legitimate request
+    const { searchParams } = new URL(request.url)
+    const secret = searchParams.get("secret")
+
+    if (secret !== process.env.CRON_SECRET) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    // Run the scrapers
+    console.log("Running daily egg price scraping...")
+
+    const nationwideResults = await scrapeAllStores()
+    const echoParkResults = await scrapeEchoParkStores()
 
     return NextResponse.json({
       success: true,
-      message: "Cron job completed successfully",
-      ...result,
+      message: "Egg price scraping completed successfully",
+      nationwideResults,
+      echoParkResults,
     })
   } catch (error) {
-    console.error("Cron job error:", error)
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : String(error),
-      },
-      { status: 500 },
-    )
+    console.error("Error in cron job:", error)
+    return NextResponse.json({ error: "Failed to run scraping job" }, { status: 500 })
   }
 }
 
