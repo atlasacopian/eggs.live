@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server"
 import { Pool } from "pg"
-import fs from "fs"
-import path from "path"
 
 export const dynamic = "force-dynamic"
 
@@ -14,12 +12,48 @@ export async function GET() {
       connectionString: process.env.DATABASE_URL,
     })
 
-    // Read the migration SQL file
-    const migrationPath = path.join(process.cwd(), "prisma/migrations/fix_egg_prices/migration.sql")
-    const migrationSQL = fs.readFileSync(migrationPath, "utf8")
+    // Migration SQL embedded directly in the code
+    const migrationSQL = `
+      -- Drop the constraint if it exists
+      ALTER TABLE IF EXISTS "egg_prices" DROP CONSTRAINT IF EXISTS "egg_prices_storeId_date_eggType_key";
 
-    // Execute the migration
-    await pool.query(migrationSQL)
+      -- Add the store_location_id column if it doesn't exist
+      DO $$
+      BEGIN
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'egg_prices' AND column_name = 'store_location_id') THEN
+              ALTER TABLE "egg_prices" ADD COLUMN "store_location_id" INTEGER;
+          END IF;
+      END
+      $$;
+
+      -- Make sure eggType is properly cased
+      ALTER TABLE "egg_prices" RENAME COLUMN IF EXISTS "eggtype" TO "eggType";
+
+      -- Create a unique constraint for the new columns
+      ALTER TABLE "egg_prices" ADD CONSTRAINT IF NOT EXISTS "egg_prices_store_location_id_date_eggType_key" 
+      UNIQUE ("store_location_id", "date", "eggType");
+
+      -- Create indexes for better performance
+      CREATE INDEX IF NOT EXISTS "egg_prices_store_location_id_idx" ON "egg_prices"("store_location_id");
+      CREATE INDEX IF NOT EXISTS "egg_prices_date_idx" ON "egg_prices"("date");
+    `
+
+    // Execute each statement separately to handle potential errors better
+    const statements = migrationSQL
+      .split(";")
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0)
+
+    for (const statement of statements) {
+      try {
+        await pool.query(statement)
+        console.log("Executed:", statement.slice(0, 50) + "...")
+      } catch (error) {
+        console.error("Error executing statement:", statement)
+        console.error("Error details:", error)
+        // Continue with other statements even if one fails
+      }
+    }
 
     // Close the connection
     await pool.end()
