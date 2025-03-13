@@ -258,21 +258,29 @@ const CHAIN_BASE_URLS = {
 
 // Generate all store locations for all chains in LA
 export function getAllLAStoreLocations(): StoreLocation[] {
-  const allLocations: StoreLocation[] = []
+  try {
+    const allLocations: StoreLocation[] = []
 
-  // For each chain, create a store location for each zip code
-  Object.entries(CHAIN_BASE_URLS).forEach(([chainName, baseUrl]) => {
-    LA_ZIP_CODES.forEach((zipCode) => {
-      allLocations.push({
-        name: chainName,
-        address: `Los Angeles area (${zipCode})`,
-        zipCode: zipCode,
-        url: baseUrl,
+    // For each chain, create a store location for each zip code
+    Object.entries(CHAIN_BASE_URLS).forEach(([chainName, baseUrl]) => {
+      LA_ZIP_CODES.forEach((zipCode) => {
+        allLocations.push({
+          name: chainName,
+          address: `Los Angeles area (${zipCode})`,
+          zipCode: zipCode,
+          url: baseUrl,
+        })
       })
     })
-  })
 
-  return allLocations
+    console.log(
+      `Generated ${allLocations.length} store locations across ${Object.keys(CHAIN_BASE_URLS).length} chains and ${LA_ZIP_CODES.length} zip codes.`,
+    )
+    return allLocations
+  } catch (error) {
+    console.error("Error generating LA store locations:", error)
+    return []
+  }
 }
 
 // Get a subset of store locations for testing or limited runs
