@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server"
 
+// Tell Next.js this is a dynamic route
+export const dynamic = "force-dynamic"
+
 export async function GET(request: Request) {
   try {
     // Get the admin key from the URL
