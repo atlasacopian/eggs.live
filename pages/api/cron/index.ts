@@ -9,15 +9,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ error: "Unauthorized" })
     }
 
-    console.log("Regular LA scrape cron job initiated")
-    const results = await scrapeAllStores(false) // false = use representative sample
+    // Check if this is a full scrape request
+    const { full = false } = req.query
+    console.log(`LA scrape cron job initiated (${full ? "full" : "regular"})`)
+
+    const results = await scrapeAllStores(full === "true")
 
     // Count successful scrapes
     const successCount = results.filter((r) => r.success && r.count > 0).length
 
     return res.json({
       success: true,
-      message: "Regular LA scrape completed",
+      message: `${full ? "Full" : "Regular"} LA scrape completed`,
       date: new Date().toISOString(),
       scrapedCount: successCount,
       totalAttempted: results.length,
