@@ -6,16 +6,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     // This endpoint is for manual testing, so we'll add some basic auth
     const { key } = req.query
+    const { full = false } = req.query
 
-    if (key !== process.env.ADMIN_KEY) {
+    // Check for either admin key or cron secret
+    const isAuthorized =
+      key === process.env.ADMIN_KEY || req.headers.authorization === `Bearer ${process.env.CRON_SECRET}`
+
+    if (!isAuthorized) {
       return res.status(401).json({
         success: false,
         error: "Unauthorized",
-        message: "Invalid or missing admin key",
+        message: "Invalid or missing authentication",
       })
     }
 
-    console.log("Manual LA scrape initiated")
+    console.log(`LA scrape initiated (${full ? "full" : "sample"})`)
 
     // First, check if we can access the database
     try {
@@ -26,13 +31,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(500).json({
         success: false,
         error: "Database connection error",
-        message: "Could not connect to database. Please check your database configuration.",
+        message: "Could not connect to database. Please check your configuration.",
         details: process.env.NODE_ENV === "development" ? dbError.message : undefined,
       })
     }
 
     // Run the scraper
-    const results = await scrapeAllStores()
+    const results = await scrapeAllStores(full === "true")
 
     // Count successful scrapes
     const successCount = results.filter((r) => r.success && r.count > 0).length
@@ -40,7 +45,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     return res.json({
       success: true,
-      message: `Manual LA scrape completed. Successfully scraped ${successCount} out of ${totalAttempted} stores.`,
+      message: `LA scrape completed. Successfully scraped ${successCount} out of ${totalAttempted} stores.`,
       date: new Date().toISOString(),
       scrapedCount: successCount,
       totalAttempted,
@@ -53,7 +58,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })),
     })
   } catch (error) {
-    console.error("Error in manual LA scrape:", error)
+    console.error("Error in LA scrape:", error)
     return res.status(500).json({
       success: false,
       error: "Failed to run LA scraping job",
