@@ -1,22 +1,20 @@
-"use client"
+'use client'
 
-import type React from "react"
-
-import { useState } from "react"
+import { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Loader2 } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { Loader2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 export function EggSearch() {
-  const [zipCode, setZipCode] = useState("")
+  const [zipCode, setZipCode] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-
+    
     // Navigate to results page with the zip code
     router.push(`/results?zipCode=${zipCode}`)
   }
@@ -40,7 +38,7 @@ export function EggSearch() {
                 required
               />
               <Button type="submit" disabled={loading} className="rounded-full px-8">
-                {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : "Find Eggs"}
+                {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : 'Find Eggs'}
               </Button>
             </div>
           </form>
@@ -76,4 +74,3 @@ export function EggSearch() {
     </div>
   )
 }
-
