@@ -3,7 +3,12 @@ import prisma from "@/lib/prisma"
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const { days = "30", eggType = "regular" } = req.query
+    const {
+      days = "30",
+      eggType = "regular",
+      storeId,
+      format = "daily", // 'daily' or 'raw'
+    } = req.query
 
     // Convert days to number and validate
     const daysNum = Number.parseInt(days as string, 10)
@@ -21,15 +26,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const startDate = new Date(endDate)
     startDate.setDate(startDate.getDate() - daysNum)
 
+    // Build query
+    const where: any = {
+      date: {
+        gte: startDate,
+        lte: endDate,
+      },
+      eggType: eggType as string,
+    }
+
+    // Add store filter if provided
+    if (storeId) {
+      where.store_location = {
+        store_id: Number.parseInt(storeId as string, 10),
+      }
+    }
+
     // Get historical prices
     const prices = await prisma.egg_prices.findMany({
-      where: {
-        date: {
-          gte: startDate,
-          lte: endDate,
-        },
-        eggType: eggType as string,
-      },
+      where,
       include: {
         store_location: {
           include: {
@@ -42,41 +57,55 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
     })
 
-    // Calculate daily averages
-    const dailyAverages = new Map()
-    prices.forEach((price) => {
-      const dateStr = price.date.toISOString().split("T")[0]
-      if (!dailyAverages.has(dateStr)) {
-        dailyAverages.set(dateStr, { sum: 0, count: 0 })
-      }
-      const daily = dailyAverages.get(dateStr)
-      daily.sum += price.price
-      daily.count += 1
-    })
+    // Format the response based on the requested format
+    if (format === "daily") {
+      // Calculate daily averages
+      const dailyAverages = new Map()
+      prices.forEach((price) => {
+        const dateStr = price.date.toISOString().split("T")[0]
+        if (!dailyAverages.has(dateStr)) {
+          dailyAverages.set(dateStr, { sum: 0, count: 0 })
+        }
+        const daily = dailyAverages.get(dateStr)
+        daily.sum += price.price
+        daily.count += 1
+      })
 
-    const averages = Array.from(dailyAverages.entries()).map(([date, data]) => ({
-      date,
-      average: data.sum / data.count,
-      count: data.count,
-    }))
+      const averages = Array.from(dailyAverages.entries()).map(([date, data]) => ({
+        date,
+        average: data.sum / data.count,
+        count: data.count,
+      }))
 
-    return res.json({
-      success: true,
-      eggType,
-      days: daysNum,
-      dateRange: {
-        start: startDate.toISOString(),
-        end: endDate.toISOString(),
-      },
-      averages,
-      prices: prices.map((p) => ({
-        id: p.id,
-        date: p.date,
-        price: p.price,
-        store: p.store_location.store.name,
-        zipCode: p.store_location.zipCode,
-      })),
-    })
+      return res.json({
+        success: true,
+        eggType,
+        days: daysNum,
+        dateRange: {
+          start: startDate.toISOString(),
+          end: endDate.toISOString(),
+        },
+        averages,
+      })
+    } else {
+      // Return raw price data
+      return res.json({
+        success: true,
+        eggType,
+        days: daysNum,
+        dateRange: {
+          start: startDate.toISOString(),
+          end: endDate.toISOString(),
+        },
+        prices: prices.map((p) => ({
+          id: p.id,
+          date: p.date,
+          price: p.price,
+          store: p.store_location.store.name,
+          zipCode: p.store_location.zipCode,
+        })),
+      })
+    }
   } catch (error) {
     console.error("Error fetching historical prices:", error)
     return res.status(500).json({
