@@ -1,11 +1,13 @@
 {
-  "buildCommand": "prisma generate && next build",
-  "installCommand": "npm install",
-  "framework": "nextjs",
   "crons": [
     {
-      "path": "/api/cron?key=${SCRAPER_API_KEY_2}",
+      "path": "/api/cron?full=false",
+      "schedule": "0 */4 * * *"
+    },
+    {
+      "path": "/api/cron?full=true",
       "schedule": "0 0 * * *"
     }
   ]
 }
+
