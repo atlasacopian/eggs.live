@@ -1,5 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// This is your Prisma schema file
+// Learn more: https://pris.ly/d/prisma-schema
 
 generator client {
   provider = "prisma-client-js"
@@ -10,6 +10,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Store information
 model store {
   id              Int               @id @default(autoincrement())
   name            String
@@ -17,20 +18,22 @@ model store {
   store_locations store_locations[]
 }
 
+// Store locations with geographic data
 model store_locations {
-  id         Int             @id @default(autoincrement())
-  store_id   Int
-  store      store           @relation(fields: [store_id], references: [id])
-  address    String?
-  zipCode    String
-  latitude   Float?
-  longitude  Float?
+  id            Int             @id @default(autoincrement())
+  store_id      Int
+  store         store           @relation(fields: [store_id], references: [id])
+  address       String?
+  zipCode       String
+  latitude      Float?
+  longitude     Float?
   la_egg_prices la_egg_prices[]
-  egg_prices egg_prices[]
+  egg_prices    egg_prices[]
 
   @@index([zipCode])
 }
 
+// Los Angeles specific egg prices
 model la_egg_prices {
   id               Int             @id @default(autoincrement())
   store_location_id Int
@@ -43,6 +46,7 @@ model la_egg_prices {
   @@index([date])
 }
 
+// National egg prices
 model egg_prices {
   id               Int             @id @default(autoincrement())
   store_location_id Int
