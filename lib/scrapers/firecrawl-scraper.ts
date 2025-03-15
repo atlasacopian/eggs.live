@@ -1,5 +1,5 @@
 import type { EggPrice } from "../types"
-import { extractZipCodeFromUrl } from "../utils/zip-code"
+import { extractZipCodeFromUrl, getLocationHeaders, getLocationCookies } from "../utils/zip-code"
 import { storeExistsInZipCode } from "../utils/store-validation"
 
 // Mock FirecrawlClient class
@@ -16,6 +16,17 @@ export class FirecrawlClient {
 
   async scrape(url: string, options?: any): Promise<{ status: number; content: string }> {
     console.log(`Mocked scrape for URL: ${url}`)
+
+    // In a real implementation, we would use these options
+    const { headers, cookies, formSelectors } = options || {}
+
+    console.log("Using headers:", headers)
+    console.log("Using cookies:", cookies)
+
+    if (formSelectors) {
+      console.log("Will fill form fields:", formSelectors)
+    }
+
     return {
       status: 200,
       content: "<html><body>Mocked HTML content</body></html>",
@@ -44,7 +55,7 @@ const firecrawlClient = new FirecrawlClient({
   timeout: 60000, // 60 seconds
 })
 
-// Enhanced scraping function that verifies the store location
+// Enhanced scraping function with location handling
 export async function scrapeWithFirecrawl(
   url: string,
   storeName: string,
@@ -60,14 +71,42 @@ export async function scrapeWithFirecrawl(
 }> {
   console.log(`Scraping ${storeName} at URL: ${url} (expecting ZIP code: ${expectedZipCode})`)
 
-  // For real implementation, we would use the Firecrawl client here
-  // For now, we'll generate mock data based on store name and the ZIP code in the URL
+  // Get location-specific headers and cookies
+  const headers = getLocationHeaders(expectedZipCode)
+  const cookies = getLocationCookies(storeName, expectedZipCode)
 
-  // Extract ZIP code from URL to use in our mock data generation
-  const urlZipCode = extractZipCodeFromUrl(url) || "00000"
+  // Define form selectors for sites that require form input
+  // This tells the scraper which form fields to fill
+  const formSelectors: Record<string, any> = {}
 
-  // Check if the expected ZIP code matches the one in the URL
-  const zipCodeMatches = urlZipCode === expectedZipCode
+  // Store-specific form handling
+  switch (storeName) {
+    case "Walmart":
+      formSelectors.zipCodeInput = "#zipCode"
+      formSelectors.submitButton = "#zipCode-form-submit"
+      break
+
+    case "Target":
+      formSelectors.zipCodeInput = "#zipcode"
+      formSelectors.submitButton = ".zipcodeForm button[type='submit']"
+      break
+
+    // Add more store-specific form selectors as needed
+  }
+
+  // In a real implementation, we would use the Firecrawl client here
+  // with all the location options we've prepared
+  /*
+  const result = await firecrawlClient.scrape(url, {
+    headers,
+    cookies,
+    formSelectors,
+    waitForSelector: '.product-price', // Wait for prices to load
+    javascript: true, // Enable JavaScript for dynamic sites
+  });
+  */
+
+  // For now, we'll generate mock data based on store name and ZIP code
 
   // Check if this store exists in this ZIP code
   const storeExists = storeExistsInZipCode(storeName, expectedZipCode)
@@ -76,7 +115,7 @@ export async function scrapeWithFirecrawl(
   const mockLocation = {
     name: storeName,
     address: `${Math.floor(Math.random() * 1000) + 100} Main St`,
-    zipCode: storeExists ? expectedZipCode : urlZipCode,
+    zipCode: storeExists ? expectedZipCode : "00000",
   }
 
   // Generate mock data based on store name and ZIP code
@@ -147,7 +186,7 @@ export async function scrapeWithFirecrawl(
 
   return {
     prices,
-    locationVerified: storeExists && zipCodeMatches,
+    locationVerified: storeExists,
     actualLocation: mockLocation,
   }
 }
