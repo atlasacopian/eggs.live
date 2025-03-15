@@ -1,8 +1,8 @@
 "use client"
 
 import type * as React from "react"
+import { ThemeProvider as NextThemesProvider } from "next-themes"
 
-// Define our own ThemeProviderProps type instead of importing it
 type ThemeProviderProps = {
   children: React.ReactNode
   attribute?: string
@@ -12,12 +12,14 @@ type ThemeProviderProps = {
 
 export function ThemeProvider({
   children,
-  // Provide default values for all props
   attribute = "class",
   defaultTheme = "system",
   enableSystem = true,
 }: ThemeProviderProps) {
-  // Just render children without any theming logic
-  return <>{children}</>
+  return (
+    <NextThemesProvider attribute={attribute} defaultTheme={defaultTheme} enableSystem={enableSystem}>
+      {children}
+    </NextThemesProvider>
+  )
 }
 
