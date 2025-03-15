@@ -171,6 +171,7 @@ export async function scrapeWithFirecrawl(
           price: regularPrice,
           eggType: "regular",
           inStock: !extractionResult.regularOutOfStock,
+          fromRealData: true,
         })
       }
     }
@@ -183,6 +184,7 @@ export async function scrapeWithFirecrawl(
           price: organicPrice,
           eggType: "organic",
           inStock: !extractionResult.organicOutOfStock,
+          fromRealData: true,
         })
       }
     }
@@ -430,6 +432,7 @@ function fallbackToMockData(
     price: Math.round((regularBasePrice + randomVariation(-0.2, 0.5)) * 100) / 100,
     eggType: "regular",
     inStock: Math.random() > 0.2,
+    fromRealData: false,
   })
 
   // Organic eggs
@@ -437,6 +440,7 @@ function fallbackToMockData(
     price: Math.round((organicBasePrice + randomVariation(-0.3, 0.7)) * 100) / 100,
     eggType: "organic",
     inStock: Math.random() > 0.3,
+    fromRealData: false,
   })
 
   return {
