@@ -9,6 +9,7 @@ export default function ScraperAdminPage() {
   const [results, setResults] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
   const [progress, setProgress] = useState<{ completed: number; total: number } | null>(null)
+  const [showDetails, setShowDetails] = useState(false)
 
   const triggerScrape = async () => {
     try {
@@ -125,6 +126,55 @@ export default function ScraperAdminPage() {
               </div>
             </div>
           </div>
+
+          <div className="mb-4">
+            <button
+              onClick={() => setShowDetails(!showDetails)}
+              className="text-amber-600 hover:text-amber-800 text-sm font-medium"
+            >
+              {showDetails ? "Hide Details" : "Show Details"}
+            </button>
+          </div>
+
+          {showDetails && (
+            <div className="mb-6">
+              <h3 className="font-medium text-lg mb-2">Store Details</h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full bg-white border border-gray-200">
+                  <thead>
+                    <tr>
+                      <th className="py-2 px-4 border-b text-left">Store</th>
+                      <th className="py-2 px-4 border-b text-left">ZIP Code</th>
+                      <th className="py-2 px-4 border-b text-left">URL</th>
+                      <th className="py-2 px-4 border-b text-left">Status</th>
+                      <th className="py-2 px-4 border-b text-left">Prices</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {results.results.map((result: any, index: number) => (
+                      <tr key={index} className={index % 2 === 0 ? "bg-gray-50" : ""}>
+                        <td className="py-2 px-4 border-b">{result.store}</td>
+                        <td className="py-2 px-4 border-b">{result.zipCode}</td>
+                        <td className="py-2 px-4 border-b">
+                          <div className="truncate max-w-xs" title={result.url}>
+                            {result.url}
+                          </div>
+                        </td>
+                        <td className="py-2 px-4 border-b">
+                          {result.success ? (
+                            <span className="text-green-600">Success</span>
+                          ) : (
+                            <span className="text-red-600">Failed</span>
+                          )}
+                        </td>
+                        <td className="py-2 px-4 border-b">{result.count}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
           <div className="bg-gray-100 p-4 rounded-md overflow-auto max-h-[600px]">
             <pre className="text-sm">{JSON.stringify(results, null, 2)}</pre>
