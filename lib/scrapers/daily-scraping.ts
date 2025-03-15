@@ -2,8 +2,9 @@ import { scrapeWithFirecrawl } from "./firecrawl-scraper"
 import { PrismaClient } from "@prisma/client"
 import { getAllLAStoreLocations, getRepresentativeLAStoreLocations } from "../la-store-locations"
 import { formatStoreUrlWithZipCode } from "../utils/zip-code"
+import { storeExistsInZipCode } from "../utils/store-validation"
 
-// Update the scrapeAllStores function to use the new store locations:
+// Update the scrapeAllStores function to use the enhanced scraper:
 
 export async function scrapeAllStores(useAllStores = false) {
   console.log(`Starting LA egg price scraping (${useAllStores ? "all stores" : "representative stores"})...`)
@@ -15,10 +16,15 @@ export async function scrapeAllStores(useAllStores = false) {
   // Get store locations - either all or representative sample
   const storeLocations = useAllStores ? getAllLAStoreLocations() : getRepresentativeLAStoreLocations(50)
 
-  console.log(`Preparing to scrape ${storeLocations.length} store locations...`)
+  // Filter out store locations that don't exist
+  const validStoreLocations = storeLocations.filter((store) => storeExistsInZipCode(store.name, store.zipCode))
+
+  console.log(
+    `Preparing to scrape ${validStoreLocations.length} valid store locations out of ${storeLocations.length} total...`,
+  )
 
   // Process stores sequentially to avoid connection issues
-  for (const store of storeLocations) {
+  for (const store of validStoreLocations) {
     // Create a new Prisma client for each store to avoid prepared statement conflicts
     const prisma = new PrismaClient()
 
@@ -27,11 +33,15 @@ export async function scrapeAllStores(useAllStores = false) {
       const storeUrl = formatStoreUrlWithZipCode(store.url, store.name, store.zipCode)
 
       console.log(`Scraping ${store.name} (${store.zipCode}) at URL: ${storeUrl}...`)
-      const storeResults = await scrapeWithFirecrawl(storeUrl, store.name)
+      const {
+        prices: storeResults,
+        locationVerified,
+        actualLocation,
+      } = await scrapeWithFirecrawl(storeUrl, store.name, store.zipCode)
 
-      // Save results to database
-      if (storeResults.length > 0) {
-        // Find or create the store - removed website field
+      // Only save results if the location was verified
+      if (locationVerified && storeResults.length > 0) {
+        // Find or create the store
         let storeRecord = await prisma.store.findFirst({
           where: { name: store.name },
         })
@@ -56,7 +66,7 @@ export async function scrapeAllStores(useAllStores = false) {
           storeLocation = await prisma.store_locations.create({
             data: {
               store_id: storeRecord.id,
-              address: store.address || `${store.name} (${store.zipCode})`,
+              address: actualLocation?.address || store.address || `${store.name} (${store.zipCode})`,
               zipcode: store.zipCode,
               latitude: store.latitude || null,
               longitude: store.longitude || null,
@@ -102,15 +112,26 @@ export async function scrapeAllStores(useAllStores = false) {
             // Continue with other prices even if one fails
           }
         }
-      }
 
-      results.push({
-        store: store.name,
-        zipCode: store.zipCode,
-        url: storeUrl, // Include the URL in the results for debugging
-        count: storeResults.length,
-        success: true,
-      })
+        results.push({
+          store: store.name,
+          zipCode: store.zipCode,
+          url: storeUrl,
+          count: storeResults.length,
+          locationVerified,
+          success: true,
+        })
+      } else {
+        results.push({
+          store: store.name,
+          zipCode: store.zipCode,
+          url: storeUrl,
+          count: 0,
+          locationVerified,
+          success: false,
+          error: "Location could not be verified",
+        })
+      }
     } catch (error) {
       console.error(`Error scraping ${store.name} (${store.zipCode}):`, error)
       results.push({
