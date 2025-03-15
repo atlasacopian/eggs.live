@@ -3,29 +3,28 @@ import prisma from "@/lib/prisma"
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const { eggType = "regular", zipCode } = req.query
+    const { zipCode, eggType = "regular" } = req.query
 
-    console.log(`Fetching LA prices for ${eggType} eggs${zipCode ? ` in ${zipCode}` : ""}`)
-
-    // Get the current date in YYYY-MM-DD format
+    // Get today's date
     const today = new Date()
     today.setHours(0, 0, 0, 0)
 
-    // Build the query
+    // Base query conditions
     const where: any = {
       date: {
         gte: today,
       },
-      eggType: eggType as string,
+      eggType: Array.isArray(eggType) ? eggType[0] : eggType,
     }
 
+    // Add zip code filter if provided
     if (zipCode) {
       where.store_location = {
-        zipCode: zipCode as string,
+        zipcode: Array.isArray(zipCode) ? zipCode[0] : zipCode,
       }
     }
 
-    // Get today's prices
+    // Get LA prices
     const prices = await prisma.la_egg_prices.findMany({
       where,
       include: {
@@ -35,53 +34,52 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           },
         },
       },
-      take: 100, // Limit results for safety
+      orderBy: {
+        price: "asc",
+      },
     })
 
-    // Calculate averages
-    let laAverage = 0
-    const chainAverages = new Map()
-
-    prices.forEach((price) => {
-      const chainName = price.store_location.store.name
-      if (!chainAverages.has(chainName)) {
-        chainAverages.set(chainName, { sum: 0, count: 0 })
+    // Group by store
+    const storeGroups = prices.reduce((groups: Record<string, any[]>, price) => {
+      const storeId = price.store_location.store.id
+      if (!groups[storeId]) {
+        groups[storeId] = []
       }
-      const chain = chainAverages.get(chainName)
-      chain.sum += price.price
-      chain.count += 1
-    })
+      groups[storeId].push(price)
+      return groups
+    }, {})
 
-    if (prices.length > 0) {
-      laAverage = prices.reduce((sum, p) => sum + p.price, 0) / prices.length
-    }
+    // Format the results
+    const formattedPrices = Object.entries(storeGroups).map(([storeId, prices]) => {
+      const firstPrice = prices[0]
+      return {
+        storeId: parseInt(storeId),
+        storeName: firstPrice.store_location.store.name,
+        address: firstPrice.store_location.address || "Address not available",
+        zipCode: firstPrice.store_location.zipcode, // Changed from zipCode to zipcode
+        latitude: firstPrice.store_location.latitude,
+        longitude: firstPrice.store_location.longitude,
+        prices: prices.map((p) => ({
+          id: p.id,
+          price: p.price,
+          eggType: p.eggType,
+          date: p.date,
+          inStock: p.inStock,
+        })),
+      }
+    })
 
     return res.json({
       success: true,
-      eggType,
-      laAverage,
-      chainAverages: Array.from(chainAverages.entries()).map(([chain, data]) => ({
-        chain,
-        average: data.sum / data.count,
-        count: data.count,
-      })),
-      priceCount: prices.length,
-      prices: prices.map((p) => ({
-        id: p.id,
-        price: p.price,
-        date: p.date,
-        store: p.store_location.store.name,
-        address: p.store_location.address,
-        zipCode: p.store_location.zipCode,
-      })),
+      count: formattedPrices.length,
+      prices: formattedPrices,
     })
   } catch (error) {
-    console.error("Error fetching LA prices:", error)
+    console.error("Error getting LA prices:", error)
     return res.status(500).json({
       success: false,
-      error: "Failed to fetch LA prices",
+      error: "Failed to get LA prices",
       message: error instanceof Error ? error.message : "Unknown error",
     })
   }
 }
-
