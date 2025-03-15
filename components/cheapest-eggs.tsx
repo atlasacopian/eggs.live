@@ -93,6 +93,11 @@ export function CheapestEggs({ initialZipCode = "" }: CheapestEggsProps) {
     return date.toLocaleDateString()
   }
 
+  // Add this handler function for the Switch component
+  const handleSwitchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setIncludeOutOfStock(e.target.checked)
+  }
+
   return (
     <div className="space-y-6">
       <form onSubmit={handleSubmit} className="flex gap-2">
@@ -111,7 +116,7 @@ export function CheapestEggs({ initialZipCode = "" }: CheapestEggsProps) {
       </form>
 
       <div className="flex items-center space-x-2">
-        <Switch id="include-out-of-stock" checked={includeOutOfStock} onChange={setIncludeOutOfStock} />
+        <Switch id="include-out-of-stock" checked={includeOutOfStock} onChange={handleSwitchChange} />
         <Label htmlFor="include-out-of-stock">Include out of stock items</Label>
       </div>
 
