@@ -22,7 +22,7 @@ export async function scrapeAllStores(useAllStores = false) {
       // For stores with location-specific pricing, we need to set the zip code
       // Make sure the zip code is always included in the URL
       let storeUrl = store.url
-      if (!storeUrl.includes("zipCode=")) {
+      if (!storeUrl.includes("zipCode=") && !storeUrl.includes("zipcode=")) {
         storeUrl += (storeUrl.includes("?") ? "&" : "?") + `zipCode=${store.zipCode}`
       }
 
@@ -49,7 +49,7 @@ export async function scrapeAllStores(useAllStores = false) {
         let storeLocation = await prisma.store_locations.findFirst({
           where: {
             store_id: storeRecord.id,
-            zipCode: store.zipCode,
+            zipcode: store.zipCode, // Changed from zipCode to zipcode
           },
         })
 
@@ -58,7 +58,7 @@ export async function scrapeAllStores(useAllStores = false) {
             data: {
               store_id: storeRecord.id,
               address: store.address || `${store.name} (${store.zipCode})`,
-              zipCode: store.zipCode,
+              zipcode: store.zipCode, // Changed from zipCode to zipcode
               latitude: store.latitude || null,
               longitude: store.longitude || null,
             },
