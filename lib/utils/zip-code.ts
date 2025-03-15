@@ -133,3 +133,71 @@ export function getZipCodeParameterForStore(storeName: string): string {
   }
 }
 
+/**
+ * Gets the appropriate headers to simulate a browser with location
+ */
+export function getLocationHeaders(zipCode: string): Record<string, string> {
+  // These headers help simulate a browser with location information
+  return {
+    "User-Agent":
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Cache-Control": "no-cache",
+    Pragma: "no-cache",
+    // Some sites check these headers for general location
+    "X-Forwarded-For": getIpForZipCode(zipCode),
+    "CF-IPCountry": "US",
+    "CF-IPCity": getCityForZipCode(zipCode) || "Los Angeles",
+    "CF-IPRegion": "CA",
+  }
+}
+
+/**
+ * Gets a simulated IP address for a ZIP code (very simplified)
+ */
+function getIpForZipCode(zipCode: string): string {
+  // This is a simplified mock function
+  // In reality, you'd use a geolocation database
+  return `192.168.${zipCode.substring(0, 1)}.${zipCode.substring(1, 3)}`
+}
+
+/**
+ * Gets a city name for a ZIP code (simplified)
+ */
+function getCityForZipCode(zipCode: string): string | null {
+  // Simplified mapping of some LA ZIP codes to cities
+  const zipToCityMap: Record<string, string> = {
+    "90001": "Los Angeles",
+    "90026": "Los Angeles",
+    "90210": "Beverly Hills",
+    "90272": "Pacific Palisades",
+    "90291": "Venice",
+    "90401": "Santa Monica",
+    // Add more as needed
+  }
+
+  return zipToCityMap[zipCode] || null
+}
+
+/**
+ * Creates a cookie string for location-based cookies
+ */
+export function getLocationCookies(storeName: string, zipCode: string): string {
+  // Different stores use different cookie formats
+  switch (storeName) {
+    case "Walmart":
+      return `location-data={"postalCode":"${zipCode}","city":"Los Angeles","state":"CA"};`
+
+    case "Target":
+      return `GuestLocation=${zipCode}|Los Angeles|CA;`
+
+    case "Whole Foods":
+      return `wfm_location_data={"postalCode":"${zipCode}","city":"Los Angeles","state":"CA"};`
+
+    // Add more store-specific cookie formats as needed
+
+    default:
+      return `location=${zipCode}; zipcode=${zipCode};`
+  }
+}
+
