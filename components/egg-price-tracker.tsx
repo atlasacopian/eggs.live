@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import CurrentPrice from "./current-price"
+import CurrentPrice from "@/components/current-price"
 
 interface EggPriceData {
   price: number
