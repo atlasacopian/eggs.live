@@ -15,21 +15,44 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Ensure the URL includes the ZIP code if provided
     let testUrl = url
-    if (zipCode && !url.includes("zipCode=") && !url.includes("zipcode=")) {
+    if (zipCode && !Array.isArray(zipCode)) {
       // Use the appropriate parameter name based on the store
-      let zipParam = "zipCode"
+      const store = storeName.toString()
+      let zipParam = "zipCode" // Default
 
-      if (storeName === "Target") {
+      // Determine the correct parameter based on the store
+      if (
+        [
+          "Target",
+          "Albertsons",
+          "Vons",
+          "Pavilions",
+          "Safeway",
+          "Food Lion",
+          "Stop and Shop",
+          "Stop & Shop",
+          "Smart & Final",
+        ].includes(store)
+      ) {
         zipParam = "zipcode"
-      } else if (storeName === "Whole Foods") {
+      } else if (store === "Whole Foods") {
         zipParam = "location"
-      } else if (["Ralphs", "Vons", "Albertsons", "Food 4 Less", "Pavilions"].includes(storeName)) {
+      } else if (["Ralphs", "Food 4 Less", "Harris Teeter"].includes(store)) {
         zipParam = "locationId"
-      } else if (storeName === "Sprouts") {
+      } else if (store === "Sprouts") {
         zipParam = "postal_code"
+      } else if (["Sam's Club", "Erewhon"].includes(store)) {
+        zipParam = "postalCode"
+      } else if (["H-E-B", "Giant Eagle", "Weis Markets", "Gelson's", "Trader Joe's"].includes(store)) {
+        zipParam = "zip"
+      } else if (["Shop Rite", "ShopRite"].includes(store)) {
+        zipParam = "storeZipCode"
       }
 
-      testUrl += (url.includes("?") ? "&" : "?") + `${zipParam}=${zipCode}`
+      // Only add the parameter if it's not already in the URL
+      if (!testUrl.includes(`${zipParam}=`)) {
+        testUrl += (testUrl.includes("?") ? "&" : "?") + `${zipParam}=${zipCode}`
+      }
     }
 
     // Test the scraper with the provided URL and store name
