@@ -1,91 +1,67 @@
 import type { NextApiRequest, NextApiResponse } from "next"
-import prisma from "@/lib/prisma"
 import { getAllLAStoreLocations } from "@/lib/la-store-locations"
+import prisma from "@/lib/prisma"
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    // Get the current date in YYYY-MM-DD format
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-
-    // Get all potential LA store locations
+    // Get all possible store locations
     const allPossibleLocations = getAllLAStoreLocations()
 
+    // Get all store locations with prices
+    const storeLocationsWithPrices = await prisma.la_egg_prices.findMany({
+      include: { store_location: { include: { store: true } } },
+    })
+
     // Get all chains
-    const chains = [...new Set(allPossibleLocations.map((loc) => loc.name))]
+    const chains = Array.from(new Set(allPossibleLocations.map((loc) => loc.name)))
 
     // Get all zip codes
-    const zipCodes = [...new Set(allPossibleLocations.map((loc) => loc.zipCode))]
+    const zipCodes = Array.from(new Set(allPossibleLocations.map((loc) => loc.zipCode)))
 
-    // Query for today's LA prices to see what we've actually scraped
-    const scrapedLocations = await prisma.la_egg_prices.findMany({
-      where: {
-        date: {
-          gte: today,
-        },
-        price: {
-          gt: 0,
-        },
+    // Calculate coverage
+    const coverage = {
+      total: {
+        possible: allPossibleLocations.length,
+        covered: storeLocationsWithPrices.length,
+        percentage: Math.round((storeLocationsWithPrices.length / allPossibleLocations.length) * 100),
       },
-      include: {
-        store_location: {
-          include: {
-            store: true,
-          },
-        },
-      },
-      distinct: ["store_location_id", "eggType"],
-    })
+      byChain: {} as Record<string, { possible: number; covered: number; percentage: number }>,
+      byZipCode: {} as Record<string, { possible: number; covered: number; percentage: number }>,
+    }
 
-    // Group by chain and zip code
-    const scrapedByChain: Record<string, Set<string>> = {}
+    // Calculate coverage by chain
+    chains.forEach((chain) => {
+      const possibleForChain = allPossibleLocations.filter((loc) => loc.name === chain).length
+      const coveredForChain = storeLocationsWithPrices.filter((item) => item.store_location.store.name === chain).length
 
-    scrapedLocations.forEach((loc) => {
-      const chainName = loc.store_location.store.name
-      const zipCode = loc.store_location.zipCode
-
-      if (!scrapedByChain[chainName]) {
-        scrapedByChain[chainName] = new Set()
-      }
-
-      scrapedByChain[chainName].add(zipCode)
-    })
-
-    // Calculate coverage statistics
-    const chainCoverage = chains.map((chain) => {
-      const possibleLocations = allPossibleLocations.filter((loc) => loc.name === chain)
-      const scrapedZipCodes = scrapedByChain[chain] || new Set()
-
-      return {
-        chain,
-        possibleLocations: possibleLocations.length,
-        scrapedLocations: scrapedZipCodes.size,
-        coverage:
-          possibleLocations.length > 0 ? Math.round((scrapedZipCodes.size / possibleLocations.length) * 100) : 0,
-        scrapedZipCodes: Array.from(scrapedZipCodes),
+      coverage.byChain[chain] = {
+        possible: possibleForChain,
+        covered: coveredForChain,
+        percentage: Math.round((coveredForChain / possibleForChain) * 100),
       }
     })
 
-    // Calculate overall coverage
-    const totalPossible = allPossibleLocations.length
-    const totalScraped = scrapedLocations.length
-    const overallCoverage = totalPossible > 0 ? Math.round((totalScraped / totalPossible) * 100) : 0
+    // Calculate coverage by zip code
+    zipCodes.forEach((zipCode) => {
+      const possibleForZip = allPossibleLocations.filter((loc) => loc.zipCode === zipCode).length
+      const coveredForZip = storeLocationsWithPrices.filter((item) => item.store_location.zipCode === zipCode).length
+
+      coverage.byZipCode[zipCode] = {
+        possible: possibleForZip,
+        covered: coveredForZip,
+        percentage: Math.round((coveredForZip / possibleForZip) * 100),
+      }
+    })
 
     return res.json({
       success: true,
-      date: today.toISOString(),
-      totalPossibleLocations: totalPossible,
-      totalScrapedLocations: totalScraped,
-      overallCoverage,
-      chainCoverage,
-      totalChains: chains.length,
-      totalZipCodes: zipCodes.length,
+      coverage,
     })
   } catch (error) {
-    console.error("Error fetching LA coverage:", error)
+    console.error("Error getting LA coverage:", error)
     return res.status(500).json({
       success: false,
-      error: "Failed to fetch LA coverage statistics",
+      error: "Failed to get LA coverage",
       message: error instanceof Error ? error.message : "Unknown error",
     })
   }
