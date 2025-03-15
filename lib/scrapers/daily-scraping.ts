@@ -12,7 +12,7 @@ export async function scrapeAllStores(useAllStores = false) {
   today.setHours(0, 0, 0, 0)
 
   // Get store locations - either all or representative sample
-  const storeLocations = useAllStores ? getAllLAStoreLocations() : getRepresentativeLAStoreLocations(50)
+  const storeLocations = useAllStores ? getAllLAStoreLocations() : getRepresentativeLAStoreLocations(10) // Reduced to 10 for testing
 
   console.log(`Preparing to scrape ${storeLocations.length} store locations...`)
 
@@ -53,7 +53,7 @@ export async function scrapeAllStores(useAllStores = false) {
           storeLocation = await prisma.store_locations.create({
             data: {
               store_id: storeRecord.id,
-              address: store.address,
+              address: store.address || null,
               zipCode: store.zipCode,
               latitude: store.latitude || null,
               longitude: store.longitude || null,
@@ -63,15 +63,20 @@ export async function scrapeAllStores(useAllStores = false) {
 
         // Save each price
         for (const price of storeResults) {
-          await prisma.la_egg_prices.create({
-            data: {
-              store_location_id: storeLocation.id,
-              price: price.price,
-              date: today,
-              eggType: price.eggType,
-              inStock: price.inStock || true, // Add inStock status with default true
-            },
-          })
+          try {
+            await prisma.la_egg_prices.create({
+              data: {
+                store_location_id: storeLocation.id,
+                price: price.price,
+                date: today,
+                eggType: price.eggType,
+                inStock: price.inStock || true, // Add inStock status with default true
+              },
+            })
+          } catch (priceError) {
+            console.error(`Error saving price for ${store.name} (${store.zipCode}):`, priceError)
+            // Continue with other prices even if one fails
+          }
         }
       }
 
@@ -88,7 +93,7 @@ export async function scrapeAllStores(useAllStores = false) {
         zipCode: store.zipCode,
         count: 0,
         success: false,
-        error: error.message || "Unknown error",
+        error: error instanceof Error ? error.message : "Unknown error",
       })
     }
   }
