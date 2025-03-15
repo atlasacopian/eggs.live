@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import { Loader2 } from "lucide-react"
+import { Loader2 } from 'lucide-react'
 
 interface SimplePriceData {
   success: boolean
@@ -75,14 +75,35 @@ export function LAPrices() {
     return price ? `$${price.toFixed(2)}` : "$0.00"
   }
 
+  // Handle tab change manually
+  const handleTabChange = (value: string) => {
+    if (value === "regular" || value === "organic") {
+      setEggType(value)
+    }
+  }
+
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="regular" onValueChange={(value) => setEggType(value as "regular" | "organic")}>
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="regular">Regular Eggs</TabsTrigger>
-          <TabsTrigger value="organic">Organic Eggs</TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <div className="flex justify-center">
+        <div className="inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground">
+          <button
+            className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
+              eggType === "regular" ? "bg-background text-foreground shadow-sm" : "hover:bg-background/50"
+            }`}
+            onClick={() => handleTabChange("regular")}
+          >
+            Regular Eggs
+          </button>
+          <button
+            className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
+              eggType === "organic" ? "bg-background text-foreground shadow-sm" : "hover:bg-background/50"
+            }`}
+            onClick={() => handleTabChange("organic")}
+          >
+            Organic Eggs
+          </button>
+        </div>
+      </div>
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-12">
@@ -147,4 +168,3 @@ export function LAPrices() {
     </div>
   )
 }
-
