@@ -5,22 +5,22 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Loader2 } from "lucide-react"
+import { useRouter } from "next/router"
 
 export default function HomePage() {
   const [zipCode, setZipCode] = useState("")
   const [loading, setLoading] = useState(false)
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      window.location.href = `/results?zipCode=${zipCode}`
+      // Navigate to results page with the zip code
+      router.push(`/results?zipCode=${zipCode}`)
     } catch (error) {
       console.error("Error:", error)
-    } finally {
       setLoading(false)
     }
   }
@@ -44,8 +44,8 @@ export default function HomePage() {
             className="text-center text-lg"
             required
           />
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Find Eggs"}
+          <Button type="submit" disabled={loading} className="w-full bg-black text-white hover:bg-gray-800">
+            {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : "Find Eggs"}
           </Button>
         </form>
 
