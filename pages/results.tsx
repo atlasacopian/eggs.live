@@ -4,14 +4,30 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/router"
 import Head from "next/head"
 import Link from "next/link"
+import { MapPin, ArrowLeft, CheckCircle, AlertCircle, Loader2 } from "lucide-react"
+
+interface EggPrice {
+  price: number
+  storeName: string
+  address: string
+  zipCode: string
+  date: string
+  id: number
+  storeLocationId: number
+  inStock: boolean
+}
 
 export default function ResultsPage() {
   const router = useRouter()
   const { zipCode } = router.query
 
-  const [prices, setPrices] = useState({ regular: [], organic: [] })
+  const [prices, setPrices] = useState<{
+    regular: EggPrice[]
+    organic: EggPrice[]
+    outOfStock: EggPrice[]
+  }>({ regular: [], organic: [], outOfStock: [] })
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
   const [includeOutOfStock, setIncludeOutOfStock] = useState(false)
   const [activeTab, setActiveTab] = useState("regular")
 
@@ -27,7 +43,7 @@ export default function ResultsPage() {
       setError(null)
 
       const url = new URL("/api/cheapest-eggs", window.location.origin)
-      url.searchParams.append("zipCode", zipCode.toString())
+      url.searchParams.append("zipCode", zipCode as string)
       url.searchParams.append("includeOutOfStock", includeOutOfStock.toString())
 
       const response = await fetch(url.toString())
@@ -37,31 +53,35 @@ export default function ResultsPage() {
         setPrices({
           regular: data.cheapestRegular || [],
           organic: data.cheapestOrganic || [],
+          outOfStock: data.outOfStock || [],
         })
       } else {
         throw new Error(data.message || "Failed to fetch data")
       }
     } catch (err) {
       console.error("Error:", err)
-      setError(err.message || "An error occurred")
+      setError(err instanceof Error ? err.message : "An error occurred")
     } finally {
       setLoading(false)
     }
   }
 
-  const formatPrice = (price) => `$${price.toFixed(2)}`
-  const formatDate = (dateString) => new Date(dateString).toLocaleDateString()
+  const formatPrice = (price: number) => `$${price.toFixed(2)}`
+  const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString()
 
   if (!zipCode) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-gray-500 mx-auto mb-4" />
+          <p>Loading...</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
+    <div className="min-h-screen bg-gray-50">
       <Head>
         <title>Egg Prices Near {zipCode} | eggs.live</title>
       </Head>
@@ -70,7 +90,7 @@ export default function ResultsPage() {
         {/* Header */}
         <div className="max-w-4xl mx-auto">
           <Link href="/" className="inline-flex items-center text-gray-600 hover:text-black mb-8">
-            ← Back to search
+            <ArrowLeft className="w-4 h-4 mr-2" /> Back to search
           </Link>
 
           <div className="text-center mb-12">
@@ -79,7 +99,7 @@ export default function ResultsPage() {
           </div>
 
           {/* Controls */}
-          <div className="flex justify-between items-center mb-8">
+          <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
             <div className="flex gap-4">
               <button
                 onClick={() => setActiveTab("regular")}
@@ -113,7 +133,8 @@ export default function ResultsPage() {
           {/* Content */}
           {loading ? (
             <div className="text-center py-12">
-              <div className="animate-pulse text-gray-600">Loading egg prices...</div>
+              <Loader2 className="w-8 h-8 animate-spin text-gray-500 mx-auto mb-4" />
+              <p className="text-gray-600">Loading egg prices for ZIP code {zipCode}...</p>
             </div>
           ) : error ? (
             <div className="text-center py-12">
@@ -124,36 +145,85 @@ export default function ResultsPage() {
             </div>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {prices[activeTab].map((item) => (
-                <div
-                  key={item.id}
-                  className={`bg-white rounded-lg border shadow-sm overflow-hidden ${
-                    !item.inStock ? "border-red-200 bg-red-50" : ""
-                  }`}
-                >
-                  <div className="p-4">
-                    <div className="flex justify-between items-start mb-3">
-                      <h3 className="font-bold text-lg">{item.storeName}</h3>
-                      <div className="text-2xl font-bold text-amber-600">{formatPrice(item.price)}</div>
-                    </div>
+              {prices[activeTab as "regular" | "organic"].length > 0 ? (
+                prices[activeTab as "regular" | "organic"].map((item) => (
+                  <div
+                    key={item.id}
+                    className={`bg-white rounded-lg border shadow-sm overflow-hidden ${
+                      !item.inStock ? "border-red-200 bg-red-50" : ""
+                    }`}
+                  >
+                    <div className="p-4">
+                      <div className="flex justify-between items-start mb-3">
+                        <h3 className="font-bold text-lg">{item.storeName}</h3>
+                        <div className="text-2xl font-bold text-amber-600">{formatPrice(item.price)}</div>
+                      </div>
 
-                    <div
-                      className={`inline-flex px-2 py-1 rounded-full text-sm font-medium mb-3 ${
-                        item.inStock ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {item.inStock ? "In Stock" : "Out of Stock"}
-                    </div>
+                      <div className="flex items-center mb-3">
+                        {item.inStock ? (
+                          <div className="flex items-center text-green-600">
+                            <CheckCircle className="h-4 w-4 mr-1" />
+                            <span className="text-sm font-medium">In Stock</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center text-red-600">
+                            <AlertCircle className="h-4 w-4 mr-1" />
+                            <span className="text-sm font-medium">Out of Stock</span>
+                          </div>
+                        )}
+                      </div>
 
-                    <div className="text-sm text-gray-600">
-                      <p>{item.address}</p>
-                      <p>ZIP: {item.zipCode}</p>
-                    </div>
+                      <div className="flex items-start gap-2 text-sm text-gray-600 mb-2">
+                        <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p>{item.address}</p>
+                          <p className="font-medium">ZIP: {item.zipCode}</p>
+                        </div>
+                      </div>
 
-                    <div className="mt-2 text-xs text-gray-500">Updated: {formatDate(item.date)}</div>
+                      <div className="mt-2 text-xs text-gray-500">Updated: {formatDate(item.date)}</div>
+                    </div>
                   </div>
+                ))
+              ) : (
+                <div className="col-span-full text-center py-8">
+                  <p className="text-gray-500">
+                    No {activeTab} egg prices found in ZIP code {zipCode}
+                  </p>
                 </div>
-              ))}
+              )}
+            </div>
+          )}
+
+          {/* Out of Stock Section */}
+          {!includeOutOfStock && prices.outOfStock.length > 0 && (
+            <div className="mt-12">
+              <h2 className="text-xl font-semibold mb-4 text-red-600">Out of Stock Locations</h2>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {prices.outOfStock.map((item) => (
+                  <div key={item.id} className="bg-red-50 rounded-lg border border-red-200 shadow-sm overflow-hidden">
+                    <div className="p-4">
+                      <div className="flex justify-between items-start mb-3">
+                        <h3 className="font-bold text-lg text-red-800">{item.storeName}</h3>
+                        <div className="flex items-center text-red-600">
+                          <AlertCircle className="h-4 w-4 mr-1" />
+                          <span className="text-sm font-medium">Out of Stock</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-2 text-sm text-red-700 mb-2">
+                        <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p>{item.address}</p>
+                          <p className="font-medium">ZIP: {item.zipCode}</p>
+                        </div>
+                      </div>
+
+                      <div className="mt-2 text-xs text-red-500">Updated: {formatDate(item.date)}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
