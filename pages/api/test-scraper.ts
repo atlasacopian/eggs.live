@@ -5,8 +5,8 @@ import { storeExistsInZipCode, getNearbyZipCodesWithStore } from "@/lib/utils/st
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    // Get URL and store name from query parameters
     const { url, storeName, zipCode } = req.query
+    const radiusMiles = 10 // Search within 10 miles
 
     if (!url || !storeName || Array.isArray(url) || Array.isArray(storeName) || !zipCode || Array.isArray(zipCode)) {
       return res.status(400).json({
@@ -15,16 +15,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
     }
 
-    // Check if the store exists in this ZIP code
-    if (!storeExistsInZipCode(storeName, zipCode)) {
+    // Check if the store exists in this ZIP code or within radius
+    if (!storeExistsInZipCode(storeName, zipCode, radiusMiles)) {
       // Get nearby ZIP codes with this store
-      const nearbyZipCodes = getNearbyZipCodesWithStore(storeName, zipCode)
+      const nearbyStores = getNearbyZipCodesWithStore(storeName, zipCode, radiusMiles)
 
       return res.status(404).json({
         success: false,
-        error: `No ${storeName} found in ZIP code ${zipCode}`,
-        nearbyZipCodes,
-        message: "Try these nearby ZIP codes instead",
+        error: `No ${storeName} found within ${radiusMiles} miles of ZIP code ${zipCode}`,
+        nearbyLocations: nearbyStores.map((store) => ({
+          zipCode: store.zipCode,
+          distance: Math.round(store.distance * 10) / 10, // Round to 1 decimal place
+        })),
+        message: "Try these nearby locations instead",
       })
     }
 
