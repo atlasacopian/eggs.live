@@ -16,11 +16,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Check if the API key is configured
-    if (!process.env.FIRECRAWL_API_KEY) {
+    const apiKey = process.env.FIRECRAWL_API_KEY
+    console.log(`Firecrawl API key status: ${apiKey ? "Configured" : "Not configured"}`)
+    console.log(`Firecrawl API key: ${apiKey ? apiKey.substring(0, 5) + "..." : "Not set"}`)
+
+    if (!apiKey) {
       return res.status(400).json({
         success: false,
         error: "Firecrawl API key not configured",
         message: "Please set up the FIRECRAWL_API_KEY environment variable",
+        usingMock: true,
       })
     }
 
@@ -72,6 +77,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
     }
 
+    // When returning success, explicitly check if we fell back to mock data
+    const usingMockData = !prices.some((price) => price.fromRealData === true)
+
     return res.status(200).json({
       success: true,
       url: formattedUrl,
@@ -82,7 +90,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       location: actualLocation,
       results: prices,
       sourceDetails,
-      usingMock: false,
+      usingMock: usingMockData,
+      apiKeyConfigured: !!apiKey,
     })
   } catch (error) {
     console.error("Error testing scraper:", error)
@@ -90,6 +99,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       success: false,
       error: "Failed to test scraper",
       message: error instanceof Error ? error.message : "Unknown error",
+      usingMock: true,
     })
   }
 }
