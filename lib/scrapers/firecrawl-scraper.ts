@@ -37,103 +37,38 @@ const firecrawlClient = new FirecrawlClient({
   timeout: 60000, // 60 seconds
 })
 
-// Store-specific selectors and extraction logic
-const storeConfigs: Record<
-  string,
-  {
-    regularEggSelector: string
-    organicEggSelector: string
-    priceExtractor: (html: string, selector: string) => { price: number; inStock: boolean } | null
-  }
-> = {
-  Walmart: {
-    regularEggSelector: '.product-card:contains("Grade A Large Eggs") .price-main',
-    organicEggSelector: '.product-card:contains("Organic") .price-main',
-    priceExtractor: (html, selector) => {
-      // Walmart-specific price extraction logic
-      const priceMatch = html.match(/\$(\d+\.\d+)/)
-      const outOfStockIndicator = html.includes("Out of stock") || html.includes("Sold out")
-
-      if (priceMatch && priceMatch[1]) {
-        return {
-          price: Number.parseFloat(priceMatch[1]),
-          inStock: !outOfStockIndicator,
-        }
-      }
-      return null
-    },
-  },
-  Target: {
-    regularEggSelector: '[data-test="product-card"]:contains("Grade A Large Eggs") [data-test="current-price"]',
-    organicEggSelector: '[data-test="product-card"]:contains("Organic") [data-test="current-price"]',
-    priceExtractor: (html, selector) => {
-      // Target-specific price extraction logic
-      const priceMatch = html.match(/\$(\d+\.\d+)/)
-      const outOfStockIndicator = html.includes("Out of stock") || html.includes("Sold out")
-
-      if (priceMatch && priceMatch[1]) {
-        return {
-          price: Number.parseFloat(priceMatch[1]),
-          inStock: !outOfStockIndicator,
-        }
-      }
-      return null
-    },
-  },
-  // Default config for other stores
-  default: {
-    regularEggSelector: '.product:contains("eggs"):contains("dozen"):not(:contains("organic")) .price',
-    organicEggSelector: '.product:contains("eggs"):contains("organic"):contains("dozen") .price',
-    priceExtractor: (html, selector) => {
-      // Generic price extraction logic
-      const priceMatch = html.match(/\$(\d+\.\d+)/)
-      const outOfStockIndicator = html.includes("Out of stock") || html.includes("Sold out")
-
-      if (priceMatch && priceMatch[1]) {
-        return {
-          price: Number.parseFloat(priceMatch[1]),
-          inStock: !outOfStockIndicator,
-        }
-      }
-      return null
-    },
-  },
-}
-
-// Add configurations for other stores as needed
-Object.assign(storeConfigs, {
-  "Whole Foods": { ...storeConfigs.default },
-  Ralphs: { ...storeConfigs.default },
-  Vons: { ...storeConfigs.default },
-  Albertsons: { ...storeConfigs.default },
-  "Food 4 Less": { ...storeConfigs.default },
-  Sprouts: { ...storeConfigs.default },
-  Erewhon: { ...storeConfigs.default },
-  "Gelson's": { ...storeConfigs.default },
-  "Smart & Final": { ...storeConfigs.default },
-  Pavilions: { ...storeConfigs.default },
-})
-
 // Mock function to simulate scraping
 export async function scrapeWithFirecrawl(url: string, storeName: string): Promise<EggPrice[]> {
-  console.log(`Mock scraping ${storeName} at ${url}`)
+  console.log(`Mock scraping ${storeName} at URL: ${url}`)
 
-  // Generate mock data based on store name
+  // For real implementation, we would use the Firecrawl client here
+  // For now, we'll generate mock data based on store name and the ZIP code in the URL
+
+  // Extract ZIP code from URL to use in our mock data generation
+  const zipCodeMatch = url.match(/[?&](zipCode|zipcode|zip|postal_code|location|locationId)=(\d{5})/i)
+  const zipCode = zipCodeMatch ? zipCodeMatch[2] : "00000"
+
+  // Generate mock data based on store name and ZIP code
   const prices: EggPrice[] = []
+
+  // Use the last two digits of the ZIP code to create some variation in prices
+  const zipVariation = Number.parseInt(zipCode.slice(-2)) / 100
 
   // Regular eggs
   prices.push({
-    price: 3.99 + Math.random() * 2,
+    price: Math.round((3.99 + zipVariation + Math.random() * 1) * 100) / 100,
     eggType: "regular",
     inStock: Math.random() > 0.2, // 80% chance of being in stock
   })
 
   // Organic eggs
   prices.push({
-    price: 5.99 + Math.random() * 3,
+    price: Math.round((5.99 + zipVariation + Math.random() * 1.5) * 100) / 100,
     eggType: "organic",
     inStock: Math.random() > 0.3, // 70% chance of being in stock
   })
+
+  console.log(`Generated prices for ${storeName} in ZIP code ${zipCode}:`, prices)
 
   return prices
 }
