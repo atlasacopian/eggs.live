@@ -199,24 +199,32 @@ export default function ScraperTestPage() {
             <div className="mb-4">
               <h3 className="font-medium mb-2">Location Techniques Used:</h3>
               <div className="space-y-2">
-                <div className="p-2 bg-gray-50 rounded">
-                  <p className="font-medium text-sm">URL Parameters</p>
-                  <p className="text-xs text-gray-600">ZIP code added to URL</p>
-                </div>
-                <div className="p-2 bg-gray-50 rounded">
-                  <p className="font-medium text-sm">Location Headers</p>
-                  <p className="text-xs text-gray-600">Browser headers set to simulate location</p>
-                </div>
-                <div className="p-2 bg-gray-50 rounded">
-                  <p className="font-medium text-sm">Location Cookies</p>
-                  <p className="text-xs text-gray-600">Cookies set with location information</p>
-                </div>
-                {results.formFilled && (
-                  <div className="p-2 bg-gray-50 rounded">
-                    <p className="font-medium text-sm">Form Filling</p>
-                    <p className="text-xs text-gray-600">ZIP code form automatically filled</p>
+                {results.formFilled ? (
+                  <div className="p-2 bg-green-50 border border-green-100 rounded">
+                    <p className="font-medium text-sm text-green-800">✓ Form Filling (Primary Method)</p>
+                    <p className="text-xs text-green-700">Successfully filled ZIP code form</p>
+                  </div>
+                ) : (
+                  <div className="p-2 bg-amber-50 border border-amber-100 rounded">
+                    <p className="font-medium text-sm text-amber-800">✗ Form Filling (Primary Method)</p>
+                    <p className="text-xs text-amber-700">No form found or form filling failed</p>
                   </div>
                 )}
+
+                <div className="p-2 bg-gray-50 rounded">
+                  <p className="font-medium text-sm">URL Parameters (Fallback)</p>
+                  <p className="text-xs text-gray-600">ZIP code added to URL</p>
+                </div>
+
+                <div className="p-2 bg-gray-50 rounded">
+                  <p className="font-medium text-sm">Location Headers (Fallback)</p>
+                  <p className="text-xs text-gray-600">Browser headers set to simulate location</p>
+                </div>
+
+                <div className="p-2 bg-gray-50 rounded">
+                  <p className="font-medium text-sm">Location Cookies (Fallback)</p>
+                  <p className="text-xs text-gray-600">Cookies set with location information</p>
+                </div>
               </div>
             </div>
 
