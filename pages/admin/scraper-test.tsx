@@ -111,12 +111,6 @@ export default function ScraperTestPage() {
               pattern="[0-9]{5}"
             />
           </div>
-
-          <div className="text-sm text-gray-500">
-            <p>
-              Will search: <span className="font-mono">{STORE_URLS[storeName] || "URL will be generated"}</span>
-            </p>
-          </div>
         </CardContent>
         <CardFooter>
           <Button onClick={handleTest} disabled={loading}>
@@ -135,10 +129,11 @@ export default function ScraperTestPage() {
       {error && (
         <Card className="mb-8 border-red-300">
           <CardHeader className="bg-red-50">
-            <CardTitle className="text-red-700">
-              <AlertCircle className="inline-block w-5 h-5 mr-2" />
-              {error}
+            <CardTitle className="text-red-700 flex items-center gap-2">
+              <AlertCircle className="w-5 h-5" />
+              Store Not Found
             </CardTitle>
+            <CardDescription className="text-red-600">{error}</CardDescription>
           </CardHeader>
           {nearbyLocations.length > 0 && (
             <CardContent>
