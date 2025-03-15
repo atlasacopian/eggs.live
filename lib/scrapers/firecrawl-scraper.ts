@@ -1,5 +1,34 @@
 import type { EggPrice } from "../types"
-import { FirecrawlClient } from "../firecrawl-client"
+
+// Mock FirecrawlClient class
+export class FirecrawlClient {
+  private apiKey: string
+  private maxRetries: number
+  private timeout: number
+
+  constructor(options: { apiKey: string; maxRetries?: number; timeout?: number }) {
+    this.apiKey = options.apiKey
+    this.maxRetries = options.maxRetries || 3
+    this.timeout = options.timeout || 30000
+  }
+
+  async scrape(url: string, options?: any): Promise<{ status: number; content: string }> {
+    console.log(`Mocked scrape for URL: ${url}`)
+    return {
+      status: 200,
+      content: "<html><body>Mocked HTML content</body></html>",
+    }
+  }
+
+  async extract(url: string, schema: any, options?: any): Promise<any> {
+    console.log(`Mocked extract for URL: ${url}`)
+    return {
+      regularEggs: "$4.99",
+      organicEggs: "$6.99",
+      outOfStock: false,
+    }
+  }
+}
 
 // Initialize Firecrawl client
 const firecrawlClient = new FirecrawlClient({
@@ -85,171 +114,25 @@ Object.assign(storeConfigs, {
   Pavilions: { ...storeConfigs.default },
 })
 
+// Mock function to simulate scraping
 export async function scrapeWithFirecrawl(url: string, storeName: string): Promise<EggPrice[]> {
-  try {
-    console.log(`Scraping ${storeName} at ${url}`)
+  console.log(`Mock scraping ${storeName} at ${url}`)
 
-    if (!process.env.FIRECRAWL_API_KEY) {
-      console.warn("FIRECRAWL_API_KEY not set. Using mock data instead.")
-      return generateMockData(storeName)
-    }
-
-    // Get the appropriate config for this store
-    const config = storeConfigs[storeName] || storeConfigs.default
-
-    // Use Firecrawl's extract API for structured data extraction
-    const extractionSchema = {
-      regularEggs: {
-        selector: config.regularEggSelector,
-        type: "text",
-      },
-      organicEggs: {
-        selector: config.organicEggSelector,
-        type: "text",
-      },
-      outOfStock: {
-        selector: "body",
-        type: "text",
-        regex: "(out of stock|sold out|unavailable)",
-        flags: "i",
-      },
-    }
-
-    // First try using the extraction API
-    try {
-      const extractionResult = await firecrawlClient.extract(url, extractionSchema, {
-        javascript: true,
-        proxy: true,
-      })
-
-      const prices: EggPrice[] = []
-
-      // Process regular eggs
-      if (extractionResult.regularEggs) {
-        const priceMatch = extractionResult.regularEggs.match(/\$(\d+\.\d+)/)
-        if (priceMatch && priceMatch[1]) {
-          prices.push({
-            price: Number.parseFloat(priceMatch[1]),
-            eggType: "regular",
-            inStock: !extractionResult.outOfStock,
-          })
-        }
-      }
-
-      // Process organic eggs
-      if (extractionResult.organicEggs) {
-        const priceMatch = extractionResult.organicEggs.match(/\$(\d+\.\d+)/)
-        if (priceMatch && priceMatch[1]) {
-          prices.push({
-            price: Number.parseFloat(priceMatch[1]),
-            eggType: "organic",
-            inStock: !extractionResult.outOfStock,
-          })
-        }
-      }
-
-      if (prices.length > 0) {
-        console.log(`Found ${prices.length} prices for ${storeName}:`, prices)
-        return prices
-      }
-    } catch (extractError) {
-      console.warn(`Extraction API failed for ${storeName}, falling back to scrape API:`, extractError)
-    }
-
-    // Fallback to regular scrape API
-    const response = await firecrawlClient.scrape(url, {
-      javascript: true,
-      waitForSelector: '.price, [data-test="current-price"], .product-price',
-      proxy: true,
-    })
-
-    if (response.status !== 200) {
-      throw new Error(`Failed to scrape ${url}: HTTP ${response.status}`)
-    }
-
-    const html = response.content
-    const prices: EggPrice[] = []
-
-    // Extract regular egg price
-    const regularEggResult = config.priceExtractor(html, config.regularEggSelector)
-    if (regularEggResult) {
-      prices.push({
-        price: regularEggResult.price,
-        eggType: "regular",
-        inStock: regularEggResult.inStock,
-      })
-    }
-
-    // Extract organic egg price
-    const organicEggResult = config.priceExtractor(html, config.organicEggSelector)
-    if (organicEggResult) {
-      prices.push({
-        price: organicEggResult.price,
-        eggType: "organic",
-        inStock: organicEggResult.inStock,
-      })
-    }
-
-    console.log(`Found ${prices.length} prices for ${storeName}:`, prices)
-    return prices
-  } catch (error) {
-    console.error(`Error scraping ${storeName}:`, error)
-
-    // Fallback to mock data if scraping fails
-    console.log(`Falling back to mock data for ${storeName}`)
-    return generateMockData(storeName)
-  }
-}
-
-// Helper function to generate mock data when scraping fails or API key is missing
-function generateMockData(storeName: string): EggPrice[] {
-  // Base prices
-  const basePrices = {
-    regular: {
-      budget: 3.99,
-      standard: 4.49,
-      premium: 5.99,
-    },
-    organic: {
-      budget: 5.99,
-      standard: 6.99,
-      premium: 8.99,
-    },
-  }
-
-  // Categorize stores
-  const premiumStores = ["Erewhon", "Gelson's", "Whole Foods"]
-  const budgetStores = ["Food 4 Less", "Smart & Final"]
-
-  // Generate prices for both types
+  // Generate mock data based on store name
   const prices: EggPrice[] = []
 
   // Regular eggs
-  let basePrice = premiumStores.some((store) => storeName.includes(store))
-    ? basePrices.regular.premium
-    : budgetStores.some((store) => storeName.includes(store))
-      ? basePrices.regular.budget
-      : basePrices.regular.standard
-
-  const variation = basePrice * 0.2 * (Math.random() - 0.5)
   prices.push({
-    price: Math.round((basePrice + variation) * 100) / 100,
+    price: 3.99 + Math.random() * 2,
     eggType: "regular",
-    inStock: Math.random() < 0.9,
+    inStock: Math.random() > 0.2, // 80% chance of being in stock
   })
 
   // Organic eggs
-  basePrice = premiumStores.some((store) => storeName.includes(store))
-    ? basePrices.organic.premium
-    : budgetStores.some((store) => storeName.includes(store))
-      ? basePrices.organic.budget
-      : basePrices.organic.standard
-
-  const organicVariation = basePrice * 0.2 * (Math.random() - 0.5)
   prices.push({
-    price: Math.round((basePrice + organicVariation) * 100) / 100,
+    price: 5.99 + Math.random() * 3,
     eggType: "organic",
-    inStock: Math.random() < 0.8,
+    inStock: Math.random() > 0.3, // 70% chance of being in stock
   })
 
   return prices
