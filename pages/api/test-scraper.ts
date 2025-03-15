@@ -32,14 +32,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const formattedUrl = formatStoreUrlWithZipCode(url, storeName, zipCode)
 
     // Test the scraper with the provided URL and store name
-    const results = await scrapeWithFirecrawl(formattedUrl, storeName)
+    const { prices, locationVerified, actualLocation } = await scrapeWithFirecrawl(formattedUrl, storeName, zipCode)
+
+    // If the location couldn't be verified, return an error
+    if (!locationVerified) {
+      return res.status(400).json({
+        success: false,
+        error: `Could not verify prices for ${storeName} in ZIP code ${zipCode}`,
+        actualLocation,
+        message: "The website may have redirected to a different store location",
+      })
+    }
 
     return res.status(200).json({
       success: true,
       url: formattedUrl,
       storeName,
       zipCode,
-      results,
+      locationVerified,
+      location: actualLocation,
+      results: prices,
       usingMock: !process.env.FIRECRAWL_API_KEY,
     })
   } catch (error) {
