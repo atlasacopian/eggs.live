@@ -36,8 +36,11 @@ export async function scrapeAllStores(useAllStores = false) {
       const {
         prices: storeResults,
         locationVerified,
+        formFilled,
         actualLocation,
       } = await scrapeWithFirecrawl(storeUrl, store.name, store.zipCode)
+
+      console.log(`Form filled for ${store.name}: ${formFilled ? "Yes" : "No"}`)
 
       // Only save results if the location was verified
       if (locationVerified && storeResults.length > 0) {
@@ -119,6 +122,7 @@ export async function scrapeAllStores(useAllStores = false) {
           url: storeUrl,
           count: storeResults.length,
           locationVerified,
+          formFilled,
           success: true,
         })
       } else {
@@ -128,6 +132,7 @@ export async function scrapeAllStores(useAllStores = false) {
           url: storeUrl,
           count: 0,
           locationVerified,
+          formFilled,
           success: false,
           error: "Location could not be verified",
         })
