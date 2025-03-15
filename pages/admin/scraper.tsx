@@ -18,12 +18,21 @@ export default function ScraperAdminPage() {
       const response = await fetch("/api/trigger-initial-scrape", {
         method: "POST",
       })
-      const data = await response.json()
+
+      // First try to parse the response as JSON
+      let data
+      try {
+        data = await response.json()
+      } catch (parseError) {
+        // If JSON parsing fails, get the text and show it as an error
+        const text = await response.text()
+        throw new Error(`Failed to parse response: ${text}`)
+      }
 
       if (data.success) {
         setResults(data)
       } else {
-        setError(data.message || "Failed to trigger scraper")
+        throw new Error(data.message || "Failed to trigger scraper")
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred")
@@ -65,7 +74,7 @@ export default function ScraperAdminPage() {
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-8">
           <h2 className="text-xl font-semibold text-red-700 mb-2">Error</h2>
-          <p className="text-red-700">{error}</p>
+          <p className="text-red-700 whitespace-pre-wrap">{error}</p>
         </div>
       )}
 
