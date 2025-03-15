@@ -22,7 +22,7 @@ const storeConfigs: Record<
     organicEggSelector: '.product-card:contains("Organic") .price-main',
     priceExtractor: (html, selector) => {
       // Walmart-specific price extraction logic
-      const priceMatch = html.match(new RegExp(`${selector}[^$]*\\$(\\d+\\.\\d+)`))
+      const priceMatch = html.match(/\$(\d+\.\d+)/)
       const outOfStockIndicator = html.includes("Out of stock") || html.includes("Sold out")
 
       if (priceMatch && priceMatch[1]) {
@@ -39,7 +39,7 @@ const storeConfigs: Record<
     organicEggSelector: '[data-test="product-card"]:contains("Organic") [data-test="current-price"]',
     priceExtractor: (html, selector) => {
       // Target-specific price extraction logic
-      const priceMatch = html.match(new RegExp(`${selector}[^$]*\\$(\\d+\\.\\d+)`))
+      const priceMatch = html.match(/\$(\d+\.\d+)/)
       const outOfStockIndicator = html.includes("Out of stock") || html.includes("Sold out")
 
       if (priceMatch && priceMatch[1]) {
