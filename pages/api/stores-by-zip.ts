@@ -1,76 +1,37 @@
 import type { NextApiRequest, NextApiResponse } from "next"
-import prisma from "@/lib/prisma"
+import { stores } from "../../data"
 
-interface StorePrice {
-  storeName: string
-  address: string
-  regularPrice: number | null
-  organicPrice: number | null
-  inStock: boolean
-  distance: number // in miles
-}
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  try {
+export default function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method === "GET") {
     const { zipCode } = req.query
 
-    if (!zipCode || typeof zipCode !== "string") {
-      return res.status(400).json({
-        success: false,
-        error: "ZIP code is required",
-      })
+    if (!zipCode) {
+      return res.status(400).json({ message: "Zip code is required" })
     }
 
-    // Get today's date
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+    if (typeof zipCode !== "string") {
+      return res.status(400).json({ message: "Zip code must be a string" })
+    }
 
-    // Find stores in the given zip code and nearby areas
-    const storeLocations = await prisma.store_locations.findMany({
-      where: {
-        zipCode: zipCode,
-      },
-      include: {
-        store: true,
-        la_egg_prices: {
-          where: {
-            date: {
-              gte: today,
-            },
-          },
-        },
-      },
-    })
+    const filteredStores = stores.filter((store) => store.address.zip.toString() === zipCode)
 
-    // Format the results
-    const stores: StorePrice[] = storeLocations.map((location) => {
-      const regularPrice = location.la_egg_prices.find((p) => p.eggType === "regular")?.price || null
-      const organicPrice = location.la_egg_prices.find((p) => p.eggType === "organic")?.price || null
+    if (filteredStores.length === 0) {
+      return res.status(404).json({ message: "No stores found for this zip code" })
+    }
 
-      // Consider in stock if we have at least one price
-      const inStock = regularPrice !== null || organicPrice !== null
+    const response = filteredStores.map((store) => ({
+      id: store.id,
+      name: store.name,
+      address: store.address,
+      phone: store.phone,
+      websiteUrl: store.websiteUrl,
+      imageUrl: store.imageUrl,
+      zipcode: zipCode,
+    }))
 
-      return {
-        storeName: location.store.name,
-        address: location.address || "Address not available",
-        regularPrice,
-        organicPrice,
-        inStock,
-        distance: 0, // Same zip code = 0 miles
-      }
-    })
-
-    return res.status(200).json({
-      success: true,
-      stores: stores,
-    })
-  } catch (error) {
-    console.error("Error fetching stores by ZIP:", error)
-    return res.status(500).json({
-      success: false,
-      error: "Failed to fetch store data",
-      message: error instanceof Error ? error.message : "Unknown error occurred",
-    })
+    res.status(200).json(response)
+  } else {
+    res.status(405).json({ message: "Method Not Allowed" })
   }
 }
 
