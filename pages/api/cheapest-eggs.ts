@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma"
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const { zipCode } = req.query
+    const { zipCode, includeOutOfStock = "false" } = req.query
 
     // Get today's date
     const today = new Date()
@@ -17,6 +17,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       price: {
         gt: 0, // Ensure we don't get zero prices
       },
+    }
+
+    // Add stock filter unless explicitly including out of stock items
+    if (includeOutOfStock !== "true") {
+      baseWhere["inStock"] = true
     }
 
     // Add zip code filter if provided
@@ -78,7 +83,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         date: item.date,
         id: item.id,
         storeLocationId: item.store_location_id,
+        inStock: item.inStock,
       }))
+
+    // Also get out of stock items if we're filtering them out
+    let outOfStockItems = []
+    if (includeOutOfStock !== "true") {
+      const outOfStock = await prisma.la_egg_prices.findMany({
+        where: {
+          date: {
+            gte: today,
+          },
+          inStock: false,
+          ...(zipCode ? { store_location: { zipCode: zipCode as string } } : {}),
+        },
+        include: {
+          store_location: {
+            include: {
+              store: true,
+            },
+          },
+        },
+        take: 10, // Limit to 10 out of stock items
+      })
+
+      outOfStockItems = formatResults(outOfStock)
+    }
 
     return res.json({
       success: true,
@@ -86,6 +116,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       date: today.toISOString(),
       cheapestRegular: formatResults(cheapestRegular),
       cheapestOrganic: formatResults(cheapestOrganic),
+      outOfStock: outOfStockItems,
+      showingOutOfStock: includeOutOfStock === "true",
     })
   } catch (error) {
     console.error("Error finding cheapest eggs:", error)
