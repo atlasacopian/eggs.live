@@ -15,7 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const formattedStores = stores.map((store) => ({
         id: store.id,
         name: store.name,
-        website: store.website,
+        // Removed website field
         locations: store.store_locations.map((loc) => ({
           id: loc.id,
           address: loc.address,
