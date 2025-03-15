@@ -12,7 +12,7 @@ export async function scrapeAllStores(useAllStores = false) {
   today.setHours(0, 0, 0, 0)
 
   // Get store locations - either all or representative sample
-  const storeLocations = useAllStores ? getAllLAStoreLocations() : getRepresentativeLAStoreLocations(10) // Reduced to 10 for testing
+  const storeLocations = useAllStores ? getAllLAStoreLocations() : getRepresentativeLAStoreLocations(50)
 
   console.log(`Preparing to scrape ${storeLocations.length} store locations...`)
 
@@ -20,7 +20,11 @@ export async function scrapeAllStores(useAllStores = false) {
   for (const store of storeLocations) {
     try {
       // For stores with location-specific pricing, we need to set the zip code
-      const storeUrl = store.url + (store.url.includes("?") ? "&" : "?") + `zipCode=${store.zipCode}`
+      // Make sure the zip code is always included in the URL
+      let storeUrl = store.url
+      if (!storeUrl.includes("zipCode=")) {
+        storeUrl += (storeUrl.includes("?") ? "&" : "?") + `zipCode=${store.zipCode}`
+      }
 
       console.log(`Scraping ${store.name} (${store.zipCode})...`)
       const storeResults = await scrapeWithFirecrawl(storeUrl, store.name)
@@ -53,7 +57,7 @@ export async function scrapeAllStores(useAllStores = false) {
           storeLocation = await prisma.store_locations.create({
             data: {
               store_id: storeRecord.id,
-              address: store.address || null,
+              address: store.address || `${store.name} (${store.zipCode})`,
               zipCode: store.zipCode,
               latitude: store.latitude || null,
               longitude: store.longitude || null,
@@ -64,15 +68,36 @@ export async function scrapeAllStores(useAllStores = false) {
         // Save each price
         for (const price of storeResults) {
           try {
-            await prisma.la_egg_prices.create({
-              data: {
+            // Check for existing price record for this store location, date, and egg type
+            const existingPrice = await prisma.la_egg_prices.findFirst({
+              where: {
                 store_location_id: storeLocation.id,
-                price: price.price,
                 date: today,
                 eggType: price.eggType,
-                inStock: price.inStock || true, // Add inStock status with default true
               },
             })
+
+            if (existingPrice) {
+              // Update existing price
+              await prisma.la_egg_prices.update({
+                where: { id: existingPrice.id },
+                data: {
+                  price: price.price,
+                  inStock: price.inStock || true,
+                },
+              })
+            } else {
+              // Create new price record
+              await prisma.la_egg_prices.create({
+                data: {
+                  store_location_id: storeLocation.id,
+                  price: price.price,
+                  date: today,
+                  eggType: price.eggType,
+                  inStock: price.inStock || true,
+                },
+              })
+            }
           } catch (priceError) {
             console.error(`Error saving price for ${store.name} (${store.zipCode}):`, priceError)
             // Continue with other prices even if one fails
