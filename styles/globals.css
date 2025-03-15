@@ -7,20 +7,20 @@
   --background-rgb: 255, 255, 255;
 
   /* Modern tech color palette */
-  --primary: 0 0% 0%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 0 0% 96.1%;
-  --secondary-foreground: 0 0% 9%;
-  --muted: 0 0% 96.1%;
-  --muted-foreground: 0 0% 45.1%;
-  --accent: 0 0% 96.1%;
-  --accent-foreground: 0 0% 9%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 0 0% 89.8%;
-  --input: 0 0% 89.8%;
-  --ring: 0 0% 3.9%;
-  --radius: 0px;
+  --primary: 245 158 11;
+  --primary-foreground: 255 255 255;
+  --secondary: 249 250 251;
+  --secondary-foreground: 17 24 39;
+  --muted: 249 250 251;
+  --muted-foreground: 107 114 128;
+  --accent: 245 158 11;
+  --accent-foreground: 255 255 255;
+  --destructive: 239 68 68;
+  --destructive-foreground: 255 255 255;
+  --border: 229 231 235;
+  --input: 229 231 235;
+  --ring: 245 158 11;
+  --radius: 0.5rem;
 }
 
 @layer base {
@@ -29,122 +29,82 @@
   }
 
   html {
-    font-family: "JetBrains Mono", "Courier New", monospace;
-    letter-spacing: 0.05em;
+    font-family: "Inter", sans-serif;
   }
 
   body {
-    @apply bg-white text-black;
-    font-family: "JetBrains Mono", "Courier New", monospace;
+    @apply bg-white text-gray-900;
+    font-family: "Inter", sans-serif;
   }
 }
 
-/* Tech-forward card styling */
-.tech-card {
-  @apply border border-black rounded-none p-4 text-center;
+/* Egg container styling */
+.egg-container {
   position: relative;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  width: 300px;
+  height: 380px;
+  background: linear-gradient(to bottom, #fff8e1, #ffffff);
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  padding: 2rem;
 }
 
-.tech-card:hover {
+.egg-container:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-}
-
-.tech-card::before {
-  content: "";
-  position: absolute;
-  top: 4px;
-  left: 4px;
-  right: -4px;
-  bottom: -4px;
-  background: rgba(0, 0, 0, 0.1);
-  z-index: -1;
+  box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1), 0 10px 15px -6px rgba(0, 0, 0, 0.05);
 }
 
 /* Modern button styling */
-.tech-button {
-  @apply bg-black text-white px-4 py-2 rounded-none font-mono;
-  position: relative;
+.modern-button {
+  @apply bg-amber-500 text-white px-6 py-2 rounded-full font-medium;
   transition: all 0.2s ease;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-.tech-button:hover {
-  @apply bg-white text-black border border-black;
-  transform: translate(-2px, -2px);
-  box-shadow: 2px 2px 0 black;
+.modern-button:hover {
+  @apply bg-amber-600;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
-.tech-button:active {
-  transform: translate(0, 0);
-  box-shadow: none;
+.modern-button:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Feature card styling */
+.feature-card {
+  @apply bg-white p-6 rounded-lg text-center;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Result card styling */
+.result-card {
+  @apply bg-white p-6 rounded-lg;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: transform 0.2s ease;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.result-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 /* Price tag styling */
 .price-tag {
-  @apply inline-block bg-black text-white px-3 py-1 font-mono text-xl;
-}
-
-/* Typing effect */
-.typing-effect {
-  position: relative;
-}
-
-.typing-effect::after {
-  content: "|";
-  position: absolute;
-  right: -10px;
-  animation: blink 1s step-end infinite;
-}
-
-@keyframes blink {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0;
-  }
-}
-
-/* Pulse animation */
-.pulse-animation {
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0% {
-    opacity: 0.6;
-  }
-  50% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0.6;
-  }
-}
-
-/* Data point animation */
-.data-point {
-  @apply w-2 h-2 bg-black rounded-full;
-  animation: fadeInScale 0.5s ease-out;
-}
-
-@keyframes fadeInScale {
-  0% {
-    transform: scale(0);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-/* Grid background */
-.grid-bg {
-  background-image: linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
-  background-size: 20px 20px;
+  @apply inline-block bg-amber-500 text-white px-3 py-1 rounded-full font-medium;
 }
 
