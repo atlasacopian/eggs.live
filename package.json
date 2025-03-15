@@ -4,10 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "rm -rf .next && NODE_ENV=production prisma generate && next build --debug",
+    "build": "prisma generate && next build",
+    "build:custom": "echo 'Skipping type checking' && prisma generate && next build --no-lint --no-typescript",
     "start": "next start",
-    "lint": "next lint",
-    "clean": "rm -rf node_modules .next && npm install"
+    "lint": "next lint"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
@@ -38,4 +38,3 @@
     "typescript": "^5.4.5"
   }
 }
-
