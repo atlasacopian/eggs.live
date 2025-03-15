@@ -1,13 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from "next"
 import { scrapeAllStores } from "@/lib/scrapers/daily-scraping"
-import { PrismaClient } from "@prisma/client"
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" })
   }
-
-  const prisma = new PrismaClient()
 
   try {
     // First, check if we have the required API key
@@ -22,7 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Run the scraper
     console.log("Starting initial scrape...")
     try {
-      const results = await scrapeAllStores(true)
+      const results = await scrapeAllStores(true) // true means scrape all stores
       return res.json({
         success: true,
         message: "Initial scrape completed",
@@ -43,8 +40,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       error: "Failed to run initial scrape",
       message: error instanceof Error ? error.message : "Unknown error",
     })
-  } finally {
-    await prisma.$disconnect()
   }
 }
 
