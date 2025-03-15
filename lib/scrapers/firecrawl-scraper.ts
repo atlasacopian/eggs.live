@@ -1,4 +1,5 @@
 import type { EggPrice } from "../types"
+import { extractZipCodeFromUrl } from "../utils/zip-code"
 
 // Mock FirecrawlClient class
 export class FirecrawlClient {
@@ -45,11 +46,7 @@ export async function scrapeWithFirecrawl(url: string, storeName: string): Promi
   // For now, we'll generate mock data based on store name and the ZIP code in the URL
 
   // Extract ZIP code from URL to use in our mock data generation
-  // This regex matches all the different parameter names we might use
-  const zipCodeMatch = url.match(
-    /[?&](zipCode|zipcode|zip|postal_code|postalCode|location|locationId|storeZipCode)=(\d{5})/i,
-  )
-  const zipCode = zipCodeMatch ? zipCodeMatch[2] : "00000"
+  const zipCode = extractZipCodeFromUrl(url) || "00000"
 
   // Generate mock data based on store name and ZIP code
   const prices: EggPrice[] = []
@@ -65,11 +62,14 @@ export async function scrapeWithFirecrawl(url: string, storeName: string): Promi
   switch (storeName) {
     case "Whole Foods":
     case "Erewhon":
+    case "Gelson's":
+      // Premium stores
       regularBasePrice = 4.99
       organicBasePrice = 7.49
       break
     case "Walmart":
     case "Food 4 Less":
+      // Budget stores
       regularBasePrice = 3.49
       organicBasePrice = 5.49
       break
@@ -77,15 +77,24 @@ export async function scrapeWithFirecrawl(url: string, storeName: string): Promi
       regularBasePrice = 3.79
       organicBasePrice = 5.79
       break
-    case "Trader Joe's":
-      regularBasePrice = 3.69
+    case "Sprouts":
+      regularBasePrice = 4.29
+      organicBasePrice = 6.49
+      break
+    case "Albertsons":
+    case "Vons":
+    case "Pavilions":
+      // Albertsons Companies stores
+      regularBasePrice = 3.89
       organicBasePrice = 5.89
       break
-    case "Costco":
-    case "Sam's Club":
-      // Warehouse clubs often have better prices but larger quantities
-      regularBasePrice = 3.29
-      organicBasePrice = 5.29
+    case "Ralphs":
+      regularBasePrice = 3.85
+      organicBasePrice = 5.85
+      break
+    case "Smart & Final":
+      regularBasePrice = 3.69
+      organicBasePrice = 5.69
       break
   }
 
