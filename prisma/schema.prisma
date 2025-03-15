@@ -23,7 +23,7 @@ model store_locations {
   id          Int             @id @default(autoincrement())
   store_id    Int
   address     String?
-  zipCode     String
+  zipcode     String          // Changed to lowercase to match existing schema
   latitude    Float?
   longitude   Float?
   created_at  DateTime        @default(now())
@@ -32,7 +32,7 @@ model store_locations {
   egg_prices  la_egg_prices[]
 
   @@index([store_id])
-  @@index([zipCode])
+  @@index([zipcode])
 }
 
 model la_egg_prices {
