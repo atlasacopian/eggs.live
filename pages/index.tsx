@@ -1,11 +1,10 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Loader2, Store } from "lucide-react"
+import { Loader2, Store, ArrowRight } from "lucide-react"
 
 interface StorePrice {
   storeName: string
@@ -33,24 +32,24 @@ export default function HomePage() {
       // Mock results
       setResults([
         {
-          storeName: "Whole Foods",
-          address: "123 Main St, Los Angeles",
+          storeName: "WHOLE FOODS",
+          address: "123 MAIN ST, LOS ANGELES",
           regularPrice: 4.99,
           organicPrice: 7.99,
           inStock: true,
           distance: 0.8,
         },
         {
-          storeName: "Ralphs",
-          address: "456 Oak Ave, Los Angeles",
+          storeName: "RALPHS",
+          address: "456 OAK AVE, LOS ANGELES",
           regularPrice: 3.99,
           organicPrice: 6.99,
           inStock: true,
           distance: 1.2,
         },
         {
-          storeName: "Trader Joe's",
-          address: "789 Pine Blvd, Los Angeles",
+          storeName: "TRADER JOE'S",
+          address: "789 PINE BLVD, LOS ANGELES",
           regularPrice: 3.49,
           organicPrice: 5.99,
           inStock: false,
@@ -72,94 +71,77 @@ export default function HomePage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 flex flex-col items-center">
-      <h1 className="text-4xl font-bold mb-2 text-center">eggs.live</h1>
-      <p className="text-xl text-gray-600 mb-8 text-center">Find egg prices near you in Los Angeles</p>
+    <div className="container mx-auto px-4 py-8 font-mono">
+      <header className="mb-12 border-b border-black pb-6">
+        <h1 className="text-4xl font-bold mb-2 text-center tracking-wider">EGGS.LIVE</h1>
+        <p className="text-xl text-center tracking-wide">REAL-TIME EGG PRICE TRACKER</p>
+      </header>
 
       {!searched ? (
-        <div className="flex flex-col items-center justify-center min-h-[70vh]">
-          <div className="relative">
-            {/* Egg shape container */}
-            <div className="egg-shape relative flex items-center justify-center">
-              <form onSubmit={handleSubmit} className="absolute z-10 flex flex-col items-center">
-                <p className="text-lg font-medium mb-2 text-center">Enter your ZIP code</p>
-                <div className="flex flex-col items-center gap-4">
-                  <Input
-                    type="text"
-                    placeholder="90210"
-                    value={zipCode}
-                    onChange={(e) => setZipCode(e.target.value)}
-                    pattern="[0-9]{5}"
-                    maxLength={5}
-                    className="w-32 text-center text-xl font-bold"
-                    required
-                  />
-                  <Button type="submit" disabled={loading} className="rounded-full px-8">
-                    {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : "Find Eggs"}
-                  </Button>
-                </div>
-              </form>
-            </div>
+        <div className="flex flex-col items-center justify-center min-h-[60vh]">
+          <div className="max-w-md w-full border border-black p-8 relative">
+            <div className="absolute top-0 left-0 bg-black text-white px-2 py-1 text-xs">LOCATION</div>
+            <form onSubmit={handleSubmit} className="flex flex-col items-center space-y-6 mt-6">
+              <p className="text-lg font-medium text-center">ENTER YOUR ZIP CODE</p>
+              <div className="flex flex-col items-center gap-4 w-full">
+                <Input
+                  type="text"
+                  placeholder="90210"
+                  value={zipCode}
+                  onChange={(e) => setZipCode(e.target.value)}
+                  pattern="[0-9]{5}"
+                  maxLength={5}
+                  className="w-32 text-center text-xl font-bold border-black rounded-none"
+                  required
+                />
+                <Button type="submit" disabled={loading} className="tech-button w-full">
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : "FIND EGGS"}
+                  {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
+                </Button>
+              </div>
+            </form>
           </div>
 
-          <style jsx global>{`
-            .egg-shape {
-              width: 280px;
-              height: 380px;
-              background-color: #fff9e6;
-              border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
-              box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              transform: rotate(0deg);
-              position: relative;
-              overflow: hidden;
-            }
-            
-            .egg-shape::before {
-              content: '';
-              position: absolute;
-              top: 0;
-              left: 0;
-              right: 0;
-              height: 50%;
-              background: linear-gradient(to bottom, rgba(255, 255, 255, 0.8), transparent);
-              border-radius: 50% 50% 0 0 / 60% 60% 0 0;
-            }
-          `}</style>
+          <div className="mt-12 text-center">
+            <p className="text-sm uppercase tracking-wider">TRACKING PRICES AT 24+ STORES</p>
+            <p className="text-xs text-gray-500 mt-2">UPDATED DAILY</p>
+          </div>
         </div>
       ) : (
-        <div className="w-full max-w-4xl space-y-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold">Egg Prices Near {zipCode}</h2>
-            <Button variant="outline" onClick={() => setSearched(false)}>
-              New Search
+        <div className="w-full max-w-4xl mx-auto space-y-6">
+          <div className="flex justify-between items-center border-b border-black pb-4">
+            <h2 className="text-2xl font-bold">EGG PRICES NEAR {zipCode}</h2>
+            <Button
+              variant="outline"
+              onClick={() => setSearched(false)}
+              className="border-black rounded-none uppercase"
+            >
+              NEW SEARCH
             </Button>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="tech-grid">
             {results.map((store, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden">
-                <div className="p-4 border-b">
+              <div key={index} className="tech-card bg-white">
+                <div className="border-b border-black pb-3 mb-3">
                   <h3 className="font-bold text-lg flex items-center gap-2">
                     <Store className="h-5 w-5" />
                     {store.storeName}
                   </h3>
-                  <p className="text-sm text-gray-500">{store.address}</p>
-                  <p className="text-sm text-gray-500">{store.distance.toFixed(1)} miles away</p>
+                  <p className="text-sm">{store.address}</p>
+                  <p className="text-sm">{store.distance.toFixed(1)} MILES</p>
                 </div>
-                <div className="p-4 space-y-2">
+                <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span>Regular Eggs:</span>
-                    <span className="font-medium">{formatPrice(store.regularPrice)}</span>
+                    <span>REGULAR:</span>
+                    <span className="price-tag">{formatPrice(store.regularPrice)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Organic Eggs:</span>
-                    <span className="font-medium">{formatPrice(store.organicPrice)}</span>
+                    <span>ORGANIC:</span>
+                    <span className="price-tag">{formatPrice(store.organicPrice)}</span>
                   </div>
-                  <div className={`text-sm ${store.inStock ? "text-green-600" : "text-red-600"}`}>
-                    {store.inStock ? "In Stock" : "Out of Stock"}
+                  <div className={`text-sm ${store.inStock ? "text-green-600" : "text-red-600"} font-bold`}>
+                    {store.inStock ? "IN STOCK" : "OUT OF STOCK"}
                   </div>
                 </div>
               </div>
@@ -167,6 +149,10 @@ export default function HomePage() {
           </div>
         </div>
       )}
+
+      <footer className="mt-16 pt-6 border-t border-black text-center text-xs">
+        <p>EGGS.LIVE © {new Date().getFullYear()} | REAL-TIME EGG PRICE TRACKING</p>
+      </footer>
     </div>
   )
 }
