@@ -2,6 +2,7 @@ export interface EggPrice {
   price: number
   eggType: string
   inStock: boolean
+  fromRealData?: boolean
 }
 
 export interface StoreLocation {
