@@ -142,6 +142,7 @@ function formatStoreUrlWithZipCode(baseUrl: string, storeName: string, zipCode: 
 
   // Store-specific URL formatting
   switch (storeName) {
+    // Major national chains
     case "Walmart":
       // Walmart uses 'zipCode' parameter
       if (!url.includes("zipCode=")) {
@@ -163,24 +164,6 @@ function formatStoreUrlWithZipCode(baseUrl: string, storeName: string, zipCode: 
       }
       break
 
-    case "Ralphs":
-    case "Vons":
-    case "Albertsons":
-    case "Food 4 Less":
-    case "Pavilions":
-      // Kroger-owned stores use 'locationId' parameter
-      if (!url.includes("locationId=")) {
-        url += (url.includes("?") ? "&" : "?") + `locationId=${zipCode}`
-      }
-      break
-
-    case "Sprouts":
-      // Sprouts uses 'postal_code' parameter
-      if (!url.includes("postal_code=")) {
-        url += (url.includes("?") ? "&" : "?") + `postal_code=${zipCode}`
-      }
-      break
-
     case "Costco":
       // Costco uses 'zipCode' parameter
       if (!url.includes("zipCode=")) {
@@ -188,8 +171,132 @@ function formatStoreUrlWithZipCode(baseUrl: string, storeName: string, zipCode: 
       }
       break
 
+    case "Sam's Club":
+      // Sam's Club uses 'postalCode' parameter
+      if (!url.includes("postalCode=")) {
+        url += (url.includes("?") ? "&" : "?") + `postalCode=${zipCode}`
+      }
+      break
+
+    // Kroger-owned stores
+    case "Ralphs":
+    case "Food 4 Less":
+    case "Harris Teeter":
+      // Kroger-owned stores use 'locationId' parameter
+      if (!url.includes("locationId=")) {
+        url += (url.includes("?") ? "&" : "?") + `locationId=${zipCode}`
+      }
+      break
+
+    // Albertsons Companies stores
+    case "Albertsons":
+    case "Vons":
+    case "Pavilions":
+    case "Safeway":
+      // Albertsons Companies stores use 'zipcode' parameter
+      if (!url.includes("zipcode=")) {
+        url += (url.includes("?") ? "&" : "?") + `zipcode=${zipCode}`
+      }
+      break
+
+    // Other major chains
+    case "Sprouts":
+      // Sprouts uses 'postal_code' parameter
+      if (!url.includes("postal_code=")) {
+        url += (url.includes("?") ? "&" : "?") + `postal_code=${zipCode}`
+      }
+      break
+
+    case "H-E-B":
+      // H-E-B uses 'zip' parameter
+      if (!url.includes("zip=")) {
+        url += (url.includes("?") ? "&" : "?") + `zip=${zipCode}`
+      }
+      break
+
+    case "Meijer":
+      // Meijer uses 'zipCode' parameter
+      if (!url.includes("zipCode=")) {
+        url += (url.includes("?") ? "&" : "?") + `zipCode=${zipCode}`
+      }
+      break
+
+    case "Food Lion":
+      // Food Lion uses 'zipcode' parameter
+      if (!url.includes("zipcode=")) {
+        url += (url.includes("?") ? "&" : "?") + `zipcode=${zipCode}`
+      }
+      break
+
+    case "Giant Eagle":
+      // Giant Eagle uses 'zip' parameter
+      if (!url.includes("zip=")) {
+        url += (url.includes("?") ? "&" : "?") + `zip=${zipCode}`
+      }
+      break
+
+    case "Shop Rite":
+    case "ShopRite":
+      // ShopRite uses 'storeZipCode' parameter
+      if (!url.includes("storeZipCode=")) {
+        url += (url.includes("?") ? "&" : "?") + `storeZipCode=${zipCode}`
+      }
+      break
+
+    case "Stop and Shop":
+    case "Stop & Shop":
+      // Stop & Shop uses 'zipcode' parameter
+      if (!url.includes("zipcode=")) {
+        url += (url.includes("?") ? "&" : "?") + `zipcode=${zipCode}`
+      }
+      break
+
+    case "Winn Dixie":
+    case "Winn-Dixie":
+      // Winn-Dixie uses 'zipCode' parameter
+      if (!url.includes("zipCode=")) {
+        url += (url.includes("?") ? "&" : "?") + `zipCode=${zipCode}`
+      }
+      break
+
+    case "Weis Markets":
+      // Weis Markets uses 'zip' parameter
+      if (!url.includes("zip=")) {
+        url += (url.includes("?") ? "&" : "?") + `zip=${zipCode}`
+      }
+      break
+
+    // Specialty/regional stores
+    case "Erewhon":
+      // Erewhon uses 'postalCode' parameter
+      if (!url.includes("postalCode=")) {
+        url += (url.includes("?") ? "&" : "?") + `postalCode=${zipCode}`
+      }
+      break
+
+    case "Gelson's":
+      // Gelson's uses 'zip' parameter
+      if (!url.includes("zip=")) {
+        url += (url.includes("?") ? "&" : "?") + `zip=${zipCode}`
+      }
+      break
+
+    case "Smart & Final":
+      // Smart & Final uses 'zipcode' parameter
+      if (!url.includes("zipcode=")) {
+        url += (url.includes("?") ? "&" : "?") + `zipcode=${zipCode}`
+      }
+      break
+
+    case "Trader Joe's":
+      // Trader Joe's uses 'zip' parameter
+      if (!url.includes("zip=")) {
+        url += (url.includes("?") ? "&" : "?") + `zip=${zipCode}`
+      }
+      break
+
     default:
-      // For other stores, try both common formats
+      // For other stores, try the most common format
       if (!url.includes("zipCode=") && !url.includes("zipcode=") && !url.includes("zip=")) {
         url += (url.includes("?") ? "&" : "?") + `zipCode=${zipCode}`
       }
