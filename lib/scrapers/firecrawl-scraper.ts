@@ -14,11 +14,12 @@ export class FirecrawlClient {
     this.apiKey = options.apiKey
     this.maxRetries = options.maxRetries || 3
     this.timeout = options.timeout || 60000
-    this.baseUrl = "https://api.firecrawl.dev/v1" // Replace with actual Firecrawl API URL
+    this.baseUrl = "https://api.firecrawl.com" // Update this to the correct Firecrawl API URL
   }
 
   async scrape(url: string, options?: any): Promise<{ status: number; content: string; finalUrl: string }> {
-    console.log(`Scraping URL with Firecrawl: ${url}`)
+    console.log(`Attempting to scrape URL with Firecrawl: ${url}`)
+    console.log(`Using API key: ${this.apiKey ? this.apiKey.substring(0, 5) + "..." : "Not set"}`)
 
     const { headers, cookies, formActions, waitForSelector, javascript = true } = options || {}
 
@@ -35,6 +36,8 @@ export class FirecrawlClient {
         retry: this.maxRetries,
       }
 
+      console.log("Firecrawl payload:", JSON.stringify(payload, null, 2))
+
       // Make the API request to Firecrawl
       const response = await fetch(`${this.baseUrl}/scrape`, {
         method: "POST",
@@ -45,12 +48,16 @@ export class FirecrawlClient {
         body: JSON.stringify(payload),
       })
 
+      console.log(`Firecrawl API response status: ${response.status}`)
+
       if (!response.ok) {
         const errorText = await response.text()
+        console.error(`Firecrawl API error response: ${errorText}`)
         throw new Error(`Firecrawl API error (${response.status}): ${errorText}`)
       }
 
       const data = await response.json()
+      console.log("Firecrawl API response received successfully")
 
       return {
         status: data.status || 200,
@@ -373,7 +380,8 @@ function fallbackToMockData(
   headers: Record<string, string>,
   cookies: string,
 ): any {
-  console.log(`Falling back to mock data for ${storeName} at ${expectedZipCode}`)
+  console.log(`⚠️ FALLING BACK TO MOCK DATA for ${storeName} at ${expectedZipCode}`)
+  console.log(`⚠️ This means the real Firecrawl API call failed or was skipped`)
 
   // Check if this store exists in this ZIP code
   const storeExists = storeExistsInZipCode(storeName, expectedZipCode)
