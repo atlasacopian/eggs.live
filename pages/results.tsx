@@ -49,8 +49,8 @@ export default function ResultsPage() {
     }
   }
 
-  const formatPrice = (price: number) => `$${price.toFixed(2)}`
-  const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString()
+  const formatPrice = (price) => `$${price.toFixed(2)}`
+  const formatDate = (dateString) => new Date(dateString).toLocaleDateString()
 
   if (!zipCode) {
     return (
