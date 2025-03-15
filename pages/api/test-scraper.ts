@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next"
 import { scrapeWithFirecrawl } from "@/lib/scrapers/firecrawl-scraper"
 import { formatStoreUrlWithZipCode } from "@/lib/utils/zip-code"
+import { isStoreInZipCode, getStoreLocation, getNearbyStores } from "@/lib/data/store-locations"
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -14,6 +15,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
     }
 
+    // Check if the store exists in this ZIP code
+    if (!isStoreInZipCode(storeName, zipCode)) {
+      // Get nearby store locations
+      const nearbyLocations = getNearbyStores(storeName, zipCode)
+
+      return res.status(404).json({
+        success: false,
+        error: `No ${storeName} found in ZIP code ${zipCode}`,
+        nearbyLocations: nearbyLocations.map((loc) => ({
+          name: loc.name,
+          address: loc.address,
+          zipCode: loc.zipCode,
+          distance: "Nearby", // In a real implementation, calculate actual distance
+        })),
+        message: "Try these nearby locations instead",
+      })
+    }
+
+    // Get the specific store location
+    const location = getStoreLocation(storeName, zipCode)
+
     // Format the URL with the correct ZIP code parameter
     const formattedUrl = formatStoreUrlWithZipCode(url, storeName, zipCode)
 
@@ -25,6 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       url: formattedUrl,
       storeName,
       zipCode,
+      location,
       results,
       usingMock: !process.env.FIRECRAWL_API_KEY,
     })
