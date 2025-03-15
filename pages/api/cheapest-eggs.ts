@@ -55,36 +55,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.log("inStock column does not exist yet, skipping filter")
     }
 
-    // Determine which zipCode field name to use
-    let zipCodeField = "zipCode"
-    try {
-      // Try to query with zipCode to see if the column exists
-      await prisma.store_locations.findFirst({
-        where: { zipCode: "00000" },
-        take: 1,
-      })
-    } catch (e) {
-      // If this fails, try lowercase zipcode
-      try {
-        // @ts-ignore - Prisma doesn't know about this field yet
-        await prisma.store_locations.findFirst({
-          where: { zipcode: "00000" },
-          take: 1,
-        })
-        zipCodeField = "zipcode"
-        console.log("Using lowercase zipcode field")
-      } catch (e2) {
-        console.error("Could not determine zipCode field name", e2)
-      }
-    }
+    // We know we're using lowercase zipcode from our migration
+    const zipCodeField = "zipcode"
 
     // Add zip code filter with the correct field name
     const locationFilter = {
-      store_location:
-        zipCodeField === "zipCode"
-          ? { zipCode: zipCode as string }
-          : // @ts-ignore - Prisma doesn't know about this field yet
-            { zipcode: zipCode as string },
+      store_location: {
+        zipcode: zipCode as string,
+      },
     }
 
     // Find cheapest regular eggs
@@ -132,10 +110,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       results.map((item) => ({
         price: item.price,
         storeName: item.store_location.store.name,
-        address:
-          item.store_location.address ||
-          `${item.store_location.store.name} (${item.store_location.zipCode || item.store_location.zipcode})`,
-        zipCode: item.store_location.zipCode || item.store_location.zipcode,
+        address: item.store_location.address || `${item.store_location.store.name} (${item.store_location.zipcode})`,
+        zipCode: item.store_location.zipcode, // Use zipcode from database but return as zipCode for consistency
         date: item.date,
         id: item.id,
         storeLocationId: item.store_location_id,
