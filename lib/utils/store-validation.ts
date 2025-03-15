@@ -1,56 +1,194 @@
-interface StoreLocation {
-  name: string
-  address: string
-  zipCode: string
-  latitude?: number
-  longitude?: number
+"use client"
+
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Loader2, AlertCircle, MapPin } from "lucide-react"
+
+// List of stores to test
+const STORES = [
+  "Walmart",
+  "Target",
+  "Whole Foods",
+  "Ralphs",
+  "Vons",
+  "Albertsons",
+  "Food 4 Less",
+  "Sprouts",
+  "Erewhon",
+  "Gelson's",
+  "Smart & Final",
+  "Pavilions",
+]
+
+// Store base URLs
+const STORE_URLS: Record<string, string> = {
+  Walmart: "https://www.walmart.com/search?q=eggs",
+  Target: "https://www.target.com/s?searchTerm=eggs",
+  "Whole Foods": "https://www.wholefoodsmarket.com/search?text=eggs",
+  Ralphs: "https://www.ralphs.com/search?query=eggs",
+  Vons: "https://www.vons.com/shop/search-results.html?q=eggs",
+  Albertsons: "https://www.albertsons.com/shop/search-results.html?q=eggs",
+  "Food 4 Less": "https://www.food4less.com/search?query=eggs",
+  Sprouts: "https://shop.sprouts.com/search?search_term=eggs",
+  Erewhon: "https://www.erewhonmarket.com/search?q=eggs",
+  "Gelson's": "https://www.gelsons.com/shop/search-results.html?q=eggs",
+  "Smart & Final": "https://www.smartandfinal.com/shop/search-results.html?q=eggs",
+  Pavilions: "https://www.pavilions.com/shop/search-results.html?q=eggs",
 }
 
-// This would ideally be populated from a database or API
-// For now, we'll hardcode some sample data
-const storeLocations: Record<string, StoreLocation[]> = {
-  Walmart: [
-    { name: "Walmart", address: "4651 Firestone Blvd", zipCode: "90280" },
-    { name: "Walmart", address: "8500 Washington Blvd", zipCode: "90660" },
-    // Add more actual Walmart locations
-  ],
-  Target: [
-    { name: "Target", address: "2626 Colorado Blvd", zipCode: "90041" },
-    { name: "Target", address: "5600 Whittier Blvd", zipCode: "90022" },
-    // Add more actual Target locations
-  ],
-  // Add other stores...
-}
+export default function ScraperTestPage() {
+  const [storeName, setStoreName] = useState("Walmart")
+  const [zipCode, setZipCode] = useState("90210")
+  const [loading, setLoading] = useState(false)
+  const [results, setResults] = useState<any>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [nearbyLocations, setNearbyLocations] = useState<any[]>([])
 
-export function validateStoreLocation(storeName: string, zipCode: string): boolean {
-  const storeList = storeLocations[storeName] || []
-  return storeList.some((location) => location.zipCode === zipCode)
-}
+  const handleTest = async () => {
+    setLoading(true)
+    setError(null)
+    setResults(null)
+    setNearbyLocations([])
 
-export function getStoreLocation(storeName: string, zipCode: string): StoreLocation | null {
-  const storeList = storeLocations[storeName] || []
-  return storeList.find((location) => location.zipCode === zipCode) || null
-}
+    try {
+      // Get the base URL for the selected store
+      const baseUrl = STORE_URLS[storeName] || `https://www.google.com/search?q=${encodeURIComponent(storeName)}+eggs`
 
-export function getNearbyStores(zipCode: string, radiusMiles = 5): StoreLocation[] {
-  // For now, return stores in adjacent ZIP codes
-  // In a real implementation, this would use geolocation
-  const stores: StoreLocation[] = []
-  Object.values(storeLocations).forEach((locationList) => {
-    locationList.forEach((location) => {
-      if (isZipCodeNearby(zipCode, location.zipCode, radiusMiles)) {
-        stores.push(location)
+      const response = await fetch(
+        `/api/test-scraper?url=${encodeURIComponent(baseUrl)}&storeName=${encodeURIComponent(storeName)}&zipCode=${zipCode}`,
+      )
+      const data = await response.json()
+
+      if (data.success) {
+        setResults(data)
+      } else {
+        setError(data.error || "Failed to test scraper")
+        if (data.nearbyLocations) {
+          setNearbyLocations(data.nearbyLocations)
+        }
       }
-    })
-  })
-  return stores
-}
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred")
+    } finally {
+      setLoading(false)
+    }
+  }
 
-// Helper function to check if two ZIP codes are nearby
-// This is a simplified version - in reality, you'd want to use actual geo-coordinates
-function isZipCodeNearby(zipCode1: string, zipCode2: string, radiusMiles: number): boolean {
-  // For now, just check if the first 3 digits match (same general area)
-  // In a real implementation, you'd use latitude/longitude calculations
-  return zipCode1.substring(0, 3) === zipCode2.substring(0, 3)
+  return (
+    <div className="container mx-auto py-8">
+      <h1 className="text-3xl font-bold mb-6">Scraper Test Tool</h1>
+
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle>Test Firecrawl Scraper</CardTitle>
+          <CardDescription>Test the scraper with a specific store and ZIP code</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Store</label>
+            <select
+              value={storeName}
+              onChange={(e) => setStoreName(e.target.value)}
+              className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              {STORES.map((store) => (
+                <option key={store} value={store}>
+                  {store}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">ZIP Code</label>
+            <Input
+              value={zipCode}
+              onChange={(e) => setZipCode(e.target.value)}
+              placeholder="90210"
+              maxLength={5}
+              pattern="[0-9]{5}"
+            />
+          </div>
+        </CardContent>
+        <CardFooter>
+          <Button onClick={handleTest} disabled={loading}>
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Testing...
+              </>
+            ) : (
+              "Test Scraper"
+            )}
+          </Button>
+        </CardFooter>
+      </Card>
+
+      {error && (
+        <Card className="mb-8 border-red-300">
+          <CardHeader className="bg-red-50">
+            <CardTitle className="text-red-700 flex items-center gap-2">
+              <AlertCircle className="w-5 h-5" />
+              Store Not Found
+            </CardTitle>
+            <CardDescription className="text-red-600">{error}</CardDescription>
+          </CardHeader>
+          {nearbyLocations.length > 0 && (
+            <CardContent>
+              <h3 className="font-medium mb-3">Nearby Locations:</h3>
+              <div className="space-y-3">
+                {nearbyLocations.map((location, index) => (
+                  <div key={index} className="flex items-start gap-2 p-3 bg-white rounded border">
+                    <MapPin className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium">{location.name}</p>
+                      <p className="text-sm text-gray-600">{location.address}</p>
+                      <p className="text-sm text-gray-500">ZIP: {location.zipCode}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          )}
+        </Card>
+      )}
+
+      {results && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Results</CardTitle>
+            <CardDescription>
+              {results.usingMock ? "Using mock data (API key not configured)" : "Using real Firecrawl data"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {results.location && (
+              <div className="mb-4 p-3 bg-gray-50 rounded">
+                <h3 className="font-medium mb-2">Store Location:</h3>
+                <div className="flex items-start gap-2">
+                  <MapPin className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p>{results.location.address}</p>
+                    <p className="text-sm text-gray-600">ZIP: {results.location.zipCode}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="mb-4">
+              <h3 className="font-medium mb-2">URL Used:</h3>
+              <div className="bg-gray-50 p-2 rounded font-mono text-sm overflow-x-auto">{results.url}</div>
+            </div>
+
+            <div className="bg-gray-100 p-4 rounded-md overflow-auto max-h-96">
+              <pre className="text-sm">{JSON.stringify(results, null, 2)}</pre>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  )
 }
 
