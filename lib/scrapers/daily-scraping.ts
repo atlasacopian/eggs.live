@@ -22,14 +22,10 @@ export async function scrapeAllStores(useAllStores = false) {
     const prisma = new PrismaClient()
 
     try {
-      // For stores with location-specific pricing, we need to set the zip code
-      // Make sure the zip code is always included in the URL
-      let storeUrl = store.url
-      if (!storeUrl.includes("zipCode=") && !storeUrl.includes("zipcode=")) {
-        storeUrl += (storeUrl.includes("?") ? "&" : "?") + `zipCode=${store.zipCode}`
-      }
+      // Format the URL with the correct ZIP code parameter based on the store
+      const storeUrl = formatStoreUrlWithZipCode(store.url, store.name, store.zipCode)
 
-      console.log(`Scraping ${store.name} (${store.zipCode})...`)
+      console.log(`Scraping ${store.name} (${store.zipCode}) at URL: ${storeUrl}...`)
       const storeResults = await scrapeWithFirecrawl(storeUrl, store.name)
 
       // Save results to database
@@ -110,6 +106,7 @@ export async function scrapeAllStores(useAllStores = false) {
       results.push({
         store: store.name,
         zipCode: store.zipCode,
+        url: storeUrl, // Include the URL in the results for debugging
         count: storeResults.length,
         success: true,
       })
@@ -136,5 +133,69 @@ export async function scrapeAllStores(useAllStores = false) {
   )
 
   return results
+}
+
+// Helper function to format store URLs with the correct ZIP code parameter
+function formatStoreUrlWithZipCode(baseUrl: string, storeName: string, zipCode: string): string {
+  // Default approach - append zipCode parameter
+  let url = baseUrl
+
+  // Store-specific URL formatting
+  switch (storeName) {
+    case "Walmart":
+      // Walmart uses 'zipCode' parameter
+      if (!url.includes("zipCode=")) {
+        url += (url.includes("?") ? "&" : "?") + `zipCode=${zipCode}`
+      }
+      break
+
+    case "Target":
+      // Target uses 'zipcode' parameter (lowercase 'c')
+      if (!url.includes("zipcode=")) {
+        url += (url.includes("?") ? "&" : "?") + `zipcode=${zipCode}`
+      }
+      break
+
+    case "Whole Foods":
+      // Whole Foods uses 'location' parameter
+      if (!url.includes("location=")) {
+        url += (url.includes("?") ? "&" : "?") + `location=${zipCode}`
+      }
+      break
+
+    case "Ralphs":
+    case "Vons":
+    case "Albertsons":
+    case "Food 4 Less":
+    case "Pavilions":
+      // Kroger-owned stores use 'locationId' parameter
+      if (!url.includes("locationId=")) {
+        url += (url.includes("?") ? "&" : "?") + `locationId=${zipCode}`
+      }
+      break
+
+    case "Sprouts":
+      // Sprouts uses 'postal_code' parameter
+      if (!url.includes("postal_code=")) {
+        url += (url.includes("?") ? "&" : "?") + `postal_code=${zipCode}`
+      }
+      break
+
+    case "Costco":
+      // Costco uses 'zipCode' parameter
+      if (!url.includes("zipCode=")) {
+        url += (url.includes("?") ? "&" : "?") + `zipCode=${zipCode}`
+      }
+      break
+
+    default:
+      // For other stores, try both common formats
+      if (!url.includes("zipCode=") && !url.includes("zipcode=") && !url.includes("zip=")) {
+        url += (url.includes("?") ? "&" : "?") + `zipCode=${zipCode}`
+      }
+      break
+  }
+
+  return url
 }
 
