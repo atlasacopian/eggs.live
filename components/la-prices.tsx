@@ -59,9 +59,9 @@ export function LAPrices() {
         }
 
         setPriceData(data)
-      } catch (err) {
+      } catch (err: unknown) {
         console.error("Error fetching LA prices:", err)
-        setError(err.message || "Failed to load price data")
+        setError(err instanceof Error ? err.message : "Failed to load price data")
         setPriceData(null)
       } finally {
         setLoading(false)
