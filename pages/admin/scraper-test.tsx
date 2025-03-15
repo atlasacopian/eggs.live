@@ -182,8 +182,7 @@ export default function ScraperTestPage() {
             <Button
               onClick={checkFirecrawlApiKey}
               disabled={checkingApiKey}
-              variant="outline"
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
             >
               {checkingApiKey ? (
                 <>
