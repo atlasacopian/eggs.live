@@ -1,37 +1,63 @@
 import type { NextApiRequest, NextApiResponse } from "next"
-import { stores } from "../../data"
+import prisma from "@/lib/prisma"
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "GET") {
-    const { zipCode } = req.query
+    try {
+      const { zipCode } = req.query
 
-    if (!zipCode) {
-      return res.status(400).json({ message: "Zip code is required" })
+      if (!zipCode || typeof zipCode !== "string") {
+        return res.status(400).json({
+          success: false,
+          error: "Zip code is required and must be a string",
+        })
+      }
+
+      // Find store locations by zipcode (note the lowercase 'c')
+      const storeLocations = await prisma.store_locations.findMany({
+        where: {
+          zipcode: zipCode, // Using lowercase 'c' to match the database schema
+        },
+        include: {
+          store: true,
+        },
+      })
+
+      if (storeLocations.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: "No stores found for this zip code",
+        })
+      }
+
+      // Format the response
+      const formattedStores = storeLocations.map((location) => ({
+        id: location.id,
+        storeId: location.store_id,
+        storeName: location.store.name,
+        address: location.address || "Address not available",
+        zipcode: location.zipcode,
+        latitude: location.latitude,
+        longitude: location.longitude,
+        website: location.store.website || null,
+      }))
+
+      return res.status(200).json({
+        success: true,
+        stores: formattedStores,
+      })
+    } catch (error) {
+      console.error("Error fetching stores by zip:", error)
+      return res.status(500).json({
+        success: false,
+        error: "Failed to fetch stores",
+        message: error instanceof Error ? error.message : "Unknown error",
+      })
+    } finally {
+      await prisma.$disconnect()
     }
-
-    if (typeof zipCode !== "string") {
-      return res.status(400).json({ message: "Zip code must be a string" })
-    }
-
-    const filteredStores = stores.filter((store) => store.address.zip.toString() === zipCode)
-
-    if (filteredStores.length === 0) {
-      return res.status(404).json({ message: "No stores found for this zip code" })
-    }
-
-    const response = filteredStores.map((store) => ({
-      id: store.id,
-      name: store.name,
-      address: store.address,
-      phone: store.phone,
-      websiteUrl: store.websiteUrl,
-      imageUrl: store.imageUrl,
-      zipcode: zipCode,
-    }))
-
-    res.status(200).json(response)
   } else {
-    res.status(405).json({ message: "Method Not Allowed" })
+    res.status(405).json({ error: "Method not allowed" })
   }
 }
 
