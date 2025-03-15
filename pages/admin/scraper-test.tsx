@@ -196,6 +196,30 @@ export default function ScraperTestPage() {
               <div className="bg-gray-50 p-2 rounded font-mono text-sm overflow-x-auto">{results.url}</div>
             </div>
 
+            <div className="mb-4">
+              <h3 className="font-medium mb-2">Location Techniques Used:</h3>
+              <div className="space-y-2">
+                <div className="p-2 bg-gray-50 rounded">
+                  <p className="font-medium text-sm">URL Parameters</p>
+                  <p className="text-xs text-gray-600">ZIP code added to URL</p>
+                </div>
+                <div className="p-2 bg-gray-50 rounded">
+                  <p className="font-medium text-sm">Location Headers</p>
+                  <p className="text-xs text-gray-600">Browser headers set to simulate location</p>
+                </div>
+                <div className="p-2 bg-gray-50 rounded">
+                  <p className="font-medium text-sm">Location Cookies</p>
+                  <p className="text-xs text-gray-600">Cookies set with location information</p>
+                </div>
+                {results.formFilled && (
+                  <div className="p-2 bg-gray-50 rounded">
+                    <p className="font-medium text-sm">Form Filling</p>
+                    <p className="text-xs text-gray-600">ZIP code form automatically filled</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div className="bg-gray-100 p-4 rounded-md overflow-auto max-h-96">
               <pre className="text-sm">{JSON.stringify(results, null, 2)}</pre>
             </div>
