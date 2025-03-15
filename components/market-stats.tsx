@@ -6,88 +6,68 @@ import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAx
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export function MarketStats() {
-  const { stats, isLoading } = useEggMarketStats()
+  const { stats, loading, error } = useEggMarketStats()
 
-  if (isLoading) {
+  if (loading) {
     return <p>Loading market statistics...</p>
   }
 
+  if (error) {
+    return <p className="text-red-500">Error: {error}</p>
+  }
+
+  if (!stats) {
+    return <p>No market statistics available</p>
+  }
+
+  const chainData = stats.chainAverages.map((chain) => ({
+    name: chain.chain,
+    average: Number.parseFloat(chain.average.toFixed(2)),
+  }))
+
   return (
     <Card>
-      <CardHeader className="pb-2">
-        <CardTitle>Market Statistics</CardTitle>
-        <CardDescription>Trading volume and market activity</CardDescription>
+      <CardHeader>
+        <CardTitle>Egg Market Statistics</CardTitle>
+        <CardDescription>
+          National average: ${stats.nationalAverage.toFixed(2)} (based on {stats.priceCount} prices)
+        </CardDescription>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="volume">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="volume">Volume</TabsTrigger>
-            <TabsTrigger value="activity">Activity</TabsTrigger>
+        <Tabs defaultValue="chart">
+          <TabsList>
+            <TabsTrigger value="chart">Chart</TabsTrigger>
+            <TabsTrigger value="table">Table</TabsTrigger>
           </TabsList>
-
-          <TabsContent value="volume" className="pt-4">
-            <div className="h-[350px]">
+          <TabsContent value="chart" className="pt-4">
+            <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={stats.volumeByType} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                <BarChart data={chainData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
-                  <YAxis tickFormatter={(value) => `${value}k doz`} />
-                  <Tooltip formatter={(value) => [`${value}k dozen`, "Volume"]} />
+                  <YAxis domain={[0, "dataMax + 1"]} tickFormatter={(value) => `$${value}`} />
+                  <Tooltip formatter={(value) => [`$${value}`, "Average Price"]} />
                   <Legend />
-                  <Bar dataKey="volume" fill="#8884d8" name="Trading Volume" />
+                  <Bar dataKey="average" fill="#f59e0b" name="Average Price" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
-
-            <div className="mt-4 grid grid-cols-2 gap-4">
-              <div className="p-3 border rounded-md">
-                <div className="text-xs text-muted-foreground">Total Volume</div>
-                <div className="text-xl font-bold">{stats.totalVolume.toLocaleString()}k doz</div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  {stats.volumeChange >= 0 ? "+" : ""}
-                  {stats.volumeChange}% from yesterday
-                </div>
-              </div>
-              <div className="p-3 border rounded-md">
-                <div className="text-xs text-muted-foreground">Market Cap</div>
-                <div className="text-xl font-bold">${stats.marketCap.toLocaleString()}M</div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  {stats.marketCapChange >= 0 ? "+" : ""}
-                  {stats.marketCapChange}% from yesterday
-                </div>
-              </div>
-            </div>
           </TabsContent>
-
-          <TabsContent value="activity" className="pt-4">
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-3 border rounded-md">
-                  <div className="text-xs text-muted-foreground">Active Traders</div>
-                  <div className="text-xl font-bold">{stats.activeTraders.toLocaleString()}</div>
-                </div>
-                <div className="p-3 border rounded-md">
-                  <div className="text-xs text-muted-foreground">Trades Today</div>
-                  <div className="text-xl font-bold">{stats.tradesCount.toLocaleString()}</div>
-                </div>
+          <TabsContent value="table" className="pt-4">
+            <div className="rounded-md border">
+              <div className="grid grid-cols-12 border-b bg-muted/50 p-2 text-sm font-medium">
+                <div className="col-span-6">Chain</div>
+                <div className="col-span-3 text-right">Average</div>
+                <div className="col-span-3 text-right">Count</div>
               </div>
-
-              <div>
-                <h3 className="text-sm font-medium mb-2">Most Active Egg Types</h3>
-                <div className="space-y-2">
-                  {stats.mostActive.map((item, index) => (
-                    <div key={index} className="flex justify-between items-center p-3 border rounded-md">
-                      <div>
-                        <div className="font-medium">{item.name}</div>
-                        <div className="text-xs text-muted-foreground font-mono">{item.symbol}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-medium">{item.trades.toLocaleString()} trades</div>
-                        <div className="text-xs text-muted-foreground">{item.volume.toLocaleString()}k doz</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <div className="divide-y">
+                {stats.chainAverages.map((chain) => (
+                  <div key={chain.chain} className="grid grid-cols-12 p-2 text-sm">
+                    <div className="col-span-6 font-medium">{chain.chain}</div>
+                    <div className="col-span-3 text-right">${chain.average.toFixed(2)}</div>
+                    <div className="col-span-3 text-right">{chain.count}</div>
+                  </div>
+                ))}
               </div>
             </div>
           </TabsContent>
