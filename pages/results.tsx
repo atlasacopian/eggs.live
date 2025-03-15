@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/router"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2, Store, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 
@@ -56,71 +55,69 @@ export default function ResultsPage() {
 
   if (!zipCode) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 font-mono">
         <div className="flex justify-center items-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <Loader2 className="h-8 w-8 animate-spin text-black" />
         </div>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <Link href="/" className="inline-flex items-center mb-6 text-primary hover:underline">
+    <div className="container mx-auto px-4 py-8 font-mono">
+      <Link href="/" className="inline-flex items-center mb-6 text-black hover:underline">
         <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to search
+        BACK TO SEARCH
       </Link>
 
-      <h1 className="text-3xl font-bold mb-2">Egg Prices Near {zipCode}</h1>
-      <p className="text-gray-600 mb-8">Showing stores with egg prices in and around your area</p>
+      <h1 className="text-3xl font-bold mb-2 uppercase tracking-wider">EGG PRICES NEAR {zipCode}</h1>
+      <p className="text-gray-600 mb-8 uppercase tracking-wide">SHOWING STORES WITH EGG PRICES IN YOUR AREA</p>
 
       {loading ? (
         <div className="flex justify-center items-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <span className="ml-2">Loading stores...</span>
+          <Loader2 className="h-8 w-8 animate-spin text-black" />
+          <span className="ml-2 uppercase">LOADING STORES...</span>
         </div>
       ) : error ? (
         <div className="text-center py-8">
-          <p className="text-red-500 mb-4">{error}</p>
+          <p className="text-red-500 mb-4 uppercase">{error}</p>
           <Link href="/">
-            <Button>Try another ZIP code</Button>
+            <Button>TRY ANOTHER ZIP CODE</Button>
           </Link>
         </div>
       ) : results.length === 0 ? (
         <div className="text-center py-8">
-          <p className="text-lg text-muted-foreground mb-4">No stores found with egg prices in this area</p>
+          <p className="text-lg text-gray-600 mb-4 uppercase">NO STORES FOUND WITH EGG PRICES IN THIS AREA</p>
           <Link href="/">
-            <Button>Try another ZIP code</Button>
+            <Button>TRY ANOTHER ZIP CODE</Button>
           </Link>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="tech-grid">
           {results.map((store, index) => (
-            <Card key={index}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+            <div key={index} className="tech-card">
+              <div className="border-b border-black pb-3 mb-3">
+                <h3 className="font-bold text-lg flex items-center gap-2 uppercase">
                   <Store className="h-5 w-5" />
                   {store.storeName}
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">{store.address}</p>
-                <p className="text-sm text-muted-foreground">{store.distance.toFixed(1)} miles away</p>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>Regular Eggs:</span>
-                    <span className="font-medium">{formatPrice(store.regularPrice)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Organic Eggs:</span>
-                    <span className="font-medium">{formatPrice(store.organicPrice)}</span>
-                  </div>
-                  <div className={`text-sm ${store.inStock ? "text-green-600" : "text-red-600"}`}>
-                    {store.inStock ? "In Stock" : "Out of Stock"}
-                  </div>
+                </h3>
+                <p className="text-sm uppercase">{store.address}</p>
+                <p className="text-sm uppercase">{store.distance.toFixed(1)} MILES AWAY</p>
+              </div>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span>REGULAR EGGS:</span>
+                  <span className="price-tag">{formatPrice(store.regularPrice)}</span>
                 </div>
-              </CardContent>
-            </Card>
+                <div className="flex justify-between">
+                  <span>ORGANIC EGGS:</span>
+                  <span className="price-tag">{formatPrice(store.organicPrice)}</span>
+                </div>
+                <div className={`text-sm ${store.inStock ? "text-green-600" : "text-red-600"} font-bold uppercase`}>
+                  {store.inStock ? "IN STOCK" : "OUT OF STOCK"}
+                </div>
+              </div>
+            </div>
           ))}
         </div>
       )}
