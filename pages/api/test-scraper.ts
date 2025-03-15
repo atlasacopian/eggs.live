@@ -15,6 +15,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
     }
 
+    // Check if the API key is configured
+    if (!process.env.FIRECRAWL_API_KEY) {
+      return res.status(400).json({
+        success: false,
+        error: "Firecrawl API key not configured",
+        message: "Please set up the FIRECRAWL_API_KEY environment variable",
+      })
+    }
+
     // Check if the store exists in this ZIP code or within radius
     if (!storeExistsInZipCode(storeName, zipCode, radiusMiles)) {
       // Get nearby ZIP codes with this store
@@ -52,6 +61,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
     }
 
+    // If no prices were found, return an error
+    if (prices.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: `No egg prices found for ${storeName} in ZIP code ${zipCode}`,
+        actualLocation,
+        sourceDetails,
+        message: "The scraper couldn't find any egg prices on the page",
+      })
+    }
+
     return res.status(200).json({
       success: true,
       url: formattedUrl,
@@ -62,7 +82,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       location: actualLocation,
       results: prices,
       sourceDetails,
-      usingMock: !process.env.FIRECRAWL_API_KEY,
+      usingMock: false,
     })
   } catch (error) {
     console.error("Error testing scraper:", error)
