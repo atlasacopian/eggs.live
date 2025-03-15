@@ -7,7 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Loader2, MapPin } from "lucide-react"
+import { Loader2, MapPin, AlertCircle, CheckCircle } from "lucide-react"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
 
 interface EggPrice {
   price: number
@@ -17,6 +19,7 @@ interface EggPrice {
   date: string
   id: number
   storeLocationId: number
+  inStock: boolean
 }
 
 interface CheapestEggsProps {
@@ -30,25 +33,29 @@ export function CheapestEggs({ initialZipCode = "" }: CheapestEggsProps) {
   const [error, setError] = useState<string | null>(null)
   const [cheapestRegular, setCheapestRegular] = useState<EggPrice[]>([])
   const [cheapestOrganic, setCheapestOrganic] = useState<EggPrice[]>([])
+  const [outOfStockItems, setOutOfStockItems] = useState<EggPrice[]>([])
   const [activeTab, setActiveTab] = useState<"regular" | "organic">("regular")
+  const [includeOutOfStock, setIncludeOutOfStock] = useState(false)
+  const [showOutOfStockSection, setShowOutOfStockSection] = useState(false)
 
   useEffect(() => {
-    if (zipCode) {
-      fetchCheapestEggs()
-    } else {
-      // If no zip code, fetch nationwide cheapest
-      fetchCheapestEggs()
-    }
-  }, [zipCode])
+    fetchCheapestEggs()
+  }, [zipCode, includeOutOfStock])
 
   const fetchCheapestEggs = async () => {
     try {
       setLoading(true)
       setError(null)
 
-      const url = zipCode ? `/api/cheapest-eggs?zipCode=${zipCode}` : "/api/cheapest-eggs"
+      const url = new URL("/api/cheapest-eggs", window.location.origin)
 
-      const response = await fetch(url)
+      if (zipCode) {
+        url.searchParams.append("zipCode", zipCode)
+      }
+
+      url.searchParams.append("includeOutOfStock", includeOutOfStock.toString())
+
+      const response = await fetch(url.toString())
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
@@ -59,6 +66,8 @@ export function CheapestEggs({ initialZipCode = "" }: CheapestEggsProps) {
       if (data.success) {
         setCheapestRegular(data.cheapestRegular || [])
         setCheapestOrganic(data.cheapestOrganic || [])
+        setOutOfStockItems(data.outOfStock || [])
+        setShowOutOfStockSection(data.outOfStock?.length > 0)
       } else {
         throw new Error(data.message || "Failed to fetch cheapest eggs")
       }
@@ -101,6 +110,11 @@ export function CheapestEggs({ initialZipCode = "" }: CheapestEggsProps) {
         </Button>
       </form>
 
+      <div className="flex items-center space-x-2">
+        <Switch id="include-out-of-stock" checked={includeOutOfStock} onCheckedChange={setIncludeOutOfStock} />
+        <Label htmlFor="include-out-of-stock">Include out of stock items</Label>
+      </div>
+
       <Tabs defaultValue="regular" onValueChange={(value) => setActiveTab(value as "regular" | "organic")}>
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="regular">Regular Eggs</TabsTrigger>
@@ -128,7 +142,7 @@ export function CheapestEggs({ initialZipCode = "" }: CheapestEggsProps) {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {(activeTab === "regular" ? cheapestRegular : cheapestOrganic).length > 0 ? (
               (activeTab === "regular" ? cheapestRegular : cheapestOrganic).map((item, index) => (
-                <Card key={item.id} className="overflow-hidden">
+                <Card key={item.id} className={`overflow-hidden ${!item.inStock ? "border-red-300 bg-red-50" : ""}`}>
                   <CardHeader className="pb-2">
                     <div className="flex justify-between items-start">
                       <CardTitle className="text-lg">{item.storeName}</CardTitle>
@@ -136,6 +150,19 @@ export function CheapestEggs({ initialZipCode = "" }: CheapestEggsProps) {
                     </div>
                   </CardHeader>
                   <CardContent>
+                    <div className="flex items-center gap-2 mb-3">
+                      {item.inStock ? (
+                        <div className="flex items-center text-green-600">
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          <span className="font-medium">In Stock</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center text-red-600">
+                          <AlertCircle className="h-4 w-4 mr-1" />
+                          <span className="font-medium">Out of Stock</span>
+                        </div>
+                      )}
+                    </div>
                     <div className="flex items-start gap-2 text-sm text-muted-foreground mb-2">
                       <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
                       <div>
@@ -155,6 +182,39 @@ export function CheapestEggs({ initialZipCode = "" }: CheapestEggsProps) {
               </div>
             )}
           </div>
+
+          {/* Out of Stock Section */}
+          {!includeOutOfStock && showOutOfStockSection && (
+            <div className="mt-8">
+              <h2 className="text-xl font-bold mb-4 text-red-600">Out of Stock Locations</h2>
+
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {outOfStockItems.map((item) => (
+                  <Card key={item.id} className="overflow-hidden border-red-300 bg-red-50">
+                    <CardHeader className="pb-2">
+                      <div className="flex justify-between items-start">
+                        <CardTitle className="text-lg">{item.storeName}</CardTitle>
+                        <div className="flex items-center text-red-600">
+                          <AlertCircle className="h-4 w-4 mr-1" />
+                          <span className="font-medium">Out of Stock</span>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-start gap-2 text-sm text-muted-foreground mb-2">
+                        <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p>{item.address}</p>
+                          <p>ZIP: {item.zipCode}</p>
+                        </div>
+                      </div>
+                      <div className="text-xs text-muted-foreground">Updated: {formatDate(item.date)}</div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
