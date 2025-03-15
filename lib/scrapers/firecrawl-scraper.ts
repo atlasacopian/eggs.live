@@ -12,12 +12,14 @@ export async function scrapeWithFirecrawl(url: string, storeName: string): Promi
     prices.push({
       price: generateRealisticPrice(storeName, "regular"),
       eggType: "regular",
+      inStock: generateRealisticStockStatus(storeName, "regular"), // Add stock status
     })
 
     // Generate organic egg prices
     prices.push({
       price: generateRealisticPrice(storeName, "organic"),
       eggType: "organic",
+      inStock: generateRealisticStockStatus(storeName, "organic"), // Add stock status
     })
 
     console.log(`Found ${prices.length} prices for ${storeName}:`, prices)
@@ -64,5 +66,28 @@ function generateRealisticPrice(storeName: string, eggType: string): number {
 
   // Round to 2 decimal places
   return Math.round(finalPrice * 100) / 100
+}
+
+// New helper function to generate realistic stock status
+function generateRealisticStockStatus(storeName: string, eggType: string): boolean {
+  // Simulate some stores being out of stock
+  // In reality, this would be determined by scraping the store website
+
+  // Base probability of being in stock (90%)
+  let inStockProbability = 0.9
+
+  // Adjust probability based on store type and egg type
+  if (eggType === "organic" && !storeName.includes("Whole Foods")) {
+    // Organic eggs less likely to be in stock at non-specialty stores
+    inStockProbability -= 0.2
+  }
+
+  // Simulate current egg shortage for some budget stores
+  if (storeName.includes("Food 4 Less") || storeName.includes("Smart & Final")) {
+    inStockProbability -= 0.3
+  }
+
+  // Random determination based on probability
+  return Math.random() < inStockProbability
 }
 
