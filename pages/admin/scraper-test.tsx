@@ -22,8 +22,23 @@ const STORES = [
   "Pavilions",
 ]
 
+// Store base URLs
+const STORE_URLS: Record<string, string> = {
+  Walmart: "https://www.walmart.com/search?q=eggs",
+  Target: "https://www.target.com/s?searchTerm=eggs",
+  "Whole Foods": "https://www.wholefoodsmarket.com/search?text=eggs",
+  Ralphs: "https://www.ralphs.com/search?query=eggs",
+  Vons: "https://www.vons.com/shop/search-results.html?q=eggs",
+  Albertsons: "https://www.albertsons.com/shop/search-results.html?q=eggs",
+  "Food 4 Less": "https://www.food4less.com/search?query=eggs",
+  Sprouts: "https://shop.sprouts.com/search?search_term=eggs",
+  Erewhon: "https://www.erewhonmarket.com/search?q=eggs",
+  "Gelson's": "https://www.gelsons.com/shop/search-results.html?q=eggs",
+  "Smart & Final": "https://www.smartandfinal.com/shop/search-results.html?q=eggs",
+  Pavilions: "https://www.pavilions.com/shop/search-results.html?q=eggs",
+}
+
 export default function ScraperTestPage() {
-  const [url, setUrl] = useState("https://www.walmart.com/search?q=eggs")
   const [storeName, setStoreName] = useState("Walmart")
   const [zipCode, setZipCode] = useState("90210")
   const [loading, setLoading] = useState(false)
@@ -38,8 +53,11 @@ export default function ScraperTestPage() {
     setNearbyLocations([])
 
     try {
+      // Get the base URL for the selected store
+      const baseUrl = STORE_URLS[storeName] || `https://www.google.com/search?q=${encodeURIComponent(storeName)}+eggs`
+
       const response = await fetch(
-        `/api/test-scraper?url=${encodeURIComponent(url)}&storeName=${encodeURIComponent(storeName)}&zipCode=${zipCode}`,
+        `/api/test-scraper?url=${encodeURIComponent(baseUrl)}&storeName=${encodeURIComponent(storeName)}&zipCode=${zipCode}`,
       )
       const data = await response.json()
 
@@ -65,7 +83,7 @@ export default function ScraperTestPage() {
       <Card className="mb-8">
         <CardHeader>
           <CardTitle>Test Firecrawl Scraper</CardTitle>
-          <CardDescription>Test the scraper with a specific URL and store name</CardDescription>
+          <CardDescription>Test the scraper with a specific store and ZIP code</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
@@ -84,15 +102,6 @@ export default function ScraperTestPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">URL</label>
-            <Input
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://www.example.com/search?q=eggs"
-            />
-          </div>
-
-          <div>
             <label className="block text-sm font-medium mb-1">ZIP Code</label>
             <Input
               value={zipCode}
@@ -101,6 +110,12 @@ export default function ScraperTestPage() {
               maxLength={5}
               pattern="[0-9]{5}"
             />
+          </div>
+
+          <div className="text-sm text-gray-500">
+            <p>
+              Will search: <span className="font-mono">{STORE_URLS[storeName] || "URL will be generated"}</span>
+            </p>
           </div>
         </CardContent>
         <CardFooter>
@@ -166,6 +181,12 @@ export default function ScraperTestPage() {
                 </div>
               </div>
             )}
+
+            <div className="mb-4">
+              <h3 className="font-medium mb-2">URL Used:</h3>
+              <div className="bg-gray-50 p-2 rounded font-mono text-sm overflow-x-auto">{results.url}</div>
+            </div>
+
             <div className="bg-gray-100 p-4 rounded-md overflow-auto max-h-96">
               <pre className="text-sm">{JSON.stringify(results, null, 2)}</pre>
             </div>
