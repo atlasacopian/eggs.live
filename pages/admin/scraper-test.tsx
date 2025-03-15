@@ -169,7 +169,18 @@ export default function ScraperTestPage() {
           <CardContent>
             {results.location && (
               <div className="mb-4 p-3 bg-gray-50 rounded">
-                <h3 className="font-medium mb-2">Store Location:</h3>
+                <div className="flex justify-between items-start">
+                  <h3 className="font-medium mb-2">Store Location:</h3>
+                  {results.locationVerified ? (
+                    <span className="text-green-600 text-sm font-medium bg-green-50 px-2 py-1 rounded">
+                      Location Verified
+                    </span>
+                  ) : (
+                    <span className="text-amber-600 text-sm font-medium bg-amber-50 px-2 py-1 rounded">
+                      Location Unverified
+                    </span>
+                  )}
+                </div>
                 <div className="flex items-start gap-2">
                   <MapPin className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" />
                   <div>
