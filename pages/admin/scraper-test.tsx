@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2 } from "lucide-react"
+import { Loader2, AlertCircle, MapPin } from "lucide-react"
 
 // List of stores to test
 const STORES = [
@@ -29,28 +29,27 @@ export default function ScraperTestPage() {
   const [loading, setLoading] = useState(false)
   const [results, setResults] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
+  const [nearbyLocations, setNearbyLocations] = useState<any[]>([])
 
   const handleTest = async () => {
     setLoading(true)
     setError(null)
     setResults(null)
+    setNearbyLocations([])
 
     try {
-      // Add zip code to URL if not already present
-      let testUrl = url
-      if (zipCode && !url.includes("zipCode=")) {
-        testUrl += (url.includes("?") ? "&" : "?") + `zipCode=${zipCode}`
-      }
-
       const response = await fetch(
-        `/api/test-scraper?url=${encodeURIComponent(testUrl)}&storeName=${encodeURIComponent(storeName)}`,
+        `/api/test-scraper?url=${encodeURIComponent(url)}&storeName=${encodeURIComponent(storeName)}&zipCode=${zipCode}`,
       )
       const data = await response.json()
 
       if (data.success) {
         setResults(data)
       } else {
-        setError(data.message || "Failed to test scraper")
+        setError(data.error || "Failed to test scraper")
+        if (data.nearbyLocations) {
+          setNearbyLocations(data.nearbyLocations)
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred")
@@ -121,11 +120,28 @@ export default function ScraperTestPage() {
       {error && (
         <Card className="mb-8 border-red-300">
           <CardHeader className="bg-red-50">
-            <CardTitle className="text-red-700">Error</CardTitle>
+            <CardTitle className="text-red-700">
+              <AlertCircle className="inline-block w-5 h-5 mr-2" />
+              {error}
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-red-700">{error}</p>
-          </CardContent>
+          {nearbyLocations.length > 0 && (
+            <CardContent>
+              <h3 className="font-medium mb-3">Nearby Locations:</h3>
+              <div className="space-y-3">
+                {nearbyLocations.map((location, index) => (
+                  <div key={index} className="flex items-start gap-2 p-3 bg-white rounded border">
+                    <MapPin className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium">{location.name}</p>
+                      <p className="text-sm text-gray-600">{location.address}</p>
+                      <p className="text-sm text-gray-500">ZIP: {location.zipCode}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          )}
         </Card>
       )}
 
@@ -138,6 +154,18 @@ export default function ScraperTestPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {results.location && (
+              <div className="mb-4 p-3 bg-gray-50 rounded">
+                <h3 className="font-medium mb-2">Store Location:</h3>
+                <div className="flex items-start gap-2">
+                  <MapPin className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p>{results.location.address}</p>
+                    <p className="text-sm text-gray-600">ZIP: {results.location.zipCode}</p>
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="bg-gray-100 p-4 rounded-md overflow-auto max-h-96">
               <pre className="text-sm">{JSON.stringify(results, null, 2)}</pre>
             </div>
