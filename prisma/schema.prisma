@@ -1,15 +1,50 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model store {
+  id               Int               @id @default(autoincrement())
+  name             String
+  website          String?
+  store_locations  store_locations[]
+  created_at       DateTime          @default(now())
+  updated_at       DateTime          @updatedAt
+}
+
+model store_locations {
+  id          Int             @id @default(autoincrement())
+  store_id    Int
+  address     String?
+  zipCode     String
+  latitude    Float?
+  longitude   Float?
+  created_at  DateTime        @default(now())
+  updated_at  DateTime        @updatedAt
+  store       store           @relation(fields: [store_id], references: [id])
+  egg_prices  la_egg_prices[]
+
+  @@index([store_id])
+  @@index([zipCode])
+}
+
 model la_egg_prices {
   id                Int             @id @default(autoincrement())
   store_location_id Int
-  price            Float
-  date             DateTime
-  eggType          String          @default("regular")
-  inStock          Boolean         @default(true)  // Add this line
+  price             Float
+  date              DateTime
+  eggType           String          @default("regular")
+  inStock           Boolean         @default(true)
   store_location    store_locations @relation(fields: [store_location_id], references: [id])
 
   @@index([store_location_id])
   @@index([date])
 }
-
-// ... rest of the schema remains the same
 
