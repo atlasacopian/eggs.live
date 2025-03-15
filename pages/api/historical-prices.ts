@@ -3,47 +3,54 @@ import prisma from "@/lib/prisma"
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const {
-      days = "30",
-      eggType = "regular",
-      storeId,
-      format = "daily", // 'daily' or 'raw'
-    } = req.query
+    const { zipCode, storeId, days = "30", eggType = "regular" } = req.query
 
-    // Convert days to number and validate
-    const daysNum = Number.parseInt(days as string, 10)
-    if (isNaN(daysNum) || daysNum < 1 || daysNum > 365) {
+    // Validate parameters
+    if ((!zipCode && !storeId) || (zipCode && Array.isArray(zipCode)) || (storeId && Array.isArray(storeId))) {
+      return res.status(400).json({
+        success: false,
+        error: "Missing or invalid parameters",
+        message: "Either zipCode or storeId must be provided",
+      })
+    }
+
+    // Parse days parameter
+    const daysToLookBack = Number.parseInt(Array.isArray(days) ? days[0] : days, 10) || 30
+    if (daysToLookBack <= 0 || daysToLookBack > 365) {
       return res.status(400).json({
         success: false,
         error: "Invalid days parameter",
-        message: "Days must be a number between 1 and 365",
+        message: "Days must be between 1 and 365",
       })
     }
 
     // Calculate date range
     const endDate = new Date()
-    endDate.setHours(0, 0, 0, 0)
-    const startDate = new Date(endDate)
-    startDate.setDate(startDate.getDate() - daysNum)
+    const startDate = new Date()
+    startDate.setDate(startDate.getDate() - daysToLookBack)
 
-    // Build query
+    // Build where clause
     const where: any = {
       date: {
         gte: startDate,
         lte: endDate,
       },
-      eggType: eggType as string,
+      eggType: Array.isArray(eggType) ? eggType[0] : eggType,
     }
 
-    // Add store filter if provided
-    if (storeId) {
+    // Add location filter
+    if (zipCode) {
+      where.store_location = {
+        zipcode: zipCode as string,
+      }
+    } else if (storeId) {
       where.store_location = {
         store_id: Number.parseInt(storeId as string, 10),
       }
     }
 
     // Get historical prices
-    const prices = await prisma.egg_prices.findMany({
+    const prices = await prisma.la_egg_prices.findMany({
       where,
       include: {
         store_location: {
@@ -57,60 +64,59 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
     })
 
-    // Format the response based on the requested format
-    if (format === "daily") {
-      // Calculate daily averages
-      const dailyAverages = new Map()
-      prices.forEach((price) => {
-        const dateStr = price.date.toISOString().split("T")[0]
-        if (!dailyAverages.has(dateStr)) {
-          dailyAverages.set(dateStr, { sum: 0, count: 0 })
-        }
-        const daily = dailyAverages.get(dateStr)
-        daily.sum += price.price
-        daily.count += 1
-      })
+    // Format the results
+    const formattedPrices = prices.map((item) => ({
+      id: item.id,
+      price: item.price,
+      date: item.date,
+      storeName: item.store_location.store.name,
+      address: item.store_location.address || "Address not available",
+      zipCode: item.store_location.zipcode,
+      eggType: item.eggType,
+      inStock: item.inStock,
+    }))
 
-      const averages = Array.from(dailyAverages.entries()).map(([date, data]) => ({
+    // Group by date for chart data
+    const dateGroups = formattedPrices.reduce((groups: Record<string, any[]>, item) => {
+      const dateStr = item.date.toISOString().split("T")[0]
+      if (!groups[dateStr]) {
+        groups[dateStr] = []
+      }
+      groups[dateStr].push(item)
+      return groups
+    }, {})
+
+    // Calculate average price per date
+    const chartData = Object.entries(dateGroups).map(([date, items]) => {
+      const sum = items.reduce((total, item) => total + item.price, 0)
+      const avg = sum / items.length
+      return {
         date,
-        average: data.sum / data.count,
-        count: data.count,
-      }))
+        avgPrice: Number.parseFloat(avg.toFixed(2)),
+        count: items.length,
+      }
+    })
 
-      return res.json({
-        success: true,
+    return res.json({
+      success: true,
+      query: {
+        zipCode: zipCode || null,
+        storeId: storeId || null,
+        days: daysToLookBack,
         eggType,
-        days: daysNum,
         dateRange: {
           start: startDate.toISOString(),
           end: endDate.toISOString(),
         },
-        averages,
-      })
-    } else {
-      // Return raw price data
-      return res.json({
-        success: true,
-        eggType,
-        days: daysNum,
-        dateRange: {
-          start: startDate.toISOString(),
-          end: endDate.toISOString(),
-        },
-        prices: prices.map((p) => ({
-          id: p.id,
-          date: p.date,
-          price: p.price,
-          store: p.store_location.store.name,
-          zipCode: p.store_location.zipCode,
-        })),
-      })
-    }
+      },
+      prices: formattedPrices,
+      chartData,
+    })
   } catch (error) {
-    console.error("Error fetching historical prices:", error)
+    console.error("Error getting historical prices:", error)
     return res.status(500).json({
       success: false,
-      error: "Failed to fetch historical prices",
+      error: "Failed to get historical prices",
       message: error instanceof Error ? error.message : "Unknown error",
     })
   }
