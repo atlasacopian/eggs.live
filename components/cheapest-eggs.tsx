@@ -140,7 +140,7 @@ export function CheapestEggs({ initialZipCode = "" }: CheapestEggsProps) {
           <Tabs
             defaultValue="regular"
             value={activeTab}
-            onValueChange={(value) => setActiveTab(value as "regular" | "organic")}
+            onValueChange={(value: string) => setActiveTab(value as "regular" | "organic")}
           >
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="regular">Regular Eggs</TabsTrigger>
