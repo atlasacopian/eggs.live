@@ -64,6 +64,9 @@ export default function ScraperTestPage() {
   const [debugMode, setDebugMode] = useState(false)
   const [rawUrl, setRawUrl] = useState("")
 
+  const [apiKeyStatus, setApiKeyStatus] = useState<any>(null)
+  const [checkingApiKey, setCheckingApiKey] = useState(false)
+
   const handleTest = async () => {
     setLoading(true)
     setError(null)
@@ -92,6 +95,25 @@ export default function ScraperTestPage() {
       setError(err instanceof Error ? err.message : "An error occurred")
     } finally {
       setLoading(false)
+    }
+  }
+
+  const checkFirecrawlApiKey = async () => {
+    try {
+      setCheckingApiKey(true)
+      setApiKeyStatus(null)
+
+      const response = await fetch("/api/check-firecrawl")
+      const data = await response.json()
+
+      setApiKeyStatus(data)
+    } catch (err) {
+      setApiKeyStatus({
+        success: false,
+        error: err instanceof Error ? err.message : "An error occurred",
+      })
+    } finally {
+      setCheckingApiKey(false)
     }
   }
 
@@ -145,26 +167,68 @@ export default function ScraperTestPage() {
           </div>
         </CardContent>
         <CardFooter className="flex justify-between">
-          <Button onClick={handleTest} disabled={loading}>
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Testing...
-              </>
-            ) : (
-              "Test Scraper"
-            )}
-          </Button>
+          <div className="flex justify-between items-center w-full">
+            <Button onClick={handleTest} disabled={loading}>
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Testing...
+                </>
+              ) : (
+                "Test Scraper"
+              )}
+            </Button>
 
-          <a
-            href={STORE_LOCATOR_URLS[storeName] || "#"}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:text-blue-800 text-sm flex items-center"
-          >
-            Verify Store Location <ExternalLink className="ml-1 h-3 w-3" />
-          </a>
+            <Button
+              onClick={checkFirecrawlApiKey}
+              disabled={checkingApiKey}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              {checkingApiKey ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Checking...
+                </>
+              ) : (
+                <>
+                  <Info className="h-4 w-4" />
+                  Check Firecrawl API Key
+                </>
+              )}
+            </Button>
+
+            <a
+              href={STORE_LOCATOR_URLS[storeName] || "#"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 text-sm flex items-center"
+            >
+              Verify Store Location <ExternalLink className="ml-1 h-3 w-3" />
+            </a>
+          </div>
         </CardFooter>
+
+        {apiKeyStatus && (
+          <div
+            className={`mt-4 p-4 rounded-lg ${apiKeyStatus.success ? "bg-green-50 border border-green-200" : "bg-red-50 border border-red-200"}`}
+          >
+            <h3 className={`font-medium ${apiKeyStatus.success ? "text-green-800" : "text-red-800"}`}>
+              Firecrawl API Key Status
+            </h3>
+            <p className={`text-sm ${apiKeyStatus.success ? "text-green-700" : "text-red-700"}`}>
+              {apiKeyStatus.message}
+            </p>
+            {apiKeyStatus.apiKeyPrefix && (
+              <p className="text-sm text-gray-600 mt-1">API Key: {apiKeyStatus.apiKeyPrefix}</p>
+            )}
+            {apiKeyStatus.firecrawlStatus && (
+              <div className="mt-2 text-xs bg-white p-2 rounded">
+                <pre>{JSON.stringify(apiKeyStatus.firecrawlStatus, null, 2)}</pre>
+              </div>
+            )}
+          </div>
+        )}
       </Card>
 
       {error && (
