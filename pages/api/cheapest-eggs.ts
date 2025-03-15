@@ -37,7 +37,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Add stock filter unless explicitly including out of stock items
-    if (includeOutOfStock !== "true") {
+    // Only add inStock filter if the column exists
+    let hasInStockColumn = true
+    try {
+      // Try to query with inStock to see if the column exists
+      await prisma.la_egg_prices.findFirst({
+        where: { inStock: true },
+        take: 1,
+      })
+    } catch (e) {
+      // If this fails, the column doesn't exist yet
+      hasInStockColumn = false
+      console.log("inStock column does not exist yet, skipping filter")
+    }
+
+    if (hasInStockColumn && includeOutOfStock !== "true") {
       baseWhere["inStock"] = true
     }
 
@@ -98,12 +112,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         date: item.date,
         id: item.id,
         storeLocationId: item.store_location_id,
-        inStock: item.inStock,
+        inStock: hasInStockColumn ? item.inStock : true, // Default to true if column doesn't exist
       }))
 
     // Also get out of stock items if we're filtering them out
     let outOfStockItems = []
-    if (includeOutOfStock !== "true") {
+    if (hasInStockColumn && includeOutOfStock !== "true") {
       const outOfStock = await prisma.la_egg_prices.findMany({
         where: {
           date: {
@@ -125,36 +139,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       outOfStockItems = formatResults(outOfStock)
     }
 
-    // If no results found, try to find nearby ZIP codes with data
-    if (cheapestRegular.length === 0 && cheapestOrganic.length === 0) {
-      // Get all ZIP codes with data
-      const allZipCodes = await prisma.store_locations.findMany({
-        select: { zipCode: true },
-        distinct: ["zipCode"],
-        where: {
-          la_egg_prices: {
-            some: {
-              date: {
-                gte: today,
-              },
-            },
-          },
-        },
-      })
-
-      return res.json({
-        success: true,
-        zipCode,
-        date: today.toISOString(),
-        cheapestRegular: [],
-        cheapestOrganic: [],
-        outOfStock: [],
-        showingOutOfStock: includeOutOfStock === "true",
-        message: "No egg prices found for this ZIP code",
-        availableZipCodes: allZipCodes.map((z) => z.zipCode),
-      })
-    }
-
     return res.json({
       success: true,
       zipCode,
@@ -163,6 +147,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       cheapestOrganic: formatResults(cheapestOrganic),
       outOfStock: outOfStockItems,
       showingOutOfStock: includeOutOfStock === "true",
+      hasInStockColumn,
     })
   } catch (error) {
     console.error("Error finding cheapest eggs:", error)
