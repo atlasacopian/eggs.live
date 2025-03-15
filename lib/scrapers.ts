@@ -1,9 +1,8 @@
 import { scrapeWithFirecrawl } from "./firecrawl-scraper"
 import prisma from "@/lib/prisma"
-import { getAllLAStoreLocations, getRepresentativeLAStoreLocations } from "../la-store-locations"
+import { getAllLAStoreLocations, getRepresentativeLAStoreLocations } from "./la-store-locations"
 
-// Update the scrapeAllStores function to use the new store locations:
-
+// Export the scrapeAllStores function
 export async function scrapeAllStores(useAllStores = false) {
   console.log(`Starting LA egg price scraping (${useAllStores ? "all stores" : "representative stores"})...`)
 
@@ -40,7 +39,6 @@ export async function scrapeAllStores(useAllStores = false) {
           storeRecord = await prisma.store.create({
             data: {
               name: store.name,
-              // Removed website field
             },
           })
         }
@@ -49,7 +47,7 @@ export async function scrapeAllStores(useAllStores = false) {
         let storeLocation = await prisma.store_locations.findFirst({
           where: {
             store_id: storeRecord.id,
-            zipcode: store.zipCode, // Changed from zipCode to zipcode
+            zipcode: store.zipCode,
           },
         })
 
@@ -58,7 +56,7 @@ export async function scrapeAllStores(useAllStores = false) {
             data: {
               store_id: storeRecord.id,
               address: store.address || `${store.name} (${store.zipCode})`,
-              zipcode: store.zipCode, // Changed from zipCode to zipcode
+              zipcode: store.zipCode,
               latitude: store.latitude || null,
               longitude: store.longitude || null,
             },
