@@ -39,7 +39,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         zipcode: location.zipcode,
         latitude: location.latitude,
         longitude: location.longitude,
-        website: location.store.website || null,
+        // Removed website field
       }))
 
       return res.status(200).json({
