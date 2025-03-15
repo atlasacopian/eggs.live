@@ -1,214 +1,232 @@
-"use client"
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import Head from 'next/head';
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Loader2, Database, RefreshCw, AlertTriangle } from "lucide-react"
-import Link from "next/link"
-
-export default function AdminPage() {
-  const [dbStatus, setDbStatus] = useState<any>(null)
-  const [dbLoading, setDbLoading] = useState(false)
-  const [scrapeStatus, setScrapeStatus] = useState<any>(null)
-  const [scrapeLoading, setScrapeLoading] = useState(false)
-  const [adminKey, setAdminKey] = useState("")
-
-  // Check database status
-  const checkDatabase = async () => {
-    setDbLoading(true)
-    try {
-      const response = await fetch("/api/db-check")
-      const data = await response.json()
-      setDbStatus(data)
-    } catch (error) {
-      setDbStatus({ success: false, error: "Failed to check database" })
-    } finally {
-      setDbLoading(false)
-    }
-  }
-
-  // Run manual LA scrape
-  const runLAScrape = async () => {
-    if (!adminKey) {
-      alert("Please enter your admin key")
-      return
-    }
-
-    setScrapeLoading(true)
-    try {
-      const response = await fetch(`/api/scrape-la?key=${adminKey}`)
-      const data = await response.json()
-      setScrapeStatus(data)
-    } catch (error) {
-      setScrapeStatus({ success: false, error: "Failed to run scraper" })
-    } finally {
-      setScrapeLoading(false)
-    }
-  }
-
-  // Run database migration
-  const runMigration = async () => {
-    setDbLoading(true)
-    try {
-      const response = await fetch("/api/run-migration")
-      const data = await response.json()
-      setDbStatus(data)
-    } catch (error) {
-      setDbStatus({ success: false, error: "Failed to run migration" })
-    } finally {
-      setDbLoading(false)
-    }
-  }
-
-  // Seed database with test data
-  const seedDatabase = async () => {
-    setDbLoading(true)
-    try {
-      const response = await fetch("/api/seed")
-      const data = await response.json()
-      setDbStatus(data)
-    } catch (error) {
-      setDbStatus({ success: false, error: "Failed to seed database" })
-    } finally {
-      setDbLoading(false)
-    }
-  }
-
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-        <Link href="/">
-          <Button variant="outline">Back to Home</Button>
-        </Link>
-      </div>
-
-      <div className="grid gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-amber-500" />
-              Admin Access
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <p>Enter your admin key to access restricted functionality:</p>
-              <div className="flex gap-2">
-                <input
-                  type="password"
-                  value={adminKey}
-                  onChange={(e) => setAdminKey(e.target.value)}
-                  placeholder="Admin key"
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Tabs defaultValue="database">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="database">Database Management</TabsTrigger>
-            <TabsTrigger value="scraper">Scraper Controls</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="database" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Database className="h-5 w-5" />
-                  Database Operations
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <Button onClick={checkDatabase} disabled={dbLoading}>
-                    {dbLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                    Check Database Status
-                  </Button>
-                  <Button onClick={runMigration} disabled={dbLoading}>
-                    {dbLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                    Run Database Migration
-                  </Button>
-                  <Button onClick={seedDatabase} disabled={dbLoading}>
-                    {dbLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                    Seed Test Data
-                  </Button>
-                  <Link href="/api/verify-schema" target="_blank">
-                    <Button variant="outline" className="w-full">
-                      Verify Schema
-                    </Button>
-                  </Link>
-                </div>
-
-                {dbStatus && (
-                  <div className="mt-6">
-                    <h3 className="font-medium mb-2">Database Status:</h3>
-                    <div className="bg-muted p-4 rounded-md overflow-auto max-h-60">
-                      <pre className="text-xs">{JSON.stringify(dbStatus, null, 2)}</pre>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="scraper" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <RefreshCw className="h-5 w-5" />
-                  Scraper Controls
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <p>Run scrapers manually to collect egg price data:</p>
-
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <Button onClick={runLAScrape} disabled={scrapeLoading || !adminKey} className="w-full">
-                      {scrapeLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                      Run LA Scraper
-                    </Button>
-
-                    <Link href="/api/debug" target="_blank">
-                      <Button variant="outline" className="w-full">
-                        View Debug Data
-                      </Button>
-                    </Link>
-                  </div>
-
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <Link href="/la/coverage">
-                      <Button variant="outline" className="w-full">
-                        View LA Coverage
-                      </Button>
-                    </Link>
-
-                    <Link href="/la">
-                      <Button variant="outline" className="w-full">
-                        View LA Prices
-                      </Button>
-                    </Link>
-                  </div>
-
-                  {scrapeStatus && (
-                    <div className="mt-2">
-                      <h3 className="font-medium mb-2">Scraper Status:</h3>
-                      <div className="bg-muted p-4 rounded-md overflow-auto max-h-60">
-                        <pre className="text-xs">{JSON.stringify(scrapeStatus, null, 2)}</pre>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </div>
-  )
+interface StoreData {
+  id: number;
+  name: string;
+  locations: number;
 }
 
+interface ScrapingResult {
+  store: string;
+  zipCode: string;
+  count: number;
+  success: boolean;
+  error?: string;
+}
+
+export default function AdminPage() {
+  const [stores, setStores] = useState<StoreData[]>([]);
+  const [scrapingResults, setScrapingResults] = useState<ScrapingResult[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('stores');
+
+  useEffect(() => {
+    fetchStores();
+  }, []);
+
+  const fetchStores = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/stores');
+      const data = await response.json();
+      
+      if (data.success) {
+        setStores(data.stores || []);
+      } else {
+        setError(data.message || 'Failed to fetch stores');
+      }
+    } catch (err) {
+      setError('An error occurred while fetching stores');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const runScraper = async (type: 'sample' | 'full') => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const endpoint = type === 'sample' ? '/api/cron/scrape-la-sample' : '/api/cron/scrape-la-full';
+      const response = await fetch(endpoint);
+      const data = await response.json();
+      
+      if (data.success) {
+        setScrapingResults(data.results || []);
+        setActiveTab('results');
+      } else {
+        setError(data.message || 'Failed to run scraper');
+      }
+    } catch (err) {
+      setError('An error occurred while running the scraper');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const clearDatabase = async () => {
+    if (!confirm('Are you sure you want to clear all egg price data? This cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      const response = await fetch('/api/clear-data', { method: 'POST' });
+      const data = await response.json();
+      
+      if (data.success) {
+        alert('Database cleared successfully');
+      } else {
+        setError(data.message || 'Failed to clear database');
+      }
+    } catch (err) {
+      setError('An error occurred while clearing the database');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Head>
+        <title>Admin Dashboard | eggs.live</title>
+      </Head>
+      
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+          <Link href="/">
+            <button className="px-4 py-2 border rounded hover:bg-gray-100">Back to Home</button>
+          </Link>
+        </div>
+        
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+          <h2 className="text-xl font-semibold mb-4">Scraper Controls</h2>
+          <div className="flex flex-wrap gap-4">
+            <button
+              onClick={() => runScraper('sample')}
+              disabled={loading}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+            >
+              Run Sample Scrape
+            </button>
+            <button
+              onClick={() => runScraper('full')}
+              disabled={loading}
+              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+            >
+              Run Full Scrape
+            </button>
+            <button
+              onClick={clearDatabase}
+              disabled={loading}
+              className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+            >
+              Clear Database
+            </button>
+          </div>
+          
+          {loading && <p className="mt-4 text-gray-600">Loading...</p>}
+          {error && <p className="mt-4 text-red-600">{error}</p>}
+        </div>
+        
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="border-b mb-4">
+            <div className="flex space-x-4">
+              <button
+                onClick={() => setActiveTab('stores')}
+                className={`pb-2 px-1 ${activeTab === 'stores' ? 'border-b-2 border-blue-600 font-medium' : 'text-gray-500'}`}
+              >
+                Stores
+              </button>
+              <button
+                onClick={() => setActiveTab('results')}
+                className={`pb-2 px-1 ${activeTab === 'results' ? 'border-b-2 border-blue-600 font-medium' : 'text-gray-500'}`}
+              >
+                Scraping Results
+              </button>
+            </div>
+          </div>
+          
+          {activeTab === 'stores' && (
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Store Data</h2>
+              {stores.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Store Name</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Locations</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {stores.map((store) => (
+                        <tr key={store.id}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{store.id}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{store.name}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{store.locations}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-gray-500">No stores found.</p>
+              )}
+            </div>
+          )}
+          
+          {activeTab === 'results' && (
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Scraping Results</h2>
+              {scrapingResults.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Store</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ZIP Code</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Count</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {scrapingResults.map((result, index) => (
+                        <tr key={index}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{result.store}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{result.zipCode}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{result.count}</td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {result.success ? (
+                              <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                Success
+                              </span>
+                            ) : (
+                              <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                Failed
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-gray-500">No scraping results available. Run a scraper to see results.</p>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
