@@ -4,7 +4,6 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Loader2 } from "lucide-react"
 
 // List of stores to test
@@ -72,18 +71,17 @@ export default function ScraperTestPage() {
         <CardContent className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1">Store</label>
-            <Select value={storeName} onValueChange={setStoreName}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a store" />
-              </SelectTrigger>
-              <SelectContent>
-                {STORES.map((store) => (
-                  <SelectItem key={store} value={store}>
-                    {store}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <select
+              value={storeName}
+              onChange={(e) => setStoreName(e.target.value)}
+              className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              {STORES.map((store) => (
+                <option key={store} value={store}>
+                  {store}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>
