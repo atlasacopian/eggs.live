@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "rm -rf .next && NODE_ENV=production prisma generate && next build --debug",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "clean": "rm -rf node_modules .next && npm install"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
