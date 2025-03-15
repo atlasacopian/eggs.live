@@ -45,21 +45,46 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         where: { inStock: true },
         take: 1,
       })
+
+      if (includeOutOfStock !== "true") {
+        baseWhere["inStock"] = true
+      }
     } catch (e) {
       // If this fails, the column doesn't exist yet
       hasInStockColumn = false
       console.log("inStock column does not exist yet, skipping filter")
     }
 
-    if (hasInStockColumn && includeOutOfStock !== "true") {
-      baseWhere["inStock"] = true
+    // Determine which zipCode field name to use
+    let zipCodeField = "zipCode"
+    try {
+      // Try to query with zipCode to see if the column exists
+      await prisma.store_locations.findFirst({
+        where: { zipCode: "00000" },
+        take: 1,
+      })
+    } catch (e) {
+      // If this fails, try lowercase zipcode
+      try {
+        // @ts-ignore - Prisma doesn't know about this field yet
+        await prisma.store_locations.findFirst({
+          where: { zipcode: "00000" },
+          take: 1,
+        })
+        zipCodeField = "zipcode"
+        console.log("Using lowercase zipcode field")
+      } catch (e2) {
+        console.error("Could not determine zipCode field name", e2)
+      }
     }
 
-    // Add zip code filter
+    // Add zip code filter with the correct field name
     const locationFilter = {
-      store_location: {
-        zipCode: zipCode,
-      },
+      store_location:
+        zipCodeField === "zipCode"
+          ? { zipCode: zipCode as string }
+          : // @ts-ignore - Prisma doesn't know about this field yet
+            { zipcode: zipCode as string },
     }
 
     // Find cheapest regular eggs
@@ -107,8 +132,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       results.map((item) => ({
         price: item.price,
         storeName: item.store_location.store.name,
-        address: item.store_location.address || `${item.store_location.store.name} (${item.store_location.zipCode})`,
-        zipCode: item.store_location.zipCode,
+        address:
+          item.store_location.address ||
+          `${item.store_location.store.name} (${item.store_location.zipCode || item.store_location.zipcode})`,
+        zipCode: item.store_location.zipCode || item.store_location.zipcode,
         date: item.date,
         id: item.id,
         storeLocationId: item.store_location_id,
@@ -124,7 +151,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             gte: today,
           },
           inStock: false,
-          store_location: { zipCode },
+          ...locationFilter,
         },
         include: {
           store_location: {
@@ -148,6 +175,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       outOfStock: outOfStockItems,
       showingOutOfStock: includeOutOfStock === "true",
       hasInStockColumn,
+      zipCodeField,
     })
   } catch (error) {
     console.error("Error finding cheapest eggs:", error)
