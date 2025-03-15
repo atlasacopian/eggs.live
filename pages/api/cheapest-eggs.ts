@@ -12,12 +12,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     today.setHours(0, 0, 0, 0)
 
     // First, let's check if we have any store locations for this ZIP code
+    // Removed timestamp fields from the query
     const storeLocations = await prisma.store_locations.findMany({
       where: {
         zipcode: zipCode as string,
       },
-      include: {
-        store: true,
+      select: {
+        id: true,
+        store_id: true,
+        address: true,
+        zipcode: true,
+        latitude: true,
+        longitude: true,
+        store: {
+          select: {
+            id: true,
+            name: true,
+            website: true,
+          },
+        },
       },
     })
 
@@ -65,10 +78,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       orderBy: {
         price: "asc",
       },
-      include: {
+      select: {
+        id: true,
+        price: true,
+        date: true,
+        inStock: true,
+        store_location_id: true,
         store_location: {
-          include: {
-            store: true,
+          select: {
+            address: true,
+            zipcode: true,
+            store: {
+              select: {
+                name: true,
+              },
+            },
           },
         },
       },
@@ -86,10 +110,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       orderBy: {
         price: "asc",
       },
-      include: {
+      select: {
+        id: true,
+        price: true,
+        date: true,
+        inStock: true,
+        store_location_id: true,
         store_location: {
-          include: {
-            store: true,
+          select: {
+            address: true,
+            zipcode: true,
+            store: {
+              select: {
+                name: true,
+              },
+            },
           },
         },
       },
@@ -124,10 +159,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           },
           inStock: false,
         },
-        include: {
+        select: {
+          id: true,
+          price: true,
+          date: true,
+          inStock: true,
+          store_location_id: true,
           store_location: {
-            include: {
-              store: true,
+            select: {
+              address: true,
+              zipcode: true,
+              store: {
+                select: {
+                  name: true,
+                },
+              },
             },
           },
         },
@@ -138,22 +184,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       outOfStockItems = formatResults(outOfStock)
     }
 
-    // Let's also log the final formatted results
-    const formattedRegular = formatResults(cheapestRegular)
-    const formattedOrganic = formatResults(cheapestOrganic)
-
-    console.log("Final results:", {
-      regularCount: formattedRegular.length,
-      organicCount: formattedOrganic.length,
-      outOfStockCount: outOfStockItems.length,
-    })
-
     return res.json({
       success: true,
       zipCode: zipCode || "all",
       date: today.toISOString(),
-      cheapestRegular: formattedRegular,
-      cheapestOrganic: formattedOrganic,
+      cheapestRegular: formatResults(cheapestRegular),
+      cheapestOrganic: formatResults(cheapestOrganic),
       outOfStock: outOfStockItems,
       showingOutOfStock: includeOutOfStock === "true",
     })
