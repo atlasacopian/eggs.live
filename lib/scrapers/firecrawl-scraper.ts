@@ -14,7 +14,7 @@ export class FirecrawlClient {
     this.timeout = options.timeout || 30000
   }
 
-  async scrape(url: string, options?: any): Promise<{ status: number; content: string }> {
+  async scrape(url: string, options?: any): Promise<{ status: number; content: string; formFilled?: boolean }> {
     console.log(`Mocked scrape for URL: ${url}`)
 
     // In a real implementation, we would use these options
@@ -23,13 +23,18 @@ export class FirecrawlClient {
     console.log("Using headers:", headers)
     console.log("Using cookies:", cookies)
 
-    if (formSelectors) {
-      console.log("Will fill form fields:", formSelectors)
+    let formFilled = false
+
+    if (formSelectors && formSelectors.zipCodeInput) {
+      console.log("Will fill form field:", formSelectors.zipCodeInput)
+      // In a real implementation, this would actually fill the form
+      formFilled = true
     }
 
     return {
       status: 200,
       content: "<html><body>Mocked HTML content</body></html>",
+      formFilled,
     }
   }
 
@@ -55,7 +60,83 @@ const firecrawlClient = new FirecrawlClient({
   timeout: 60000, // 60 seconds
 })
 
-// Enhanced scraping function with location handling
+// Get form selectors for a specific store
+function getFormSelectors(storeName: string): Record<string, string> {
+  // Define form selectors for sites that require form input
+  // This tells the scraper which form fields to fill
+  switch (storeName) {
+    case "Walmart":
+      return {
+        zipCodeInput: "#zipCode",
+        submitButton: "#zipCode-form-submit",
+      }
+
+    case "Target":
+      return {
+        zipCodeInput: "#zipcode",
+        submitButton: ".zipcodeForm button[type='submit']",
+      }
+
+    case "Whole Foods":
+      return {
+        zipCodeInput: "#zip-code",
+        submitButton: ".zip-code-form button[type='submit']",
+      }
+
+    case "Ralphs":
+      return {
+        zipCodeInput: "#zipCode",
+        submitButton: "#zipCodeButton",
+      }
+
+    case "Vons":
+    case "Albertsons":
+    case "Pavilions":
+      return {
+        zipCodeInput: "#zipcode",
+        submitButton: ".zip-code-form button[type='submit']",
+      }
+
+    case "Food 4 Less":
+      return {
+        zipCodeInput: "#zipCode",
+        submitButton: "#zipCodeButton",
+      }
+
+    case "Sprouts":
+      return {
+        zipCodeInput: "#postal_code",
+        submitButton: ".postal-code-form button[type='submit']",
+      }
+
+    case "Erewhon":
+      return {
+        zipCodeInput: "#postalCode",
+        submitButton: ".postal-code-form button[type='submit']",
+      }
+
+    case "Gelson's":
+      return {
+        zipCodeInput: "#zip",
+        submitButton: ".zip-form button[type='submit']",
+      }
+
+    case "Smart & Final":
+      return {
+        zipCodeInput: "#zipcode",
+        submitButton: ".zip-code-form button[type='submit']",
+      }
+
+    default:
+      return {
+        zipCodeInput:
+          "#zipCode, #zipcode, #zip, #postal_code, #postalCode, input[name='zipCode'], input[name='zipcode'], input[name='zip']",
+        submitButton: "button[type='submit'], input[type='submit'], .submit-button, .btn-submit",
+      }
+  }
+}
+
+// Enhanced scraping function with prioritized form filling
 export async function scrapeWithFirecrawl(
   url: string,
   storeName: string,
@@ -63,6 +144,7 @@ export async function scrapeWithFirecrawl(
 ): Promise<{
   prices: EggPrice[]
   locationVerified: boolean
+  formFilled: boolean
   actualLocation?: {
     name: string
     address: string
@@ -71,42 +153,37 @@ export async function scrapeWithFirecrawl(
 }> {
   console.log(`Scraping ${storeName} at URL: ${url} (expecting ZIP code: ${expectedZipCode})`)
 
-  // Get location-specific headers and cookies
+  // 1. FIRST APPROACH: Try to find and fill a ZIP code input form
+  const formSelectors = getFormSelectors(storeName)
+
+  // 2. FALLBACK APPROACHES: Prepare headers and cookies as fallbacks
   const headers = getLocationHeaders(expectedZipCode)
   const cookies = getLocationCookies(storeName, expectedZipCode)
 
-  // Define form selectors for sites that require form input
-  // This tells the scraper which form fields to fill
-  const formSelectors: Record<string, any> = {}
-
-  // Store-specific form handling
-  switch (storeName) {
-    case "Walmart":
-      formSelectors.zipCodeInput = "#zipCode"
-      formSelectors.submitButton = "#zipCode-form-submit"
-      break
-
-    case "Target":
-      formSelectors.zipCodeInput = "#zipcode"
-      formSelectors.submitButton = ".zipcodeForm button[type='submit']"
-      break
-
-    // Add more store-specific form selectors as needed
-  }
-
   // In a real implementation, we would use the Firecrawl client here
-  // with all the location options we've prepared
+  // with all the location options we've prepared, prioritizing form filling
   /*
   const result = await firecrawlClient.scrape(url, {
+    formSelectors,  // Try form filling first
+    waitForSelector: formSelectors.zipCodeInput,
+    fillForm: {
+      [formSelectors.zipCodeInput]: expectedZipCode
+    },
+    clickSelector: formSelectors.submitButton,
+    waitForNavigation: true,
+    
+    // Fallbacks if form filling doesn't work
     headers,
     cookies,
-    formSelectors,
     waitForSelector: '.product-price', // Wait for prices to load
     javascript: true, // Enable JavaScript for dynamic sites
   });
+  
+  const formFilled = result.formFilled || false;
   */
 
   // For now, we'll generate mock data based on store name and ZIP code
+  const formFilled = Math.random() > 0.3 // 70% chance that form filling worked
 
   // Check if this store exists in this ZIP code
   const storeExists = storeExistsInZipCode(storeName, expectedZipCode)
@@ -183,10 +260,12 @@ export async function scrapeWithFirecrawl(
   })
 
   console.log(`Generated prices for ${storeName} in ZIP code ${expectedZipCode}:`, prices)
+  console.log(`Form filled: ${formFilled ? "Yes" : "No"}`)
 
   return {
     prices,
     locationVerified: storeExists,
+    formFilled,
     actualLocation: mockLocation,
   }
 }
