@@ -1,13 +1,43 @@
-import type { NextApiRequest, NextApiResponse } from 'next'
-import prisma from '@/lib/prisma'
+import type { NextApiRequest, NextApiResponse } from "next"
+import prisma from "@/lib/prisma"
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { zipCode, includeOutOfStock = "false" } = req.query
 
+    console.log("Received request for ZIP:", zipCode)
+
     // Get today's date
     const today = new Date()
     today.setHours(0, 0, 0, 0)
+
+    // First, let's check if we have any store locations for this ZIP code
+    const storeLocations = await prisma.store_locations.findMany({
+      where: {
+        zipcode: zipCode as string,
+      },
+      include: {
+        store: true,
+      },
+    })
+
+    console.log(`Found ${storeLocations.length} store locations for ZIP ${zipCode}`)
+
+    if (storeLocations.length === 0) {
+      return res.json({
+        success: true,
+        zipCode,
+        message: `No stores found in ZIP code ${zipCode}`,
+        cheapestRegular: [],
+        cheapestOrganic: [],
+        outOfStock: [],
+        showingOutOfStock: includeOutOfStock === "true",
+      })
+    }
+
+    // Get store location IDs
+    const storeLocationIds = storeLocations.map((loc) => loc.id)
+    console.log("Store location IDs:", storeLocationIds)
 
     // Base query conditions
     const baseWhere: any = {
@@ -15,29 +45,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         gte: today,
       },
       price: {
-        gt: 0, // Ensure we don't get zero prices
+        gt: 0,
+      },
+      store_location_id: {
+        in: storeLocationIds,
       },
     }
 
-    // Add stock filter unless explicitly including out of stock items
     if (includeOutOfStock !== "true") {
       baseWhere["inStock"] = true
     }
-
-    // Add zip code filter if provided
-    const locationFilter = zipCode
-      ? {
-          store_location: {
-            zipcode: zipCode as string, // Note: using lowercase 'zipcode'
-          },
-        }
-      : {}
 
     // Find cheapest regular eggs
     const cheapestRegular = await prisma.la_egg_prices.findMany({
       where: {
         ...baseWhere,
-        ...locationFilter,
         eggType: "regular",
       },
       orderBy: {
@@ -50,14 +72,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           },
         },
       },
-      take: 5, // Get top 5 cheapest
+      take: 5,
     })
+
+    console.log(`Found ${cheapestRegular.length} regular egg prices`)
 
     // Find cheapest organic eggs
     const cheapestOrganic = await prisma.la_egg_prices.findMany({
       where: {
         ...baseWhere,
-        ...locationFilter,
         eggType: "organic",
       },
       orderBy: {
@@ -70,8 +93,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           },
         },
       },
-      take: 5, // Get top 5 cheapest
+      take: 5,
     })
+
+    console.log(`Found ${cheapestOrganic.length} organic egg prices`)
 
     // Format the results
     const formatResults = (results: any[]) =>
@@ -86,16 +111,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         inStock: item.inStock,
       }))
 
-    // Also get out of stock items if we're filtering them out
+    // Get out of stock items
     let outOfStockItems = []
     if (includeOutOfStock !== "true") {
       const outOfStock = await prisma.la_egg_prices.findMany({
         where: {
+          store_location_id: {
+            in: storeLocationIds,
+          },
           date: {
             gte: today,
           },
           inStock: false,
-          ...(zipCode ? { store_location: { zipcode: zipCode as string } } : {}),
         },
         include: {
           store_location: {
@@ -104,18 +131,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             },
           },
         },
-        take: 10, // Limit to 10 out of stock items
+        take: 10,
       })
 
+      console.log(`Found ${outOfStock.length} out of stock items`)
       outOfStockItems = formatResults(outOfStock)
     }
+
+    // Let's also log the final formatted results
+    const formattedRegular = formatResults(cheapestRegular)
+    const formattedOrganic = formatResults(cheapestOrganic)
+
+    console.log("Final results:", {
+      regularCount: formattedRegular.length,
+      organicCount: formattedOrganic.length,
+      outOfStockCount: outOfStockItems.length,
+    })
 
     return res.json({
       success: true,
       zipCode: zipCode || "all",
       date: today.toISOString(),
-      cheapestRegular: formatResults(cheapestRegular),
-      cheapestOrganic: formatResults(cheapestOrganic),
+      cheapestRegular: formattedRegular,
+      cheapestOrganic: formattedOrganic,
       outOfStock: outOfStockItems,
       showingOutOfStock: includeOutOfStock === "true",
     })
@@ -128,3 +166,4 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
   }
 }
+
