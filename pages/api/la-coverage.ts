@@ -44,7 +44,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Calculate coverage by zip code
     zipCodes.forEach((zipCode) => {
       const possibleForZip = allPossibleLocations.filter((loc) => loc.zipCode === zipCode).length
-      const coveredForZip = storeLocationsWithPrices.filter((item) => item.store_location.zipCode === zipCode).length
+      const coveredForZip = storeLocationsWithPrices.filter((item) => item.store_location.zipcode === zipCode).length // Changed from zipCode to zipcode
 
       coverage.byZipCode[zipCode] = {
         possible: possibleForZip,
