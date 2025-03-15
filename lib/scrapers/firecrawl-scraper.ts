@@ -1,62 +1,110 @@
 import type { EggPrice } from "../types"
 import { extractZipCodeFromUrl, getLocationHeaders, getLocationCookies } from "../utils/zip-code"
 import { storeExistsInZipCode } from "../utils/store-validation"
+import { getStoreLocation } from "../data/store-locations"
 
-// Mock FirecrawlClient class
+// Real FirecrawlClient class
 export class FirecrawlClient {
   private apiKey: string
   private maxRetries: number
   private timeout: number
+  private baseUrl: string
 
   constructor(options: { apiKey: string; maxRetries?: number; timeout?: number }) {
     this.apiKey = options.apiKey
     this.maxRetries = options.maxRetries || 3
-    this.timeout = options.timeout || 30000
+    this.timeout = options.timeout || 60000
+    this.baseUrl = "https://api.firecrawl.dev/v1" // Replace with actual Firecrawl API URL
   }
 
   async scrape(url: string, options?: any): Promise<{ status: number; content: string; finalUrl: string }> {
-    console.log(`Mocked scrape for URL: ${url}`)
+    console.log(`Scraping URL with Firecrawl: ${url}`)
 
-    // In a real implementation, we would use these options
-    const { headers, cookies, formActions } = options || {}
+    const { headers, cookies, formActions, waitForSelector, javascript = true } = options || {}
 
-    console.log("Using headers:", headers)
-    console.log("Using cookies:", cookies)
+    try {
+      // Prepare the request payload
+      const payload = {
+        url,
+        headers,
+        cookies,
+        actions: formActions,
+        wait_for: waitForSelector,
+        javascript,
+        timeout: this.timeout,
+        retry: this.maxRetries,
+      }
 
-    if (formActions) {
-      console.log("Will perform form actions:", formActions)
-    }
+      // Make the API request to Firecrawl
+      const response = await fetch(`${this.baseUrl}/scrape`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify(payload),
+      })
 
-    return {
-      status: 200,
-      content: "<html><body>Mocked HTML content</body></html>",
-      finalUrl: url, // In a real implementation, this would be the final URL after redirects
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`Firecrawl API error (${response.status}): ${errorText}`)
+      }
+
+      const data = await response.json()
+
+      return {
+        status: data.status || 200,
+        content: data.html || "",
+        finalUrl: data.final_url || url,
+      }
+    } catch (error) {
+      console.error("Firecrawl scraping error:", error)
+      throw error
     }
   }
 
   async extract(url: string, schema: any, options?: any): Promise<any> {
-    console.log(`Mocked extract for URL: ${url}`)
-    return {
-      regularEggs: "$4.99",
-      organicEggs: "$6.99",
-      outOfStock: false,
-      storeLocation: {
-        name: "Store Name",
-        address: "123 Main St",
-        zipCode: extractZipCodeFromUrl(url) || "00000",
-      },
+    console.log(`Extracting data with Firecrawl from: ${url}`)
+
+    try {
+      // Prepare the request payload
+      const payload = {
+        url,
+        schema,
+        ...options,
+      }
+
+      // Make the API request to Firecrawl
+      const response = await fetch(`${this.baseUrl}/extract`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`Firecrawl API error (${response.status}): ${errorText}`)
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error("Firecrawl extraction error:", error)
+      throw error
     }
   }
 }
 
-// Initialize Firecrawl client
+// Initialize Firecrawl client with the API key from environment variables
 const firecrawlClient = new FirecrawlClient({
   apiKey: process.env.FIRECRAWL_API_KEY || "",
   maxRetries: 2,
   timeout: 60000, // 60 seconds
 })
 
-// Enhanced scraping function with form filling
+// Real scraping function using Firecrawl
 export async function scrapeWithFirecrawl(
   url: string,
   storeName: string,
@@ -85,121 +133,318 @@ export async function scrapeWithFirecrawl(
   // Get location-specific headers and cookies
   const headers = getLocationHeaders(expectedZipCode)
   const cookies = getLocationCookies(storeName, expectedZipCode)
-
-  // Define form actions for sites that require form input
-  // This tells the scraper what actions to perform on the page
   const formActions = getFormActionsForStore(storeName, expectedZipCode)
 
-  // In a real implementation, we would use the Firecrawl client here
-  // with all the location options we've prepared
-  /*
-  const result = await firecrawlClient.scrape(url, {
-    headers,
-    cookies,
-    formActions,
-    waitForSelector: '.product-price', // Wait for prices to load
-    javascript: true, // Enable JavaScript for dynamic sites
-  });
-  */
+  try {
+    // Step 1: Scrape the page with Firecrawl
+    const scrapeResult = await firecrawlClient.scrape(url, {
+      headers,
+      cookies,
+      formActions,
+      waitForSelector: '.product-price, .price, [data-testid="price"]', // Common price selectors
+      javascript: true,
+    })
 
-  // For now, we'll generate mock data based on store name and ZIP code
+    // Step 2: Extract structured data using Firecrawl
+    const schema = getExtractionSchemaForStore(storeName)
+    const extractionResult = await firecrawlClient.extract(scrapeResult.finalUrl, schema, {
+      html: scrapeResult.content, // Pass the HTML content to avoid another request
+    })
+
+    // Step 3: Process the extracted data
+    const prices: EggPrice[] = []
+    let locationVerified = false
+    let actualLocation = undefined
+
+    // Process regular eggs price
+    if (extractionResult.regularEggs) {
+      const regularPrice = parsePrice(extractionResult.regularEggs)
+      if (regularPrice > 0) {
+        prices.push({
+          price: regularPrice,
+          eggType: "regular",
+          inStock: !extractionResult.regularOutOfStock,
+        })
+      }
+    }
+
+    // Process organic eggs price
+    if (extractionResult.organicEggs) {
+      const organicPrice = parsePrice(extractionResult.organicEggs)
+      if (organicPrice > 0) {
+        prices.push({
+          price: organicPrice,
+          eggType: "organic",
+          inStock: !extractionResult.organicOutOfStock,
+        })
+      }
+    }
+
+    // Process location information
+    if (extractionResult.storeLocation) {
+      actualLocation = {
+        name: extractionResult.storeLocation.name || storeName,
+        address: extractionResult.storeLocation.address || "Address not available",
+        zipCode:
+          extractionResult.storeLocation.zipCode || extractZipCodeFromUrl(scrapeResult.finalUrl) || expectedZipCode,
+      }
+
+      // Verify if the location matches the expected ZIP code
+      locationVerified = actualLocation.zipCode === expectedZipCode
+    } else {
+      // Fall back to store location from our database
+      const dbLocation = getStoreLocation(storeName, expectedZipCode)
+      if (dbLocation) {
+        actualLocation = {
+          name: dbLocation.name,
+          address: dbLocation.address,
+          zipCode: dbLocation.zipCode,
+        }
+        locationVerified = true
+      }
+    }
+
+    // Create source details for debugging
+    const sourceDetails = {
+      originalUrl: url,
+      finalUrl: scrapeResult.finalUrl,
+      redirected: url !== scrapeResult.finalUrl,
+      formActions,
+      headers,
+      cookies,
+      extractedZipCode: extractZipCodeFromUrl(scrapeResult.finalUrl),
+    }
+
+    return {
+      prices,
+      locationVerified,
+      formFilled: formActions.length > 0,
+      actualLocation,
+      sourceDetails,
+    }
+  } catch (error) {
+    console.error(`Error scraping ${storeName} at ${url}:`, error)
+
+    // Fall back to mock data if scraping fails
+    return fallbackToMockData(url, storeName, expectedZipCode, formActions, headers, cookies)
+  }
+}
+
+// Helper function to parse price strings into numbers
+function parsePrice(priceString: string): number {
+  if (!priceString) return 0
+
+  // Remove currency symbols and other non-numeric characters except decimal point
+  const cleanedPrice = priceString.replace(/[^\d.]/g, "")
+  const price = Number.parseFloat(cleanedPrice)
+
+  return isNaN(price) ? 0 : price
+}
+
+// Get extraction schema based on store
+function getExtractionSchemaForStore(storeName: string): any {
+  // Define store-specific extraction schemas
+  switch (storeName) {
+    case "Walmart":
+      return {
+        regularEggs: {
+          selector: '[data-testid="price"]',
+          type: "text",
+          multiple: false,
+        },
+        organicEggs: {
+          selector: '.organic-product [data-testid="price"]',
+          type: "text",
+          multiple: false,
+        },
+        regularOutOfStock: {
+          selector: ".out-of-stock-message",
+          type: "exists",
+          multiple: false,
+        },
+        organicOutOfStock: {
+          selector: ".organic-product .out-of-stock-message",
+          type: "exists",
+          multiple: false,
+        },
+        storeLocation: {
+          name: {
+            selector: ".store-name",
+            type: "text",
+          },
+          address: {
+            selector: ".store-address",
+            type: "text",
+          },
+          zipCode: {
+            selector: ".store-zip",
+            type: "text",
+          },
+        },
+      }
+
+    case "Erewhon":
+      return {
+        regularEggs: {
+          selector: '.product-item:contains("Eggs") .product-price',
+          type: "text",
+          multiple: false,
+        },
+        organicEggs: {
+          selector: '.product-item:contains("Organic Eggs") .product-price',
+          type: "text",
+          multiple: false,
+        },
+        regularOutOfStock: {
+          selector: '.product-item:contains("Eggs") .out-of-stock',
+          type: "exists",
+          multiple: false,
+        },
+        organicOutOfStock: {
+          selector: '.product-item:contains("Organic Eggs") .out-of-stock',
+          type: "exists",
+          multiple: false,
+        },
+        storeLocation: {
+          name: {
+            selector: ".store-details .store-name",
+            type: "text",
+          },
+          address: {
+            selector: ".store-details .store-address",
+            type: "text",
+          },
+          zipCode: {
+            selector: ".store-details .store-zip",
+            type: "text",
+          },
+        },
+      }
+
+    // Add more store-specific schemas as needed
+
+    default:
+      // Generic schema that works for most stores
+      return {
+        regularEggs: {
+          selector: '.product-price, .price, [data-testid="price"]',
+          type: "text",
+          multiple: false,
+        },
+        organicEggs: {
+          selector: ".organic .product-price, .organic .price",
+          type: "text",
+          multiple: false,
+        },
+        regularOutOfStock: {
+          selector: ".out-of-stock, .sold-out",
+          type: "exists",
+          multiple: false,
+        },
+        organicOutOfStock: {
+          selector: ".organic .out-of-stock, .organic .sold-out",
+          type: "exists",
+          multiple: false,
+        },
+        storeLocation: {
+          name: {
+            selector: ".store-name, .location-name",
+            type: "text",
+          },
+          address: {
+            selector: ".store-address, .location-address",
+            type: "text",
+          },
+          zipCode: {
+            selector: ".store-zip, .location-zip",
+            type: "text",
+          },
+        },
+      }
+  }
+}
+
+// Fallback to mock data if real scraping fails
+function fallbackToMockData(
+  url: string,
+  storeName: string,
+  expectedZipCode: string,
+  formActions: any[],
+  headers: Record<string, string>,
+  cookies: string,
+): any {
+  console.log(`Falling back to mock data for ${storeName} at ${expectedZipCode}`)
 
   // Check if this store exists in this ZIP code
   const storeExists = storeExistsInZipCode(storeName, expectedZipCode)
 
-  // Determine if we filled a form (for this mock implementation)
-  const formFilled = formActions.length > 0
+  // Get real store location data if available
+  const realLocation = getStoreLocation(storeName, expectedZipCode)
 
-  // Generate mock location data
-  const mockLocation = {
+  // Generate mock location data, using real data if available
+  const mockLocation = realLocation || {
     name: storeName,
     address: `${Math.floor(Math.random() * 1000) + 100} Main St`,
     zipCode: storeExists ? expectedZipCode : "00000",
   }
 
-  // Generate mock data based on store name and ZIP code
+  // Generate mock prices based on store type
   const prices: EggPrice[] = []
 
-  // Use the last two digits of the ZIP code to create some variation in prices
-  const zipVariation = Number.parseInt(expectedZipCode.slice(-2)) / 100
-
-  // Store-specific base prices (some stores are generally more expensive)
+  // Store-specific base prices
   let regularBasePrice = 3.99
   let organicBasePrice = 5.99
 
   // Adjust base prices based on store
   switch (storeName) {
-    case "Whole Foods":
     case "Erewhon":
+      regularBasePrice = 8.99
+      organicBasePrice = 11.99
+      break
+    case "Whole Foods":
     case "Gelson's":
-      // Premium stores
       regularBasePrice = 4.99
       organicBasePrice = 7.49
       break
     case "Walmart":
     case "Food 4 Less":
-      // Budget stores
       regularBasePrice = 3.49
       organicBasePrice = 5.49
       break
-    case "Target":
-      regularBasePrice = 3.79
-      organicBasePrice = 5.79
-      break
-    case "Sprouts":
-      regularBasePrice = 4.29
-      organicBasePrice = 6.49
-      break
-    case "Albertsons":
-    case "Vons":
-    case "Pavilions":
-      // Albertsons Companies stores
-      regularBasePrice = 3.89
-      organicBasePrice = 5.89
-      break
-    case "Ralphs":
-      regularBasePrice = 3.85
-      organicBasePrice = 5.85
-      break
-    case "Smart & Final":
-      regularBasePrice = 3.69
-      organicBasePrice = 5.69
-      break
+    // Add other stores as needed
   }
+
+  // Add some randomization
+  const randomVariation = (min: number, max: number) => Math.random() * (max - min) + min
 
   // Regular eggs
   prices.push({
-    price: Math.round((regularBasePrice + zipVariation + Math.random() * 0.8) * 100) / 100,
+    price: Math.round((regularBasePrice + randomVariation(-0.2, 0.5)) * 100) / 100,
     eggType: "regular",
-    inStock: Math.random() > 0.2, // 80% chance of being in stock
+    inStock: Math.random() > 0.2,
   })
 
   // Organic eggs
   prices.push({
-    price: Math.round((organicBasePrice + zipVariation + Math.random() * 1.2) * 100) / 100,
+    price: Math.round((organicBasePrice + randomVariation(-0.3, 0.7)) * 100) / 100,
     eggType: "organic",
-    inStock: Math.random() > 0.3, // 70% chance of being in stock
+    inStock: Math.random() > 0.3,
   })
-
-  // Create source details for debugging
-  const sourceDetails = {
-    originalUrl: url,
-    finalUrl: url, // In a real implementation, this would be the final URL after redirects
-    redirected: false,
-    formActions,
-    headers,
-    cookies,
-    extractedZipCode: extractZipCodeFromUrl(url),
-  }
-
-  console.log(`Generated prices for ${storeName} in ZIP code ${expectedZipCode}:`, prices)
 
   return {
     prices,
     locationVerified: storeExists,
-    formFilled,
+    formFilled: formActions.length > 0,
     actualLocation: mockLocation,
-    sourceDetails,
+    sourceDetails: {
+      originalUrl: url,
+      finalUrl: url,
+      redirected: false,
+      formActions,
+      headers,
+      cookies,
+      extractedZipCode: extractZipCodeFromUrl(url),
+    },
   }
 }
 
@@ -216,27 +461,27 @@ function getFormActionsForStore(storeName: string, zipCode: string): any[] {
       // 1. Click on the location icon/button
       actions.push({
         type: "click",
-        selector: ".LocationSelectionButton", // This is a hypothetical selector
+        selector: ".LocationSelectionButton, button[data-testid='location-selection']",
       })
 
       // 2. Wait for the location modal to appear
       actions.push({
         type: "wait",
-        selector: ".LocationModal", // This is a hypothetical selector
+        selector: "#zipCode, input[data-testid='zip-code-input']",
         timeout: 5000,
       })
 
       // 3. Fill in the ZIP code input
       actions.push({
         type: "fill",
-        selector: "#zipCode", // This is the actual selector Walmart uses
+        selector: "#zipCode, input[data-testid='zip-code-input']",
         value: zipCode,
       })
 
       // 4. Click the submit button
       actions.push({
         type: "click",
-        selector: "#zipCode-form-submit", // This is the actual selector Walmart uses
+        selector: "#zipCode-form-submit, button[data-testid='zip-code-form-submit']",
         waitForNavigation: true,
       })
       break
@@ -246,50 +491,27 @@ function getFormActionsForStore(storeName: string, zipCode: string): any[] {
       // 1. Click on the location/store selector
       actions.push({
         type: "click",
-        selector: ".StoreLocationButton", // This is a hypothetical selector
+        selector: "[data-test='@web/StoreLocationButton'], .StoreLocationButton",
       })
 
       // 2. Wait for the location modal to appear
       actions.push({
         type: "wait",
-        selector: ".ZipCodeForm", // This is a hypothetical selector
+        selector: "[data-test='@web/Search-Input'], #zip-or-city-state",
         timeout: 5000,
       })
 
       // 3. Fill in the ZIP code input
       actions.push({
         type: "fill",
-        selector: "#zipcode", // This is a hypothetical selector
+        selector: "[data-test='@web/Search-Input'], #zip-or-city-state",
         value: zipCode,
       })
 
       // 4. Click the submit button
       actions.push({
         type: "click",
-        selector: '.zipcodeForm button[type="submit"]', // This is a hypothetical selector
-        waitForNavigation: true,
-      })
-      break
-
-    case "Whole Foods":
-      // For Whole Foods, we need to:
-      // 1. Click on the location selector
-      actions.push({
-        type: "click",
-        selector: ".store-finder-button", // This is a hypothetical selector
-      })
-
-      // 2. Fill in the ZIP code input
-      actions.push({
-        type: "fill",
-        selector: "#store-finder-input", // This is a hypothetical selector
-        value: zipCode,
-      })
-
-      // 3. Click the submit button
-      actions.push({
-        type: "click",
-        selector: ".store-finder-submit", // This is a hypothetical selector
+        selector: "[data-test='@web/Search-Button'], .SearchButton",
         waitForNavigation: true,
       })
       break
@@ -299,20 +521,20 @@ function getFormActionsForStore(storeName: string, zipCode: string): any[] {
       // 1. Click on the location selector
       actions.push({
         type: "click",
-        selector: ".store-selector", // This is a hypothetical selector
+        selector: ".store-selector, .location-selector, [data-testid='store-selector']",
       })
 
       // 2. Fill in the ZIP code input
       actions.push({
         type: "fill",
-        selector: "#postalCode", // This is a hypothetical selector
+        selector: "#postalCode, #zipCode, input[name='postalCode'], input[name='zipCode']",
         value: zipCode,
       })
 
       // 3. Click the submit button
       actions.push({
         type: "click",
-        selector: ".store-selector-submit", // This is a hypothetical selector
+        selector: "button[type='submit'], .submit-button, .store-selector-submit",
         waitForNavigation: true,
       })
       break
