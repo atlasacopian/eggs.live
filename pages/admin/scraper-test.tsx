@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2, AlertCircle, MapPin } from "lucide-react"
+import { Loader2, AlertCircle, MapPin, ExternalLink, Info } from "lucide-react"
 
 // List of stores to test
 const STORES = [
@@ -38,6 +38,22 @@ const STORE_URLS: Record<string, string> = {
   Pavilions: "https://www.pavilions.com/shop/search-results.html?q=eggs",
 }
 
+// Store location URLs (for direct linking to store locators)
+const STORE_LOCATOR_URLS: Record<string, string> = {
+  Walmart: "https://www.walmart.com/store/finder",
+  Target: "https://www.target.com/store-locator/find-stores",
+  "Whole Foods": "https://www.wholefoodsmarket.com/stores",
+  Ralphs: "https://www.ralphs.com/stores/search",
+  Vons: "https://www.vons.com/stores/search-stores.html",
+  Albertsons: "https://www.albertsons.com/stores/search-stores.html",
+  "Food 4 Less": "https://www.food4less.com/stores/search",
+  Sprouts: "https://shop.sprouts.com/store/search",
+  Erewhon: "https://www.erewhonmarket.com/stores",
+  "Gelson's": "https://www.gelsons.com/stores",
+  "Smart & Final": "https://www.smartandfinal.com/stores/",
+  Pavilions: "https://www.pavilions.com/stores/search-stores.html",
+}
+
 export default function ScraperTestPage() {
   const [storeName, setStoreName] = useState("Walmart")
   const [zipCode, setZipCode] = useState("90210")
@@ -45,6 +61,8 @@ export default function ScraperTestPage() {
   const [results, setResults] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
   const [nearbyLocations, setNearbyLocations] = useState<any[]>([])
+  const [debugMode, setDebugMode] = useState(false)
+  const [rawUrl, setRawUrl] = useState("")
 
   const handleTest = async () => {
     setLoading(true)
@@ -55,6 +73,7 @@ export default function ScraperTestPage() {
     try {
       // Get the base URL for the selected store
       const baseUrl = STORE_URLS[storeName] || `https://www.google.com/search?q=${encodeURIComponent(storeName)}+eggs`
+      setRawUrl(baseUrl)
 
       const response = await fetch(
         `/api/test-scraper?url=${encodeURIComponent(baseUrl)}&storeName=${encodeURIComponent(storeName)}&zipCode=${zipCode}`,
@@ -111,8 +130,21 @@ export default function ScraperTestPage() {
               pattern="[0-9]{5}"
             />
           </div>
+
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="debugMode"
+              checked={debugMode}
+              onChange={(e) => setDebugMode(e.target.checked)}
+              className="rounded border-gray-300"
+            />
+            <label htmlFor="debugMode" className="text-sm text-gray-700">
+              Show Debug Information
+            </label>
+          </div>
         </CardContent>
-        <CardFooter>
+        <CardFooter className="flex justify-between">
           <Button onClick={handleTest} disabled={loading}>
             {loading ? (
               <>
@@ -123,6 +155,15 @@ export default function ScraperTestPage() {
               "Test Scraper"
             )}
           </Button>
+
+          <a
+            href={STORE_LOCATOR_URLS[storeName] || "#"}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800 text-sm flex items-center"
+          >
+            Verify Store Location <ExternalLink className="ml-1 h-3 w-3" />
+          </a>
         </CardFooter>
       </Card>
 
@@ -139,16 +180,17 @@ export default function ScraperTestPage() {
             <CardContent>
               <h3 className="font-medium mb-3">Try these ZIP codes instead:</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
-                {nearbyLocations.map((zipCode, index) => (
+                {nearbyLocations.map((location, index) => (
                   <button
                     key={index}
                     onClick={() => {
-                      setZipCode(zipCode)
+                      setZipCode(location.zipCode)
                       handleTest()
                     }}
                     className="border border-gray-300 rounded px-3 py-2 text-center hover:bg-gray-100"
                   >
-                    {zipCode}
+                    {location.zipCode}
+                    {location.distance && <span className="block text-xs text-gray-500">{location.distance} mi</span>}
                   </button>
                 ))}
               </div>
@@ -166,6 +208,40 @@ export default function ScraperTestPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {/* Source URL Information */}
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-100 rounded">
+              <h3 className="font-medium mb-2 flex items-center text-blue-800">
+                <Info className="w-4 h-4 mr-2" /> Source Information
+              </h3>
+
+              <div className="space-y-2">
+                <div>
+                  <p className="text-sm font-medium text-blue-700">Base URL:</p>
+                  <div className="bg-white p-2 rounded font-mono text-xs overflow-x-auto">{rawUrl}</div>
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-blue-700">Final URL with ZIP code:</p>
+                  <div className="bg-white p-2 rounded font-mono text-xs overflow-x-auto">{results.url}</div>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <a
+                    href={results.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 text-sm flex items-center"
+                  >
+                    Open URL in Browser <ExternalLink className="ml-1 h-3 w-3" />
+                  </a>
+
+                  <span className="text-xs text-gray-500">
+                    {results.usingMock ? "Note: Using mock data, not actually scraping this URL" : ""}
+                  </span>
+                </div>
+              </div>
+            </div>
+
             {results.location && (
               <div className="mb-4 p-3 bg-gray-50 rounded">
                 <div className="flex justify-between items-start">
@@ -189,11 +265,6 @@ export default function ScraperTestPage() {
                 </div>
               </div>
             )}
-
-            <div className="mb-4">
-              <h3 className="font-medium mb-2">URL Used:</h3>
-              <div className="bg-gray-50 p-2 rounded font-mono text-sm overflow-x-auto">{results.url}</div>
-            </div>
 
             <div className="mb-4">
               <h3 className="font-medium mb-2">Location Techniques Used:</h3>
@@ -227,9 +298,43 @@ export default function ScraperTestPage() {
               </div>
             </div>
 
-            <div className="bg-gray-100 p-4 rounded-md overflow-auto max-h-96">
-              <pre className="text-sm">{JSON.stringify(results, null, 2)}</pre>
+            {/* Scraped Prices */}
+            <div className="mb-6">
+              <h3 className="font-medium mb-3">Scraped Prices:</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {results.results &&
+                  results.results.map((item: any, index: number) => (
+                    <div
+                      key={index}
+                      className={`p-3 rounded border ${item.inStock ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}`}
+                    >
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="font-medium">
+                          {item.eggType.charAt(0).toUpperCase() + item.eggType.slice(1)} Eggs
+                        </span>
+                        <span className="text-lg font-bold">${item.price.toFixed(2)}</span>
+                      </div>
+                      <div className="text-sm">
+                        {item.inStock ? (
+                          <span className="text-green-700">In Stock</span>
+                        ) : (
+                          <span className="text-red-700">Out of Stock</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+              </div>
             </div>
+
+            {/* Debug Information */}
+            {debugMode && (
+              <div className="mt-6">
+                <h3 className="font-medium mb-2">Debug Information:</h3>
+                <div className="bg-gray-100 p-4 rounded-md overflow-auto max-h-96">
+                  <pre className="text-sm">{JSON.stringify(results, null, 2)}</pre>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
