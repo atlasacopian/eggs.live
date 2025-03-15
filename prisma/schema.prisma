@@ -10,7 +10,7 @@ datasource db {
 model store {
   id              Int               @id @default(autoincrement())
   name            String
-  website         String?
+  // Remove the website field or make it optional
   store_locations store_locations[]
 }
 
