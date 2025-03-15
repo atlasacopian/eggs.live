@@ -1,5 +1,5 @@
 import { scrapeWithFirecrawl } from "./firecrawl-scraper"
-import prisma from "@/lib/prisma"
+import { PrismaClient } from "@prisma/client"
 import { getAllLAStoreLocations, getRepresentativeLAStoreLocations } from "../la-store-locations"
 
 // Update the scrapeAllStores function to use the new store locations:
@@ -16,8 +16,11 @@ export async function scrapeAllStores(useAllStores = false) {
 
   console.log(`Preparing to scrape ${storeLocations.length} store locations...`)
 
-  // Scrape LA stores
+  // Process stores sequentially to avoid connection issues
   for (const store of storeLocations) {
+    // Create a new Prisma client for each store to avoid prepared statement conflicts
+    const prisma = new PrismaClient()
+
     try {
       // For stores with location-specific pricing, we need to set the zip code
       // Make sure the zip code is always included in the URL
@@ -40,7 +43,6 @@ export async function scrapeAllStores(useAllStores = false) {
           storeRecord = await prisma.store.create({
             data: {
               name: store.name,
-              // Removed website field
             },
           })
         }
@@ -49,7 +51,7 @@ export async function scrapeAllStores(useAllStores = false) {
         let storeLocation = await prisma.store_locations.findFirst({
           where: {
             store_id: storeRecord.id,
-            zipcode: store.zipCode, // Changed from zipCode to zipcode
+            zipcode: store.zipCode,
           },
         })
 
@@ -58,7 +60,7 @@ export async function scrapeAllStores(useAllStores = false) {
             data: {
               store_id: storeRecord.id,
               address: store.address || `${store.name} (${store.zipCode})`,
-              zipcode: store.zipCode, // Changed from zipCode to zipcode
+              zipcode: store.zipCode,
               latitude: store.latitude || null,
               longitude: store.longitude || null,
             },
@@ -120,6 +122,9 @@ export async function scrapeAllStores(useAllStores = false) {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
       })
+    } finally {
+      // Always disconnect the Prisma client to free up resources
+      await prisma.$disconnect()
     }
   }
 
