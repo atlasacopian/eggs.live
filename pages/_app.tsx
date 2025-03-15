@@ -1,24 +1,19 @@
+import "../styles/globals.css"
 import type { AppProps } from "next/app"
-import "@/styles/globals.css"
 import Head from "next/head"
 
-export default function App({ Component, pageProps }: AppProps) {
+function MyApp({ Component, pageProps }: AppProps) {
   return (
     <>
       <Head>
-        <title>EGGS.LIVE | REAL-TIME EGG PRICE TRACKER</title>
-        <meta name="description" content="Track egg prices in real-time across multiple stores" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap"
-          rel="stylesheet"
-        />
+        <title>eggs.live - Real-time Egg Price Tracker</title>
+        <meta name="description" content="Track egg prices in real-time across stores nationwide" />
+        <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div className="min-h-screen bg-white">
-        <Component {...pageProps} />
-      </div>
+      <Component {...pageProps} />
     </>
   )
 }
+
+export default MyApp
 
