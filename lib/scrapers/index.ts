@@ -1,6 +1,13 @@
 import { scrapeWithFirecrawl } from "./firecrawl-scraper"
 import type { EggPrice, StoreLocation } from "../types"
 
+// Define scraper interface
+export interface Scraper {
+  name: string;
+  description: string;
+  scrape: (store: StoreLocation) => Promise<EggPrice[]>;
+}
+
 // Export the main scraper function
 export async function scrapeStoreForEggPrices(store: StoreLocation): Promise<EggPrice[]> {
   try {
@@ -13,6 +20,27 @@ export async function scrapeStoreForEggPrices(store: StoreLocation): Promise<Egg
     console.error(`Error scraping ${store.name} (${store.zipCode}):`, error)
     return []
   }
+}
+
+// Add the getAllScrapers function
+export function getAllScrapers(): Scraper[] {
+  return [
+    {
+      name: "firecrawl",
+      description: "General purpose web scraper for egg prices",
+      scrape: async (store: StoreLocation) => {
+        const storeUrl = store.url + (store.url.includes("?") ? "&" : "?") + `zipCode=${store.zipCode}`
+        return await scrapeWithFirecrawl(storeUrl, store.name)
+      }
+    },
+    {
+      name: "mock",
+      description: "Mock scraper for testing",
+      scrape: async (store: StoreLocation) => {
+        return generateMockEggPrices(store.name)
+      }
+    }
+  ]
 }
 
 // Export other scraper-related functions
