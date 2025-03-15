@@ -77,8 +77,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
     }
 
-    // When returning success, explicitly check if we fell back to mock data
-    const usingMockData = !prices.some((price) => price.fromRealData === true)
+    // When returning success, check if we're using mock data
+    // Since we don't have a fromRealData property, we'll use the sourceDetails to determine this
+    const usingMockData = sourceDetails.originalUrl === sourceDetails.finalUrl && !sourceDetails.redirected
 
     return res.status(200).json({
       success: true,
