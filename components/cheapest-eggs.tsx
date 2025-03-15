@@ -111,7 +111,7 @@ export function CheapestEggs({ initialZipCode = "" }: CheapestEggsProps) {
       </form>
 
       <div className="flex items-center space-x-2">
-        <Switch id="include-out-of-stock" checked={includeOutOfStock} onCheckedChange={setIncludeOutOfStock} />
+        <Switch id="include-out-of-stock" checked={includeOutOfStock} onChange={setIncludeOutOfStock} />
         <Label htmlFor="include-out-of-stock">Include out of stock items</Label>
       </div>
 
