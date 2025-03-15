@@ -4,3 +4,12 @@ export interface EggPrice {
   inStock: boolean
 }
 
+export interface StoreLocation {
+  name: string
+  address?: string
+  zipCode: string
+  latitude?: number
+  longitude?: number
+  url: string
+}
+
