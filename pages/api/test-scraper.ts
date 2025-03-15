@@ -32,7 +32,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const formattedUrl = formatStoreUrlWithZipCode(url, storeName, zipCode)
 
     // Test the scraper with the provided URL and store name
-    const { prices, locationVerified, actualLocation } = await scrapeWithFirecrawl(formattedUrl, storeName, zipCode)
+    const { prices, locationVerified, formFilled, actualLocation } = await scrapeWithFirecrawl(
+      formattedUrl,
+      storeName,
+      zipCode,
+    )
 
     // If the location couldn't be verified, return an error
     if (!locationVerified) {
@@ -50,6 +54,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       storeName,
       zipCode,
       locationVerified,
+      formFilled,
       location: actualLocation,
       results: prices,
       usingMock: !process.env.FIRECRAWL_API_KEY,
