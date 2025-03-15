@@ -137,17 +137,20 @@ export default function ScraperTestPage() {
           </CardHeader>
           {nearbyLocations.length > 0 && (
             <CardContent>
-              <h3 className="font-medium mb-3">Nearby Locations:</h3>
-              <div className="space-y-3">
-                {nearbyLocations.map((location, index) => (
-                  <div key={index} className="flex items-start gap-2 p-3 bg-white rounded border">
-                    <MapPin className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-medium">{location.name}</p>
-                      <p className="text-sm text-gray-600">{location.address}</p>
-                      <p className="text-sm text-gray-500">ZIP: {location.zipCode}</p>
-                    </div>
-                  </div>
+              <h3 className="font-medium mb-3">Try these ZIP codes instead:</h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+                {nearbyLocations.map((zipCode, index) => (
+                  <Button
+                    key={index}
+                    variant="outline"
+                    onClick={() => {
+                      setZipCode(zipCode)
+                      handleTest()
+                    }}
+                    className="text-center"
+                  >
+                    {zipCode}
+                  </Button>
                 ))}
               </div>
             </CardContent>
