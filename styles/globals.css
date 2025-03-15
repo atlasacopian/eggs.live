@@ -30,7 +30,6 @@
 
   html {
     font-family: "JetBrains Mono", "Courier New", monospace;
-    text-transform: uppercase;
     letter-spacing: 0.05em;
   }
 
@@ -38,22 +37,18 @@
     @apply bg-white text-black;
     font-family: "JetBrains Mono", "Courier New", monospace;
   }
-
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
 }
 
 /* Tech-forward card styling */
 .tech-card {
-  @apply border border-black rounded-none p-4;
+  @apply border border-black rounded-none p-4 text-center;
   position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tech-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
 .tech-card::before {
@@ -69,7 +64,7 @@
 
 /* Modern button styling */
 .tech-button {
-  @apply bg-black text-white px-4 py-2 rounded-none uppercase font-mono;
+  @apply bg-black text-white px-4 py-2 rounded-none font-mono;
   position: relative;
   transition: all 0.2s ease;
 }
@@ -85,20 +80,71 @@
   box-shadow: none;
 }
 
-/* Grid styling */
-.tech-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
-}
-
-/* Data display */
-.data-display {
-  @apply font-mono text-lg border-l-4 border-black pl-4 my-4;
-}
-
 /* Price tag styling */
 .price-tag {
   @apply inline-block bg-black text-white px-3 py-1 font-mono text-xl;
+}
+
+/* Typing effect */
+.typing-effect {
+  position: relative;
+}
+
+.typing-effect::after {
+  content: "|";
+  position: absolute;
+  right: -10px;
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Pulse animation */
+.pulse-animation {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+/* Data point animation */
+.data-point {
+  @apply w-2 h-2 bg-black rounded-full;
+  animation: fadeInScale 0.5s ease-out;
+}
+
+@keyframes fadeInScale {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Grid background */
+.grid-bg {
+  background-image: linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
