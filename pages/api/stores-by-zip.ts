@@ -15,7 +15,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const { zipCode } = req.query
 
     if (!zipCode || typeof zipCode !== "string") {
-      return res.status(400).json({ error: "ZIP code is required" })
+      return res.status(400).json({
+        success: false,
+        error: "ZIP code is required",
+      })
     }
 
     // Get today's date
@@ -40,7 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
 
     // Format the results
-    const stores = storeLocations.map((location) => {
+    const stores: StorePrice[] = storeLocations.map((location) => {
       const regularPrice = location.la_egg_prices.find((p) => p.eggType === "regular")?.price || null
       const organicPrice = location.la_egg_prices.find((p) => p.eggType === "organic")?.price || null
 
