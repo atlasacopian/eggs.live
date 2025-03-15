@@ -1,13 +1,7 @@
 {
-  "crons": [
-    {
-      "path": "/api/cron?full=false",
-      "schedule": "0 */4 * * *"
-    },
-    {
-      "path": "/api/cron?full=true",
-      "schedule": "0 0 * * *"
-    }
-  ]
+  "version": 2,
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
+  "framework": "nextjs"
 }
 
