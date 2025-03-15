@@ -14,27 +14,23 @@ export class FirecrawlClient {
     this.timeout = options.timeout || 30000
   }
 
-  async scrape(url: string, options?: any): Promise<{ status: number; content: string; formFilled?: boolean }> {
+  async scrape(url: string, options?: any): Promise<{ status: number; content: string; finalUrl: string }> {
     console.log(`Mocked scrape for URL: ${url}`)
 
     // In a real implementation, we would use these options
-    const { headers, cookies, formSelectors } = options || {}
+    const { headers, cookies, formActions } = options || {}
 
     console.log("Using headers:", headers)
     console.log("Using cookies:", cookies)
 
-    let formFilled = false
-
-    if (formSelectors && formSelectors.zipCodeInput) {
-      console.log("Will fill form field:", formSelectors.zipCodeInput)
-      // In a real implementation, this would actually fill the form
-      formFilled = true
+    if (formActions) {
+      console.log("Will perform form actions:", formActions)
     }
 
     return {
       status: 200,
       content: "<html><body>Mocked HTML content</body></html>",
-      formFilled,
+      finalUrl: url, // In a real implementation, this would be the final URL after redirects
     }
   }
 
@@ -60,83 +56,7 @@ const firecrawlClient = new FirecrawlClient({
   timeout: 60000, // 60 seconds
 })
 
-// Get form selectors for a specific store
-function getFormSelectors(storeName: string): Record<string, string> {
-  // Define form selectors for sites that require form input
-  // This tells the scraper which form fields to fill
-  switch (storeName) {
-    case "Walmart":
-      return {
-        zipCodeInput: "#zipCode",
-        submitButton: "#zipCode-form-submit",
-      }
-
-    case "Target":
-      return {
-        zipCodeInput: "#zipcode",
-        submitButton: ".zipcodeForm button[type='submit']",
-      }
-
-    case "Whole Foods":
-      return {
-        zipCodeInput: "#zip-code",
-        submitButton: ".zip-code-form button[type='submit']",
-      }
-
-    case "Ralphs":
-      return {
-        zipCodeInput: "#zipCode",
-        submitButton: "#zipCodeButton",
-      }
-
-    case "Vons":
-    case "Albertsons":
-    case "Pavilions":
-      return {
-        zipCodeInput: "#zipcode",
-        submitButton: ".zip-code-form button[type='submit']",
-      }
-
-    case "Food 4 Less":
-      return {
-        zipCodeInput: "#zipCode",
-        submitButton: "#zipCodeButton",
-      }
-
-    case "Sprouts":
-      return {
-        zipCodeInput: "#postal_code",
-        submitButton: ".postal-code-form button[type='submit']",
-      }
-
-    case "Erewhon":
-      return {
-        zipCodeInput: "#postalCode",
-        submitButton: ".postal-code-form button[type='submit']",
-      }
-
-    case "Gelson's":
-      return {
-        zipCodeInput: "#zip",
-        submitButton: ".zip-form button[type='submit']",
-      }
-
-    case "Smart & Final":
-      return {
-        zipCodeInput: "#zipcode",
-        submitButton: ".zip-code-form button[type='submit']",
-      }
-
-    default:
-      return {
-        zipCodeInput:
-          "#zipCode, #zipcode, #zip, #postal_code, #postalCode, input[name='zipCode'], input[name='zipcode'], input[name='zip']",
-        submitButton: "button[type='submit'], input[type='submit'], .submit-button, .btn-submit",
-      }
-  }
-}
-
-// Enhanced scraping function with prioritized form filling
+// Enhanced scraping function with form filling
 export async function scrapeWithFirecrawl(
   url: string,
   storeName: string,
@@ -150,43 +70,45 @@ export async function scrapeWithFirecrawl(
     address: string
     zipCode: string
   }
+  sourceDetails: {
+    originalUrl: string
+    finalUrl: string
+    redirected: boolean
+    formActions: any[]
+    headers: Record<string, string>
+    cookies: string
+    extractedZipCode: string | null
+  }
 }> {
   console.log(`Scraping ${storeName} at URL: ${url} (expecting ZIP code: ${expectedZipCode})`)
 
-  // 1. FIRST APPROACH: Try to find and fill a ZIP code input form
-  const formSelectors = getFormSelectors(storeName)
-
-  // 2. FALLBACK APPROACHES: Prepare headers and cookies as fallbacks
+  // Get location-specific headers and cookies
   const headers = getLocationHeaders(expectedZipCode)
   const cookies = getLocationCookies(storeName, expectedZipCode)
 
+  // Define form actions for sites that require form input
+  // This tells the scraper what actions to perform on the page
+  const formActions = getFormActionsForStore(storeName, expectedZipCode)
+
   // In a real implementation, we would use the Firecrawl client here
-  // with all the location options we've prepared, prioritizing form filling
+  // with all the location options we've prepared
   /*
   const result = await firecrawlClient.scrape(url, {
-    formSelectors,  // Try form filling first
-    waitForSelector: formSelectors.zipCodeInput,
-    fillForm: {
-      [formSelectors.zipCodeInput]: expectedZipCode
-    },
-    clickSelector: formSelectors.submitButton,
-    waitForNavigation: true,
-    
-    // Fallbacks if form filling doesn't work
     headers,
     cookies,
+    formActions,
     waitForSelector: '.product-price', // Wait for prices to load
     javascript: true, // Enable JavaScript for dynamic sites
   });
-  
-  const formFilled = result.formFilled || false;
   */
 
   // For now, we'll generate mock data based on store name and ZIP code
-  const formFilled = Math.random() > 0.3 // 70% chance that form filling worked
 
   // Check if this store exists in this ZIP code
   const storeExists = storeExistsInZipCode(storeName, expectedZipCode)
+
+  // Determine if we filled a form (for this mock implementation)
+  const formFilled = formActions.length > 0
 
   // Generate mock location data
   const mockLocation = {
@@ -259,14 +181,165 @@ export async function scrapeWithFirecrawl(
     inStock: Math.random() > 0.3, // 70% chance of being in stock
   })
 
+  // Create source details for debugging
+  const sourceDetails = {
+    originalUrl: url,
+    finalUrl: url, // In a real implementation, this would be the final URL after redirects
+    redirected: false,
+    formActions,
+    headers,
+    cookies,
+    extractedZipCode: extractZipCodeFromUrl(url),
+  }
+
   console.log(`Generated prices for ${storeName} in ZIP code ${expectedZipCode}:`, prices)
-  console.log(`Form filled: ${formFilled ? "Yes" : "No"}`)
 
   return {
     prices,
     locationVerified: storeExists,
     formFilled,
     actualLocation: mockLocation,
+    sourceDetails,
   }
+}
+
+/**
+ * Gets the form actions needed to set the ZIP code for a specific store
+ */
+function getFormActionsForStore(storeName: string, zipCode: string): any[] {
+  // Define the actions to perform on the page
+  const actions = []
+
+  switch (storeName) {
+    case "Walmart":
+      // For Walmart, we need to:
+      // 1. Click on the location icon/button
+      actions.push({
+        type: "click",
+        selector: ".LocationSelectionButton", // This is a hypothetical selector
+      })
+
+      // 2. Wait for the location modal to appear
+      actions.push({
+        type: "wait",
+        selector: ".LocationModal", // This is a hypothetical selector
+        timeout: 5000,
+      })
+
+      // 3. Fill in the ZIP code input
+      actions.push({
+        type: "fill",
+        selector: "#zipCode", // This is the actual selector Walmart uses
+        value: zipCode,
+      })
+
+      // 4. Click the submit button
+      actions.push({
+        type: "click",
+        selector: "#zipCode-form-submit", // This is the actual selector Walmart uses
+        waitForNavigation: true,
+      })
+      break
+
+    case "Target":
+      // For Target, we need to:
+      // 1. Click on the location/store selector
+      actions.push({
+        type: "click",
+        selector: ".StoreLocationButton", // This is a hypothetical selector
+      })
+
+      // 2. Wait for the location modal to appear
+      actions.push({
+        type: "wait",
+        selector: ".ZipCodeForm", // This is a hypothetical selector
+        timeout: 5000,
+      })
+
+      // 3. Fill in the ZIP code input
+      actions.push({
+        type: "fill",
+        selector: "#zipcode", // This is a hypothetical selector
+        value: zipCode,
+      })
+
+      // 4. Click the submit button
+      actions.push({
+        type: "click",
+        selector: '.zipcodeForm button[type="submit"]', // This is a hypothetical selector
+        waitForNavigation: true,
+      })
+      break
+
+    case "Whole Foods":
+      // For Whole Foods, we need to:
+      // 1. Click on the location selector
+      actions.push({
+        type: "click",
+        selector: ".store-finder-button", // This is a hypothetical selector
+      })
+
+      // 2. Fill in the ZIP code input
+      actions.push({
+        type: "fill",
+        selector: "#store-finder-input", // This is a hypothetical selector
+        value: zipCode,
+      })
+
+      // 3. Click the submit button
+      actions.push({
+        type: "click",
+        selector: ".store-finder-submit", // This is a hypothetical selector
+        waitForNavigation: true,
+      })
+      break
+
+    case "Erewhon":
+      // For Erewhon, we need to:
+      // 1. Click on the location selector
+      actions.push({
+        type: "click",
+        selector: ".store-selector", // This is a hypothetical selector
+      })
+
+      // 2. Fill in the ZIP code input
+      actions.push({
+        type: "fill",
+        selector: "#postalCode", // This is a hypothetical selector
+        value: zipCode,
+      })
+
+      // 3. Click the submit button
+      actions.push({
+        type: "click",
+        selector: ".store-selector-submit", // This is a hypothetical selector
+        waitForNavigation: true,
+      })
+      break
+
+    // Add more stores as needed
+
+    default:
+      // For stores we don't have specific instructions for,
+      // we'll try a generic approach
+
+      // Look for common location/ZIP code input patterns
+      actions.push({
+        type: "fill",
+        selector:
+          'input[name="zipcode"], input[name="zip"], input[name="postalCode"], input[id="zipcode"], input[id="zip"], input[id="postalCode"]',
+        value: zipCode,
+      })
+
+      // Try to find and click a submit button
+      actions.push({
+        type: "click",
+        selector: 'button[type="submit"], input[type="submit"], .submit-button, .zip-submit',
+        waitForNavigation: true,
+      })
+      break
+  }
+
+  return actions
 }
 
