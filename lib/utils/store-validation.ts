@@ -1,13 +1,7 @@
-"use client"
+// A simplified store validation utility
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2, AlertCircle, MapPin } from "lucide-react"
-
-// List of stores to test
-const STORES = [
+// Define the stores we support
+const SUPPORTED_STORES = [
   "Walmart",
   "Target",
   "Whole Foods",
@@ -22,173 +16,116 @@ const STORES = [
   "Pavilions",
 ]
 
-// Store base URLs
-const STORE_URLS: Record<string, string> = {
-  Walmart: "https://www.walmart.com/search?q=eggs",
-  Target: "https://www.target.com/s?searchTerm=eggs",
-  "Whole Foods": "https://www.wholefoodsmarket.com/search?text=eggs",
-  Ralphs: "https://www.ralphs.com/search?query=eggs",
-  Vons: "https://www.vons.com/shop/search-results.html?q=eggs",
-  Albertsons: "https://www.albertsons.com/shop/search-results.html?q=eggs",
-  "Food 4 Less": "https://www.food4less.com/search?query=eggs",
-  Sprouts: "https://shop.sprouts.com/search?search_term=eggs",
-  Erewhon: "https://www.erewhonmarket.com/search?q=eggs",
-  "Gelson's": "https://www.gelsons.com/shop/search-results.html?q=eggs",
-  "Smart & Final": "https://www.smartandfinal.com/shop/search-results.html?q=eggs",
-  Pavilions: "https://www.pavilions.com/shop/search-results.html?q=eggs",
+// Simple mapping of ZIP codes to stores that exist there
+// This is a simplified example - you would expand this with real data
+const ZIP_CODE_STORE_MAP: Record<string, string[]> = {
+  "90001": ["Walmart", "Target", "Food 4 Less"],
+  "90002": ["Walmart", "Ralphs"],
+  "90003": ["Target", "Vons", "Food 4 Less"],
+  "90004": ["Whole Foods", "Ralphs", "Vons"],
+  "90005": ["Target", "Ralphs", "Sprouts"],
+  "90006": ["Food 4 Less", "Smart & Final"],
+  "90007": ["Target", "Ralphs"],
+  "90008": ["Vons", "Smart & Final"],
+  "90010": ["Whole Foods", "Ralphs"],
+  "90011": ["Food 4 Less", "Smart & Final"],
+  "90012": ["Whole Foods", "Ralphs"],
+  "90013": ["Ralphs", "Smart & Final"],
+  "90014": ["Whole Foods"],
+  "90015": ["Target", "Ralphs"],
+  "90016": ["Food 4 Less", "Smart & Final"],
+  "90017": ["Whole Foods", "Ralphs"],
+  "90018": ["Food 4 Less", "Smart & Final"],
+  "90019": ["Ralphs", "Vons"],
+  "90020": ["Whole Foods", "Ralphs"],
+  "90021": ["Smart & Final"],
+  "90023": ["Food 4 Less", "Smart & Final"],
+  "90024": ["Whole Foods", "Ralphs", "Gelson's"],
+  "90025": ["Whole Foods", "Ralphs", "Vons"],
+  "90026": ["Vons", "Gelson's"], // No Walmart in 90026
+  "90027": ["Ralphs", "Vons", "Gelson's"],
+  "90028": ["Ralphs", "Vons"],
+  "90029": ["Food 4 Less", "Smart & Final"],
+  "90031": ["Food 4 Less"],
+  "90032": ["Food 4 Less", "Smart & Final"],
+  "90033": ["Food 4 Less", "Smart & Final"],
+  "90034": ["Ralphs", "Vons", "Sprouts"],
+  "90035": ["Whole Foods", "Ralphs"],
+  "90036": ["Whole Foods", "Ralphs", "Vons"],
+  "90037": ["Food 4 Less", "Smart & Final"],
+  "90038": ["Ralphs", "Vons"],
+  "90039": ["Ralphs", "Vons"],
+  "90041": ["Target", "Vons"],
+  "90042": ["Food 4 Less", "Smart & Final"],
+  "90043": ["Food 4 Less", "Smart & Final"],
+  "90044": ["Food 4 Less", "Smart & Final"],
+  "90045": ["Ralphs", "Vons", "Whole Foods"],
+  "90046": ["Whole Foods", "Ralphs", "Gelson's"],
+  "90047": ["Food 4 Less", "Smart & Final"],
+  "90048": ["Whole Foods", "Ralphs", "Gelson's"],
+  "90049": ["Whole Foods", "Ralphs", "Gelson's"],
+  "90056": ["Ralphs", "Vons"],
+  "90057": ["Food 4 Less", "Smart & Final"],
+  "90058": ["Food 4 Less", "Smart & Final"],
+  "90059": ["Food 4 Less", "Smart & Final"],
+  "90061": ["Food 4 Less", "Smart & Final"],
+  "90062": ["Food 4 Less", "Smart & Final"],
+  "90063": ["Food 4 Less", "Smart & Final"],
+  "90064": ["Whole Foods", "Ralphs", "Vons"],
+  "90065": ["Food 4 Less", "Smart & Final"],
+  "90066": ["Ralphs", "Vons", "Whole Foods"],
+  "90067": ["Whole Foods", "Ralphs", "Gelson's"],
+  "90068": ["Ralphs", "Gelson's"],
+  "90069": ["Whole Foods", "Ralphs", "Gelson's"],
+  "90071": ["Whole Foods"],
+  "90077": ["Whole Foods", "Ralphs", "Gelson's"],
+  "90210": ["Whole Foods", "Ralphs", "Gelson's"],
+  "90211": ["Whole Foods", "Ralphs", "Gelson's"],
+  "90212": ["Whole Foods", "Ralphs", "Gelson's"],
+  "90230": ["Ralphs", "Vons", "Sprouts"],
+  "90232": ["Ralphs", "Vons"],
+  "90245": ["Ralphs", "Vons"],
+  "90247": ["Food 4 Less", "Smart & Final"],
+  "90248": ["Food 4 Less", "Smart & Final"],
+  "90272": ["Ralphs", "Gelson's"],
+  "90280": ["Walmart", "Food 4 Less", "Smart & Final"],
+  "90290": ["Ralphs", "Gelson's"],
+  "90291": ["Whole Foods", "Ralphs", "Gelson's"],
+  "90292": ["Ralphs", "Gelson's"],
+  "90293": ["Ralphs", "Vons"],
+  "90401": ["Whole Foods", "Vons"],
+  "90402": ["Whole Foods", "Gelson's"],
+  "90403": ["Whole Foods", "Vons"],
+  "90404": ["Whole Foods", "Vons"],
+  "90405": ["Whole Foods", "Vons"],
+  "90660": ["Walmart", "Food 4 Less", "Smart & Final"],
 }
 
-export default function ScraperTestPage() {
-  const [storeName, setStoreName] = useState("Walmart")
-  const [zipCode, setZipCode] = useState("90210")
-  const [loading, setLoading] = useState(false)
-  const [results, setResults] = useState<any>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [nearbyLocations, setNearbyLocations] = useState<any[]>([])
-
-  const handleTest = async () => {
-    setLoading(true)
-    setError(null)
-    setResults(null)
-    setNearbyLocations([])
-
-    try {
-      // Get the base URL for the selected store
-      const baseUrl = STORE_URLS[storeName] || `https://www.google.com/search?q=${encodeURIComponent(storeName)}+eggs`
-
-      const response = await fetch(
-        `/api/test-scraper?url=${encodeURIComponent(baseUrl)}&storeName=${encodeURIComponent(storeName)}&zipCode=${zipCode}`,
-      )
-      const data = await response.json()
-
-      if (data.success) {
-        setResults(data)
-      } else {
-        setError(data.error || "Failed to test scraper")
-        if (data.nearbyLocations) {
-          setNearbyLocations(data.nearbyLocations)
-        }
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred")
-    } finally {
-      setLoading(false)
-    }
+/**
+ * Checks if a store exists in a given ZIP code
+ */
+export function storeExistsInZipCode(storeName: string, zipCode: string): boolean {
+  // If we don't have data for this ZIP code, assume the store doesn't exist there
+  if (!ZIP_CODE_STORE_MAP[zipCode]) {
+    return false
   }
 
-  return (
-    <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-6">Scraper Test Tool</h1>
+  // Check if the store exists in this ZIP code
+  return ZIP_CODE_STORE_MAP[zipCode].includes(storeName)
+}
 
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>Test Firecrawl Scraper</CardTitle>
-          <CardDescription>Test the scraper with a specific store and ZIP code</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Store</label>
-            <select
-              value={storeName}
-              onChange={(e) => setStoreName(e.target.value)}
-              className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-            >
-              {STORES.map((store) => (
-                <option key={store} value={store}>
-                  {store}
-                </option>
-              ))}
-            </select>
-          </div>
+/**
+ * Gets nearby ZIP codes that have the requested store
+ */
+export function getNearbyZipCodesWithStore(storeName: string, zipCode: string): string[] {
+  // This is a simplified implementation
+  // In a real app, you'd use geolocation to find truly nearby ZIP codes
 
-          <div>
-            <label className="block text-sm font-medium mb-1">ZIP Code</label>
-            <Input
-              value={zipCode}
-              onChange={(e) => setZipCode(e.target.value)}
-              placeholder="90210"
-              maxLength={5}
-              pattern="[0-9]{5}"
-            />
-          </div>
-        </CardContent>
-        <CardFooter>
-          <Button onClick={handleTest} disabled={loading}>
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Testing...
-              </>
-            ) : (
-              "Test Scraper"
-            )}
-          </Button>
-        </CardFooter>
-      </Card>
-
-      {error && (
-        <Card className="mb-8 border-red-300">
-          <CardHeader className="bg-red-50">
-            <CardTitle className="text-red-700 flex items-center gap-2">
-              <AlertCircle className="w-5 h-5" />
-              Store Not Found
-            </CardTitle>
-            <CardDescription className="text-red-600">{error}</CardDescription>
-          </CardHeader>
-          {nearbyLocations.length > 0 && (
-            <CardContent>
-              <h3 className="font-medium mb-3">Nearby Locations:</h3>
-              <div className="space-y-3">
-                {nearbyLocations.map((location, index) => (
-                  <div key={index} className="flex items-start gap-2 p-3 bg-white rounded border">
-                    <MapPin className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-medium">{location.name}</p>
-                      <p className="text-sm text-gray-600">{location.address}</p>
-                      <p className="text-sm text-gray-500">ZIP: {location.zipCode}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          )}
-        </Card>
-      )}
-
-      {results && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Results</CardTitle>
-            <CardDescription>
-              {results.usingMock ? "Using mock data (API key not configured)" : "Using real Firecrawl data"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {results.location && (
-              <div className="mb-4 p-3 bg-gray-50 rounded">
-                <h3 className="font-medium mb-2">Store Location:</h3>
-                <div className="flex items-start gap-2">
-                  <MapPin className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p>{results.location.address}</p>
-                    <p className="text-sm text-gray-600">ZIP: {results.location.zipCode}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="mb-4">
-              <h3 className="font-medium mb-2">URL Used:</h3>
-              <div className="bg-gray-50 p-2 rounded font-mono text-sm overflow-x-auto">{results.url}</div>
-            </div>
-
-            <div className="bg-gray-100 p-4 rounded-md overflow-auto max-h-96">
-              <pre className="text-sm">{JSON.stringify(results, null, 2)}</pre>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  )
+  // For now, just return all ZIP codes that have this store
+  return Object.entries(ZIP_CODE_STORE_MAP)
+    .filter(([_, stores]) => stores.includes(storeName))
+    .map(([zip, _]) => zip)
+    .filter((zip) => zip !== zipCode) // Exclude the original ZIP code
+    .slice(0, 5) // Limit to 5 results
 }
 
