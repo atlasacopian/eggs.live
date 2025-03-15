@@ -140,17 +140,16 @@ export default function ScraperTestPage() {
               <h3 className="font-medium mb-3">Try these ZIP codes instead:</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
                 {nearbyLocations.map((zipCode, index) => (
-                  <Button
+                  <button
                     key={index}
-                    variant="outline"
                     onClick={() => {
                       setZipCode(zipCode)
                       handleTest()
                     }}
-                    className="text-center"
+                    className="border border-gray-300 rounded px-3 py-2 text-center hover:bg-gray-100"
                   >
                     {zipCode}
-                  </Button>
+                  </button>
                 ))}
               </div>
             </CardContent>
