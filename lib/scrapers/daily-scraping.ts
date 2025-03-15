@@ -1,4 +1,4 @@
-import { scrapeWithFirecrawl } from "../firecrawl-scraper"
+import { scrapeWithFirecrawl } from "./firecrawl-scraper"
 import prisma from "@/lib/prisma"
 import { getAllLAStoreLocations, getRepresentativeLAStoreLocations } from "../la-store-locations"
 
