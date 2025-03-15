@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next"
 import { scrapeWithFirecrawl } from "@/lib/scrapers/firecrawl-scraper"
-import { formatStoreUrlWithZipCode, getZipCodeParameterForStore } from "@/lib/utils/zip-code"
+import { formatStoreUrlWithZipCode } from "@/lib/utils/zip-code"
+import { validateStoreLocation, getStoreLocation, getNearbyStores } from "@/lib/utils/store-validation"
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -14,23 +15,52 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
     }
 
-    // Ensure the URL includes the ZIP code if provided
-    let testUrl = url
+    // Validate store location if ZIP code is provided
     if (zipCode && !Array.isArray(zipCode)) {
-      testUrl = formatStoreUrlWithZipCode(testUrl, storeName, zipCode)
+      const storeExists = validateStoreLocation(storeName, zipCode)
+
+      if (!storeExists) {
+        // Get nearby stores
+        const nearbyStores = getNearbyStores(zipCode)
+          .filter((store) => store.name === storeName)
+          .map((store) => ({
+            name: store.name,
+            address: store.address,
+            zipCode: store.zipCode,
+            distance: "Nearby", // In a real implementation, calculate actual distance
+          }))
+
+        return res.status(404).json({
+          success: false,
+          error: `No ${storeName} found in ZIP code ${zipCode}`,
+          nearbyLocations: nearbyStores,
+          message: "Try searching these nearby locations instead",
+        })
+      }
+
+      // Get the specific store location
+      const location = getStoreLocation(storeName, zipCode)
+
+      // Ensure the URL includes the ZIP code
+      const testUrl = formatStoreUrlWithZipCode(url, storeName, zipCode)
+
+      // Test the scraper with the provided URL and store name
+      const results = await scrapeWithFirecrawl(testUrl, storeName)
+
+      return res.status(200).json({
+        success: true,
+        url: testUrl,
+        storeName,
+        location,
+        results,
+        usingMock: !process.env.FIRECRAWL_API_KEY,
+      })
     }
 
-    // Test the scraper with the provided URL and store name
-    const results = await scrapeWithFirecrawl(testUrl, storeName)
-
-    return res.status(200).json({
-      success: true,
-      url: testUrl,
-      storeName,
-      zipCode: zipCode || "Not specified (using default location)",
-      zipCodeParameter: zipCode ? getZipCodeParameterForStore(storeName) : null,
-      results,
-      usingMock: !process.env.FIRECRAWL_API_KEY,
+    // If no ZIP code provided, return an error
+    return res.status(400).json({
+      success: false,
+      error: "ZIP code is required to check store availability",
     })
   } catch (error) {
     console.error("Error testing scraper:", error)
