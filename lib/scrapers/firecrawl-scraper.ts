@@ -12,14 +12,14 @@ export async function scrapeWithFirecrawl(url: string, storeName: string): Promi
     prices.push({
       price: generateRealisticPrice(storeName, "regular"),
       eggType: "regular",
-      inStock: generateRealisticStockStatus(storeName, "regular"), // Add stock status
+      inStock: generateRealisticStockStatus(storeName, "regular"),
     })
 
     // Generate organic egg prices
     prices.push({
       price: generateRealisticPrice(storeName, "organic"),
       eggType: "organic",
-      inStock: generateRealisticStockStatus(storeName, "organic"), // Add stock status
+      inStock: generateRealisticStockStatus(storeName, "organic"),
     })
 
     console.log(`Found ${prices.length} prices for ${storeName}:`, prices)
