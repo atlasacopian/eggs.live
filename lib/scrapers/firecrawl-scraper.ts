@@ -14,7 +14,8 @@ export class FirecrawlClient {
     this.apiKey = options.apiKey
     this.maxRetries = options.maxRetries || 3
     this.timeout = options.timeout || 60000
-    this.baseUrl = "https://api.firecrawl.com" // Update this to the correct Firecrawl API URL
+    // Update this line with the URL that worked from the diagnostic test
+    this.baseUrl = "https://api.firecrawl.dev" // Replace with working URL
   }
 
   async scrape(url: string, options?: any): Promise<{ status: number; content: string; finalUrl: string }> {
