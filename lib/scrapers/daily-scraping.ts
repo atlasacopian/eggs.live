@@ -1,4 +1,4 @@
-import { scrapeWithFirecrawl } from "./firecrawl-scraper"
+import { scrapeWithFirecrawl } from "../firecrawl-scraper"
 import prisma from "@/lib/prisma"
 import { getAllLAStoreLocations, getRepresentativeLAStoreLocations } from "../la-store-locations"
 
@@ -31,7 +31,7 @@ export async function scrapeAllStores(useAllStores = false) {
 
       // Save results to database
       if (storeResults.length > 0) {
-        // Find or create the store
+        // Find or create the store - removed website field
         let storeRecord = await prisma.store.findFirst({
           where: { name: store.name },
         })
@@ -40,7 +40,7 @@ export async function scrapeAllStores(useAllStores = false) {
           storeRecord = await prisma.store.create({
             data: {
               name: store.name,
-              website: store.url.split("/").slice(0, 3).join("/"),
+              // Removed website field
             },
           })
         }
