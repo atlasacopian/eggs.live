@@ -11,7 +11,7 @@ const roboto_mono = Roboto_Mono({
 })
 
 export const metadata = {
-  title: 'EGGS LIVE',
+  title: 'eggs.live',
   description: 'Egg prices near you',
 }
 
