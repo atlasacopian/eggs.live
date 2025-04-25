@@ -219,7 +219,7 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
         letterSpacing: 2, 
         marginBottom: 16, // Reduced bottom margin 
         color: 'inherit', 
-        fontSize: '18px' // Restore original font size
+        fontSize: '14px' // Reduced from 18px
       }}>
         {isEditingZip ? (
           <form onSubmit={handleZipSubmit} style={{ display: 'inline-block' }}>
@@ -236,7 +236,7 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
                 border: 'none',
                 borderBottom: '1px solid #ccc',
                 fontFamily: 'inherit',
-                fontSize: '5rem', // Make zip large when editing
+                fontSize: '5rem', // Keep editing size large
                 fontWeight: 'inherit',
                 letterSpacing: 'inherit',
                 color: 'inherit',
@@ -251,7 +251,7 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
           <>
             {/* Location Text (City, State) - Placed ABOVE ZIP */}
             <div style={{ 
-                fontSize: '18px', // Restore original font size
+                fontSize: '14px', // Reduced from 18px
                 letterSpacing: 2, 
                 color: locationInfo.city ? '#fff' : '#666', // Dim if loading/error
                 marginBottom: '4px' 
@@ -263,7 +263,7 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
 
             {/* Make ZIP code large and editable */}
             <div style={{ 
-              fontSize: '72px', // Restore previous size (was 5rem initially)
+              fontSize: '50px', // Reduced from 72px
               fontWeight: '700', 
               lineHeight: '1',
               display: 'inline-block',
@@ -276,7 +276,7 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
             <p
               style={{ 
                 textAlign: 'center', 
-                fontSize: 14, // Restore original font size
+                fontSize: 11, // Reduced from 14px
                 marginTop: 0, // Remove top margin
                 marginBottom: '8px', // Add space below
                 letterSpacing:1, 
@@ -303,7 +303,7 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
           opacity: 0;
           transition: opacity 0.2s ease-out;
           color: ${accentColor};
-          font-size: 0.8rem;
+          font-size: 0.8rem; /* Keep hint small */
           margin-top: 8px;
         }
         .store-item:hover .hint {
@@ -337,17 +337,17 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
                 padding: '16px',
               }}
             >
-              <div style={{ fontSize: '18px', marginBottom: '4px' }}> {/* Restore original font size */}
+              <div style={{ fontSize: '14px', marginBottom: '4px' }}> {/* Reduced from 18px */}
                 <strong>{s.store}</strong> — {s.distance?.toFixed(1)} MI
               </div>
               <div style={{
-                fontSize: '14px', // Restore original font size
+                fontSize: '11px', // Reduced from 14px
                 color: '#666',
                 marginBottom: '12px',
                 paddingLeft: '24px'
               }}>{formatAddress(s.address).display}</div>
               <div style={{
-                fontSize: '16px', // This was already 16px
+                fontSize: '12px', // Reduced from 16px
                 display: 'grid',
                 gridTemplateColumns: '1fr 1fr',
                 justifyItems: 'end',
