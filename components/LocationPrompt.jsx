@@ -32,7 +32,10 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
   return (
     <div style={{ position: 'fixed', bottom: '20vh', left: '50%', transform: 'translateX(-50%)', zIndex: 20, textAlign: 'center' }}>
       {/* Scan Header */}
-      <div style={{ color: '#000', fontFamily: 'Roboto Mono, monospace', letterSpacing: '2px', fontSize: '12px', marginBottom: '1rem' }}>
+      <div 
+        style={{ color: '#000', fontFamily: 'Roboto Mono, monospace', letterSpacing: '2px', fontSize: '12px', marginBottom: '1rem' }} 
+        className="scan-header-text"
+      >
         📡 SCAN FOR EGG PRICES
       </div>
       {/* Buttons Container */}
@@ -65,6 +68,13 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
           )}
         </div>
       </div>
+      <style jsx>{`
+        @media (max-width: 768px) {
+          .scan-header-text {
+            font-size: 10px !important;
+          }
+        }
+      `}</style>
     </div>
   )
 } 

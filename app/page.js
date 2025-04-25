@@ -42,12 +42,20 @@ export default function Home() {
           width: '100%',
           padding: '0 16px',
           boxSizing: 'border-box',
-          marginTop: '15vh' /* Space below ticker */,
+          marginTop: '15vh' /* Default margin */,
         }}
+        className="header-container"
       >
         <Header />
       </div>
       <LocationPrompt onUseLocation={handleUseLocation} onEnterZip={handleEnterZip} />
+      <style jsx>{`
+        @media (max-width: 768px) {
+          .header-container {
+            margin-top: 8vh !important; /* Reduced margin for mobile */
+          }
+        }
+      `}</style>
     </main>
   )
 } 
