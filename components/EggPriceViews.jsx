@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import gsap from 'gsap'
 import EggPriceChart from './EggPriceChart'
 import { motion } from 'framer-motion'
 
