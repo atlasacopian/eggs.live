@@ -219,7 +219,7 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
         letterSpacing: 2, 
         marginBottom: 16, // Reduced bottom margin 
         color: 'inherit', 
-        fontSize: '14px' // Reduced from 18px
+        fontSize: '10px' // Reduced from 14px
       }}>
         {isEditingZip ? (
           <form onSubmit={handleZipSubmit} style={{ display: 'inline-block' }}>
@@ -251,7 +251,7 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
           <>
             {/* Location Text (City, State) - Placed ABOVE ZIP */}
             <div style={{ 
-                fontSize: '14px', // Reduced from 18px
+                fontSize: '10px', // Reduced from 14px
                 letterSpacing: 2, 
                 color: locationInfo.city ? '#fff' : '#666', // Dim if loading/error
                 marginBottom: '4px' 
@@ -263,7 +263,7 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
 
             {/* Make ZIP code large and editable */}
             <div style={{ 
-              fontSize: '50px', // Reduced from 72px
+              fontSize: '35px', // Reduced from 50px
               fontWeight: '700', 
               lineHeight: '1',
               display: 'inline-block',
@@ -276,7 +276,7 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
             <p
               style={{ 
                 textAlign: 'center', 
-                fontSize: 11, // Reduced from 14px
+                fontSize: 8, // Reduced from 11px
                 marginTop: 0, // Remove top margin
                 marginBottom: '8px', // Add space below
                 letterSpacing:1, 
@@ -337,17 +337,17 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
                 padding: '16px',
               }}
             >
-              <div style={{ fontSize: '14px', marginBottom: '4px' }}> {/* Reduced from 18px */}
+              <div style={{ fontSize: '10px', marginBottom: '4px' }}> {/* Reduced from 14px */}
                 <strong>{s.store}</strong> — {s.distance?.toFixed(1)} MI
               </div>
               <div style={{
-                fontSize: '11px', // Reduced from 14px
+                fontSize: '8px', // Reduced from 11px
                 color: '#666',
                 marginBottom: '12px',
                 paddingLeft: '24px'
               }}>{formatAddress(s.address).display}</div>
               <div style={{
-                fontSize: '12px', // Reduced from 16px
+                fontSize: '9px', // Reduced from 12px
                 display: 'grid',
                 gridTemplateColumns: '1fr 1fr',
                 justifyItems: 'end',

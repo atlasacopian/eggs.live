@@ -39,7 +39,10 @@ export default function ZipCodePage() {
     }}>
       {/* Ticker - Absolute positioning */}
       <div style={{ position: 'absolute', top: 16, left: 16, right: 16, zIndex: 10 }}>
-        <TickerStrip text="NATIONAL AVG: REG $6.23 <span style='color: #00FF00;'>↑</span> | ORG $6.98 <span style='color: #FF0000;'>↓</span>  🥚  123 STORES | 45 ZIP CODES 🥚" />
+        <TickerStrip 
+          text="NATIONAL AVG: REG $6.23 <span style='color: #00FF00;'>↑</span> | ORG $6.98 <span style='color: #FF0000;'>↓</span>  🥚  123 STORES | 45 ZIP CODES 🥚" 
+          fontSize="10px"
+        />
       </div>
 
       {/* Background Scene - Absolute positioning */}

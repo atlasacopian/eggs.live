@@ -31,6 +31,7 @@ export default function Home() {
         <TickerStrip 
           text="NATIONAL AVG: REG $6.23 <span style='color: #00FF00;'>↑</span> | ORG $6.98 <span style='color: #FF0000;'>↓</span>  🥚  123 STORES | 45 ZIP CODES 🥚" 
           overrideBackgroundColor="white" 
+          fontSize="10px"
         />
       </div>
       <EggCartonScene />

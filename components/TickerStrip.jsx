@@ -3,13 +3,17 @@
 import React from 'react';
 import styles from './TickerStrip.module.css';
 
-// Accept an optional overrideBackgroundColor prop
-export default function TickerStrip({ text, overrideBackgroundColor }) {
+// Accept an optional overrideBackgroundColor and fontSize prop
+export default function TickerStrip({ text, overrideBackgroundColor, fontSize = '14px' /* Default size */ }) {
   // Prepare style object
   const containerStyle = {};
   if (overrideBackgroundColor) {
     containerStyle.backgroundColor = overrideBackgroundColor;
   }
+
+  const tickerItemStyle = {
+    fontSize: fontSize // Apply the fontSize prop
+  };
 
   const extraClass = overrideBackgroundColor === 'white' ? styles.whiteBackground : '';
 
@@ -22,8 +26,8 @@ export default function TickerStrip({ text, overrideBackgroundColor }) {
       <div className={styles.tickerWrap}>
         {/* Repeat content multiple times to ensure no gaps */}
         {[...Array(6)].map((_,i)=>(
-          // Use dangerouslySetInnerHTML to render the styled spans
-          <span key={i} className={styles.tickerItem} dangerouslySetInnerHTML={{ __html: content }} />
+          // Use dangerouslySetInnerHTML to render the styled spans and apply item style
+          <span key={i} className={styles.tickerItem} style={tickerItemStyle} dangerouslySetInnerHTML={{ __html: content }} />
         ))}
       </div>
     </div>
