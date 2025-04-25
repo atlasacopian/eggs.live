@@ -1,0 +1,50 @@
+@keyframes scroll {
+  0% { transform: translateX(0%); }
+  /* Move slightly less than half to potentially close gap */
+  100% { transform: translateX(-49.5%); }
+}
+
+.tickerContainer {
+  border: 1px solid rgba(255, 193, 7, 0.3); /* Yolk yellow border */
+  border-radius: 6px;
+  background-color: #000000 !important; /* Solid black - Force Override */
+  padding: 8px 16px;
+  box-shadow: 0 0 8px rgba(255, 193, 7, 0.15); /* Yolk yellow shadow */
+  font-family: 'Roboto Mono', monospace;
+  color: var(--accent-color); /* Accent green text */
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative; /* Needed for absolute positioning if used */
+  margin-bottom: 16px; /* Space below ticker */
+  width: 100%; /* Make it full width of parent */
+  box-sizing: border-box;
+  opacity: 0;
+  animation: tickerFade 0.6s ease-out 1.2s forwards;
+}
+
+.tickerWrap {
+  display: flex;
+  width: max-content;
+  animation: scroll 30s linear infinite;
+  will-change: transform;
+}
+
+.tickerContainer:hover .tickerWrap {
+  animation-play-state: paused;
+}
+
+.tickerItem {
+  flex-shrink: 0;
+  white-space: nowrap;
+  padding-right: 1ch; /* single space between repeats */
+  box-sizing: content-box;
+}
+
+.whiteBackground {
+  background-color: #ffffff !important; /* Force white background */
+  color: #000000 !important;          /* Black text */
+  border: 1px solid #000000 !important; /* Black outline */
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.05);
+}
+
+@keyframes tickerFade { from { opacity: 0; transform: translateY(-5px);} to { opacity:1; transform: translateY(0);} } 

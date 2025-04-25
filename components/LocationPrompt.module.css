@@ -1,0 +1,110 @@
+.container {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  align-items: center;
+  width: auto;
+  padding: 0;
+}
+
+.option {
+  position: relative; 
+  cursor: pointer; 
+  text-transform: uppercase;
+  letter-spacing: 2px; 
+  font-size: 16px;
+  color: #000000;
+  padding: 0.5rem; 
+  border-radius: 4px; 
+  transition: color 0.2s ease-out, background-color 0.2s ease-out;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.option:hover {
+  color: var(--accent-color);
+  background-color: rgba(255, 193, 7, 0.15); /* match new accent-color #ffc107 */
+}
+
+.zipInput {
+  background: transparent;
+  border: none;
+  color: var(--accent-color);
+  font-family: 'Roboto Mono', monospace;
+  font-size: 16px;
+  letter-spacing: 2px;
+  width: 180px; text-align: center;
+  padding-right: 25px;
+}
+
+.activeInput {
+  background: rgba(255, 193, 7, 0.05);
+  cursor: text;
+}
+
+/* New style for valid input */
+.zipInputValid {
+  box-shadow: none;
+}
+
+/* Style for the Enter hint */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateX(-5px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes enterFade { from { opacity: 0; transform: translateY(-2px);} to { opacity:1; transform: translateY(0);} }
+
+.enterHint {
+  position: absolute;
+  right: 5px;
+  top: 0;
+  bottom:0;
+  display:flex;
+  align-items:center;
+  color: var(--accent-color);
+  font-size: 20px;
+  opacity:0;
+  animation: enterFade 0.4s ease-out forwards;
+}
+
+/* restore zipInput focus */
+.zipInput:focus {
+  outline: none;
+  letter-spacing: 3px;
+}
+
+.scanHeader {
+  position: static;
+  margin-bottom: 12px;
+  width: 100%;
+  text-align: center;
+  font-family: 'Roboto Mono', monospace;
+  letter-spacing: 2px;
+  font-size: 14px;
+  color: #fff; /* white to contrast dark background */
+}
+
+/* Hide brackets when the option is activeInput (input mode) */
+.activeInput::before,
+.activeInput::after { display:none; }
+
+.promptWrapper {
+  position: fixed;
+  bottom: 8vh; /* near bottom */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: auto;
+}
+
+.scanHeader{
+  font-size:18px;
+  color: #000;
+}
+.container .option::before,
+.container .option::after{color:#000;}
+.option{font-size:18px;} 
