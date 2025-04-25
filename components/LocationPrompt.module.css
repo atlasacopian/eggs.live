@@ -118,15 +118,21 @@
 /* Add media query for mobile adjustments */
 @media (max-width: 768px) {
   .option {
-    font-size: 7px; /* Further reduced */
-    padding: 0.3rem;
-    min-height: 28px; /* Further reduced */
-    letter-spacing: 1px;
+    font-size: 6px; /* Further reduced */
+    padding: 0.2rem 0.3rem; /* Reduced padding */
+    min-height: 24px; /* Further reduced */
+    letter-spacing: 0.8px;
   }
 
   .zipInput {
-     width: 100px; /* Further reduced */
-     font-size: 8px; /* Further reduced */
+     width: 80px; /* Further reduced */
+     font-size: 8px; /* Kept small */
+     padding-right: 15px; /* Reduce padding */
+  }
+  
+  .enterHint {
+    font-size: 14px; /* Reduce hint size */
+    right: 2px;
   }
 
   /* Note: .scanHeader class is not defined here, 

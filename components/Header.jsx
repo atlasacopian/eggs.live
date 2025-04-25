@@ -18,12 +18,12 @@ export default function Header() {
         }
         @media (max-width: 768px) {
           h1 {
-            font-size: 1.2rem; /* Further reduced mobile size */
-            letter-spacing: 2px;
+            font-size: 1.0rem; /* Even smaller mobile size */
+            letter-spacing: 1.5px;
           }
           h3 {
-            font-size: 0.5rem; /* Further reduced mobile size */
-            letter-spacing: 1px;
+            font-size: 0.4rem; /* Even smaller mobile size */
+            letter-spacing: 0.8px;
           }
         }
       `}</style>

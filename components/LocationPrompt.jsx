@@ -71,7 +71,8 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
       <style jsx>{`
         @media (max-width: 768px) {
           .scan-header-text {
-            font-size: 9px !important;
+            font-size: 8px !important;
+            margin-bottom: 0.5rem !important;
           }
         }
       `}</style>
