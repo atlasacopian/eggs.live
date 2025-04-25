@@ -30,7 +30,7 @@ export default function Header() {
       <h1 style={baseH1Style}>
         eggs<span style={{ color: '#000' }}>.</span>live
       </h1>
-      <h3 style={baseH3Style}>HOW MUCH IS A DOZEN TODAY?</h3>
+      <h3 style={baseH3Style}>FIND THE CHEAPEST DOZEN NEAR YOU</h3>
     </header>
   )
 } 
