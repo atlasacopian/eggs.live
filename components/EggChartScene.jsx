@@ -196,12 +196,6 @@ export default function EggChartScene({ showHistory = false }) {
         {/* Disable OrbitControls; interaction handled manually */}
         <OrbitControls enabled={false} />
       </Canvas>
-
-      {/* Overlay label */}
-      <div style={{ position: 'absolute', top: 20, left: 20, color: '#ffc107', fontFamily: 'Roboto Mono, monospace', letterSpacing: 2, lineHeight: 1.4 }}>
-        <div style={{ fontSize: 20, fontWeight: 700 }}>EGGS.LIVE</div>
-        <div style={{ fontSize: 14 }}>National Average: {latest ? `$${latest.toFixed(2)}` : '…'} / dozen</div>
-      </div>
     </div>
   )
 } 
