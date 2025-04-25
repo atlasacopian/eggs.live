@@ -14,6 +14,7 @@ function ModelPrimitive(props) {
 // Static Experience component for egg carton
 function Experience({ onInteractionStart }) {
   const centerRef = useRef()
+  const mouse = useRef({ x: 0, y: 0 }) // For desktop mouse tracking
   const [isMobile, setIsMobile] = useState(false);
 
   // Detect touch device on mount
@@ -22,16 +23,36 @@ function Experience({ onInteractionStart }) {
     setIsMobile(checkMobile());
   }, []);
 
-  // Remove conditional listeners (no interaction needed for this version)
-  // useEffect(() => {
-  //   if (isMobile) { ... } else { ... }
-  // }, [isMobile, onInteractionStart])
+  // Add mouse listener only if not mobile
+  useEffect(() => {
+    if (!isMobile) {
+      const handleMouseMove = (e) => {
+        mouse.current.x = (e.clientX / window.innerWidth) * 2 - 1
+        mouse.current.y = -(e.clientY / window.innerHeight) * 2 + 1
+        onInteractionStart?.(); // Trigger interaction if needed
+      }
+      window.addEventListener('mousemove', handleMouseMove)
+      return () => window.removeEventListener('mousemove', handleMouseMove)
+    }
+    // No cleanup needed if mobile, as listener wasn't added
+  }, [isMobile, onInteractionStart]) 
 
-  // Apply subtle animation only on desktop
+
+  // Apply animation based on device type
   useFrame((state, delta) => {
-    if (centerRef.current && !isMobile) { // Only animate if NOT mobile
-      // Slow constant spin on Y axis for desktop
-      centerRef.current.rotation.y += delta * 0.1;
+    if (centerRef.current) { 
+      if (isMobile) { 
+        // Mobile: Subtle constant rotation
+        centerRef.current.rotation.y += delta * 0.1; // Slow spin
+        // Keep X rotation fixed (or add very subtle oscillation?)
+        centerRef.current.rotation.x = Math.PI / 2.2 + Math.sin(state.clock.elapsedTime * 0.3) * 0.05;
+      } else {
+        // Desktop: Follow mouse
+        const targetY = mouse.current.x * 0.5 // Rotate Y based on mouse X
+        const targetX = mouse.current.y * 0.5 // Rotate X based on mouse Y
+        centerRef.current.rotation.y = THREE.MathUtils.lerp(centerRef.current.rotation.y, targetY, 0.1)
+        centerRef.current.rotation.x = THREE.MathUtils.lerp(centerRef.current.rotation.x, targetX, 0.1)
+      }
     }
   })
 
@@ -43,7 +64,7 @@ function Experience({ onInteractionStart }) {
       <directionalLight position={[10,10,5]} intensity={1.5} />
       <directionalLight position={[-10,-10,-5]} intensity={1} />
       <Suspense fallback={null}>
-        {/* Restore original rotation/position */}
+        {/* Start with default rotation/position */}
         <Center ref={centerRef} rotation={[Math.PI / 2.2, 0, 0]} position={[0, 0.5, 0]}>
           <ModelPrimitive />
         </Center>
