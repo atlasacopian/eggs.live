@@ -14,42 +14,43 @@ function ModelPrimitive(props) {
 // Static Experience component for egg carton
 function Experience({ onInteractionStart }) {
   const centerRef = useRef()
-  // Store the target rotation value, updated on scroll
-  const targetRotationX = useRef(Math.PI / 2.2); // Initial rotation
+  // Restore mouse ref
+  const mouse = useRef({ x: 0, y: 0 })
+  // Remove targetRotationX ref
+  // const targetRotationX = useRef(Math.PI / 2.2);
 
-  // Update targetRotationX based on scroll
+  // Restore mousemove effect
   useEffect(() => {
-    const initialRotation = Math.PI / 2.2;
-    const maxScroll = 500; // Pixels scrolled to reach max tilt
-    const maxTilt = Math.PI / 12; // How much extra tilt (radians)
-
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      // Calculate additional tilt based on scroll, clamped between 0 and maxTilt
-      const additionalTilt = THREE.MathUtils.mapLinear(scrollY, 0, maxScroll, 0, maxTilt);
-      const clampedTilt = THREE.MathUtils.clamp(additionalTilt, 0, maxTilt);
-      // Set the target rotation (initial + tilt)
-      targetRotationX.current = initialRotation + clampedTilt;
+    const handleMouseMove = (e) => {
+      mouse.current.x = (e.clientX / window.innerWidth) * 2 - 1
+      mouse.current.y = -(e.clientY / window.innerHeight) * 2 + 1
+      onInteractionStart?.(); // Trigger interaction if needed
     }
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, []) // No dependencies needed if onInteractionStart isn't used
+    window.addEventListener('mousemove', handleMouseMove)
+    return () => window.removeEventListener('mousemove', handleMouseMove)
+  }, [onInteractionStart])
 
-  // Apply rotation smoothly in the animation frame
-  useFrame((state, delta) => { // Add delta time
+  // Remove scroll listener effect
+  // useEffect(() => {
+  //   const handleScroll = () => { ... }
+  //   window.addEventListener('scroll', handleScroll, { passive: true })
+  //   return () => window.removeEventListener('scroll', handleScroll)
+  // }, [])
+
+  // Restore mouse-based rotation in useFrame
+  useFrame(() => {
     if (centerRef.current) {
-      // Lerp towards the target X rotation (Keep scroll logic for now, but override with test)
-      // centerRef.current.rotation.x = THREE.MathUtils.lerp(
-      //   centerRef.current.rotation.x,
-      //   targetRotationX.current,
-      //   0.1 // Smoothing factor
-      // );
+      // Lerp towards target rotation based on mouse position
+      const targetY = mouse.current.x * 0.5 // Rotate around Y axis based on mouse X
+      const targetX = mouse.current.y * 0.5 // Rotate around X axis based on mouse Y
+      centerRef.current.rotation.y = THREE.MathUtils.lerp(centerRef.current.rotation.y, targetY, 0.1)
+      centerRef.current.rotation.x = THREE.MathUtils.lerp(centerRef.current.rotation.x, targetX, 0.1)
       
-      // TEST: Apply constant rotation instead of scroll-based
-      const initialRotation = Math.PI / 2.2;
-      const maxTilt = Math.PI / 12; // How much extra tilt (radians)
-      centerRef.current.rotation.x = initialRotation + Math.sin(state.clock.elapsedTime * 0.5) * (maxTilt / 2); // Gentle up/down oscillation
-      centerRef.current.rotation.y += delta * 0.1; // Slow constant spin on Y axis
+      // Remove test rotation
+      // const initialRotation = Math.PI / 2.2;
+      // const maxTilt = Math.PI / 12;
+      // centerRef.current.rotation.x = initialRotation + Math.sin(state.clock.elapsedTime * 0.5) * (maxTilt / 2); 
+      // centerRef.current.rotation.y += delta * 0.1; 
     }
   })
 
@@ -61,8 +62,8 @@ function Experience({ onInteractionStart }) {
       <directionalLight position={[10,10,5]} intensity={1.5} />
       <directionalLight position={[-10,-10,-5]} intensity={1} />
       <Suspense fallback={null}>
-        {/* Set initial rotation and Y position */}
-        <Center ref={centerRef} rotation={[targetRotationX.current, 0, 0]} position={[0, 0.5, 0]}>
+        {/* Restore original rotation/position */}
+        <Center ref={centerRef} rotation={[Math.PI / 2.2, 0, 0]} position={[0, 0.5, 0]}>
           <ModelPrimitive />
         </Center>
       </Suspense>
@@ -73,7 +74,8 @@ function Experience({ onInteractionStart }) {
 // Main Scene component only sets up the Canvas
 export default function EggCartonScene({ onInteractionStart }) {
   return (
-    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
+    // Restore pointerEvents: none as mousemove doesn't need scroll
+    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none' }}>
       <Canvas camera={{ position: [0,2,12], fov:50 }} onCreated={({ scene }) => { scene.background = new THREE.Color(1,1,1) }}>
         <Experience onInteractionStart={onInteractionStart} />
       </Canvas>
