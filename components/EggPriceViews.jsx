@@ -263,7 +263,7 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
 
             {/* Make ZIP code large and editable */}
             <div style={{ 
-              fontSize: '5rem', // Large font size for ZIP
+              fontSize: '72px',
               fontWeight: '700', 
               lineHeight: '1',
               display: 'inline-block',
