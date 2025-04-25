@@ -69,7 +69,7 @@ function Experience({ onInteractionStart }) {
 // Main Scene component only sets up the Canvas
 export default function EggCartonScene({ onInteractionStart }) {
   return (
-    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none' }}>
+    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
       <Canvas camera={{ position: [0,2,12], fov:50 }} onCreated={({ scene }) => { scene.background = new THREE.Color(1,1,1) }}>
         <Experience onInteractionStart={onInteractionStart} />
       </Canvas>
