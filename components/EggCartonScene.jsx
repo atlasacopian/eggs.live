@@ -8,7 +8,8 @@ import * as THREE from 'three'
 // Simple component to load the model
 function ModelPrimitive(props) {
   const { scene } = useGLTF('/dozen eggs 3d.glb')
-  return <primitive object={scene} scale={1.2} {...props} />
+  // Reduce scale further
+  return <primitive object={scene} scale={1.0} {...props} />
 }
 
 // Static Experience component for egg carton
@@ -16,7 +17,7 @@ function Experience({ onInteractionStart }) {
   const centerRef = useRef()
   const mouse = useRef({ x: 0, y: 0 }) // For desktop mouse tracking
   const [isMobile, setIsMobile] = useState(false);
-  const initialRotationX = Math.PI / 4; // Define initial tilt
+  const initialRotationX = Math.PI / 4; // Keep initial tilt
 
   // Detect touch device on mount
   useEffect(() => {
@@ -49,7 +50,7 @@ function Experience({ onInteractionStart }) {
       } else {
         // Desktop: Follow mouse (Reverted targetX calculation)
         const targetY = mouse.current.x * 0.5 // Rotate Y based on mouse X
-        const targetX = mouse.current.y * 0.5 // Rotate X directly based on mouse Y 
+        const targetX = mouse.current.y * 0.5 // Rotate X directly based on mouse Y (original logic)
         centerRef.current.rotation.y = THREE.MathUtils.lerp(centerRef.current.rotation.y, targetY, 0.1)
         centerRef.current.rotation.x = THREE.MathUtils.lerp(centerRef.current.rotation.x, targetX, 0.1)
       }
