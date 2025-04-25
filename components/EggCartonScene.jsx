@@ -36,16 +36,20 @@ function Experience({ onInteractionStart }) {
   }, []) // No dependencies needed if onInteractionStart isn't used
 
   // Apply rotation smoothly in the animation frame
-  useFrame(() => {
+  useFrame((state, delta) => { // Add delta time
     if (centerRef.current) {
-      // Lerp towards the target X rotation
-      centerRef.current.rotation.x = THREE.MathUtils.lerp(
-        centerRef.current.rotation.x,
-        targetRotationX.current,
-        0.1 // Smoothing factor
-      );
-      // Optional: Keep a very subtle constant Y rotation if desired
-      // centerRef.current.rotation.y += 0.001;
+      // Lerp towards the target X rotation (Keep scroll logic for now, but override with test)
+      // centerRef.current.rotation.x = THREE.MathUtils.lerp(
+      //   centerRef.current.rotation.x,
+      //   targetRotationX.current,
+      //   0.1 // Smoothing factor
+      // );
+      
+      // TEST: Apply constant rotation instead of scroll-based
+      const initialRotation = Math.PI / 2.2;
+      const maxTilt = Math.PI / 12; // How much extra tilt (radians)
+      centerRef.current.rotation.x = initialRotation + Math.sin(state.clock.elapsedTime * 0.5) * (maxTilt / 2); // Gentle up/down oscillation
+      centerRef.current.rotation.y += delta * 0.1; // Slow constant spin on Y axis
     }
   })
 
