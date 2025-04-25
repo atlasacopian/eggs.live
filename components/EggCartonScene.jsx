@@ -8,7 +8,7 @@ import * as THREE from 'three'
 // Simple component to load the model
 function ModelPrimitive(props) {
   const { scene } = useGLTF('/dozen eggs 3d.glb')
-  return <primitive object={scene} scale={1.8} {...props} />
+  return <primitive object={scene} scale={1.2} {...props} />
 }
 
 // Static Experience component for egg carton
@@ -16,6 +16,7 @@ function Experience({ onInteractionStart }) {
   const centerRef = useRef()
   const mouse = useRef({ x: 0, y: 0 }) // For desktop mouse tracking
   const [isMobile, setIsMobile] = useState(false);
+  const initialRotationX = Math.PI / 4; // Define initial tilt
 
   // Detect touch device on mount
   useEffect(() => {
@@ -42,15 +43,18 @@ function Experience({ onInteractionStart }) {
   useFrame((state, delta) => {
     if (centerRef.current) { 
       if (isMobile) { 
-        // Mobile: Subtle constant rotation
+        // Mobile: Subtle constant rotation around the new initial tilt
         centerRef.current.rotation.y += delta * 0.1; // Slow spin
-        // Keep X rotation fixed (or add very subtle oscillation?)
-        centerRef.current.rotation.x = Math.PI / 2.2 + Math.sin(state.clock.elapsedTime * 0.3) * 0.05;
+        centerRef.current.rotation.x = initialRotationX + Math.sin(state.clock.elapsedTime * 0.3) * 0.05;
       } else {
-        // Desktop: Follow mouse
+        // Desktop: Follow mouse (targetX is offset from initial tilt)
         const targetY = mouse.current.x * 0.5 // Rotate Y based on mouse X
-        const targetX = mouse.current.y * 0.5 // Rotate X based on mouse Y
+        // Adjust targetX based on mouse.y relative to the center, applied to initialRotationX
+        const targetX = initialRotationX + (mouse.current.y * 0.5); 
         centerRef.current.rotation.y = THREE.MathUtils.lerp(centerRef.current.rotation.y, targetY, 0.1)
+        // Clamp targetX before lerping to prevent extreme flipping? Optional.
+        // const clampedTargetX = THREE.MathUtils.clamp(targetX, initialRotationX - Math.PI / 4, initialRotationX + Math.PI / 4);
+        // centerRef.current.rotation.x = THREE.MathUtils.lerp(centerRef.current.rotation.x, clampedTargetX, 0.1)
         centerRef.current.rotation.x = THREE.MathUtils.lerp(centerRef.current.rotation.x, targetX, 0.1)
       }
     }
@@ -64,8 +68,8 @@ function Experience({ onInteractionStart }) {
       <directionalLight position={[10,10,5]} intensity={1.5} />
       <directionalLight position={[-10,-10,-5]} intensity={1} />
       <Suspense fallback={null}>
-        {/* Start with default rotation/position */}
-        <Center ref={centerRef} rotation={[Math.PI / 2.2, 0, 0]} position={[0, 0.5, 0]}>
+        {/* Use new initial rotation */}
+        <Center ref={centerRef} rotation={[initialRotationX, 0, 0]} position={[0, 0.5, 0]}>
           <ModelPrimitive />
         </Center>
       </Suspense>
