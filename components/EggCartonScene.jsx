@@ -43,18 +43,14 @@ function Experience({ onInteractionStart }) {
   useFrame((state, delta) => {
     if (centerRef.current) { 
       if (isMobile) { 
-        // Mobile: Subtle constant rotation around the new initial tilt
+        // Mobile: Subtle constant rotation around the initial tilt
         centerRef.current.rotation.y += delta * 0.1; // Slow spin
         centerRef.current.rotation.x = initialRotationX + Math.sin(state.clock.elapsedTime * 0.3) * 0.05;
       } else {
-        // Desktop: Follow mouse (targetX is offset from initial tilt)
+        // Desktop: Follow mouse (Reverted targetX calculation)
         const targetY = mouse.current.x * 0.5 // Rotate Y based on mouse X
-        // Adjust targetX based on mouse.y relative to the center, applied to initialRotationX
-        const targetX = initialRotationX + (mouse.current.y * 0.5); 
+        const targetX = mouse.current.y * 0.5 // Rotate X directly based on mouse Y 
         centerRef.current.rotation.y = THREE.MathUtils.lerp(centerRef.current.rotation.y, targetY, 0.1)
-        // Clamp targetX before lerping to prevent extreme flipping? Optional.
-        // const clampedTargetX = THREE.MathUtils.clamp(targetX, initialRotationX - Math.PI / 4, initialRotationX + Math.PI / 4);
-        // centerRef.current.rotation.x = THREE.MathUtils.lerp(centerRef.current.rotation.x, clampedTargetX, 0.1)
         centerRef.current.rotation.x = THREE.MathUtils.lerp(centerRef.current.rotation.x, targetX, 0.1)
       }
     }
