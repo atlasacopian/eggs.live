@@ -118,15 +118,15 @@
 /* Add media query for mobile adjustments */
 @media (max-width: 768px) {
   .option {
-    font-size: 8px; /* Slightly smaller on mobile */
-    padding: 0.4rem;
-    min-height: 32px; /* Slightly smaller min height */
-    letter-spacing: 1.5px;
+    font-size: 7px; /* Further reduced */
+    padding: 0.3rem;
+    min-height: 28px; /* Further reduced */
+    letter-spacing: 1px;
   }
 
   .zipInput {
-     width: 120px; /* Make input slightly smaller */
-     font-size: 9px;
+     width: 100px; /* Further reduced */
+     font-size: 8px; /* Further reduced */
   }
 
   /* Note: .scanHeader class is not defined here, 

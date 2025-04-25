@@ -48,11 +48,19 @@ export default function Home() {
       >
         <Header />
       </div>
-      <LocationPrompt onUseLocation={handleUseLocation} onEnterZip={handleEnterZip} />
+      <LocationPrompt 
+        className="location-prompt-container"
+        onUseLocation={handleUseLocation} 
+        onEnterZip={handleEnterZip} 
+      />
       <style jsx>{`
         @media (max-width: 768px) {
           .header-container {
-            margin-top: 8vh !important; /* Reduced margin for mobile */
+            margin-top: 5vh !important; /* Reduced margin further for mobile */
+          }
+          /* Target LocationPrompt container via its main wrapper div */
+          :global(.location-prompt-container > div) { 
+            bottom: 10vh !important; /* Raise prompt slightly on mobile */
           }
         }
       `}</style>
