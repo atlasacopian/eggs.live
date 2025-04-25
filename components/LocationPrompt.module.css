@@ -12,7 +12,7 @@
   cursor: pointer; 
   text-transform: uppercase;
   letter-spacing: 2px; 
-  font-size: 11px;
+  font-size: 9px;
   color: #000000;
   padding: 0.5rem; 
   border-radius: 4px; 
@@ -81,7 +81,7 @@
   text-align: center;
   font-family: 'Roboto Mono', monospace;
   letter-spacing: 2px;
-  font-size: 11px;
+  font-size: 9px;
   color: #fff; /* white to contrast dark background */
 }
 
