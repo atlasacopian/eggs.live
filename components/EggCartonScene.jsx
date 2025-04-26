@@ -17,7 +17,7 @@ function ModelPrimitive(props) {
   })
   const scene = obj
   // Reduce scale further
-  return <primitive object={scene} scale={1.0} {...props} />
+  return <primitive object={scene} scale={0.8} {...props} />
 }
 
 // Static Experience component for egg carton
@@ -88,10 +88,10 @@ export default function EggCartonScene({ onInteractionStart }) {
     // Restore pointerEvents: none
     <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none' }}>
       <Canvas
-        camera={{ position: [0, 5, 4], fov: 40 }}
+        camera={{ position: [2, 3, 6], fov: 35 }}
         onCreated={({ scene, camera }) => {
           scene.background = new THREE.Color(1, 1, 1);
-          camera.lookAt(0, 0, 0);
+          camera.lookAt(0, 1, 0); // aim slightly above origin to center the egg
         }}
       >
         <Experience onInteractionStart={onInteractionStart} />
