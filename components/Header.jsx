@@ -27,13 +27,13 @@ export default function Header() {
           }
         }
         .record-dot {
-          color: #ff0000;
+          color: var(--accent-color);
           display: inline-block;
           animation: pulse 1.2s infinite ease-in-out;
         }
         @keyframes pulse {
-          0%, 100% { text-shadow: 0 0 4px #ff0000, 0 0 8px #ff0000; }
-          50% { text-shadow: 0 0 12px #ff0000, 0 0 24px #ff0000; }
+          0%, 100% { text-shadow: 0 0 4px var(--accent-color), 0 0 8px var(--accent-color); }
+          50% { text-shadow: 0 0 12px var(--accent-color), 0 0 24px var(--accent-color); }
         }
       `}</style>
       <h1 style={baseH1Style}>
