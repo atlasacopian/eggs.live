@@ -1,13 +1,21 @@
 'use client'
 
 import { useRef, useEffect, Suspense, useState } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
-import { useGLTF, Center } from '@react-three/drei'
+import { Canvas, useFrame, useLoader } from '@react-three/fiber'
+import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader'
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
+import { Center } from '@react-three/drei'
 import * as THREE from 'three'
 
 // Simple component to load the model
 function ModelPrimitive(props) {
-  const { scene } = useGLTF('/placeholder_egg.glb')
+  // Load material and OBJ
+  const materials = useLoader(MTLLoader, '/White_Egg/White_Egg_convert.mtl')
+  materials.preload()
+  const obj = useLoader(OBJLoader, '/White_Egg/White_Egg_convert.obj', (loader) => {
+    loader.setMaterials(materials)
+  })
+  const scene = obj
   // Reduce scale further
   return <primitive object={scene} scale={1.0} {...props} />
 }
