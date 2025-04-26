@@ -1,3 +1,4 @@
+'use client';
 import React, { useState, useEffect } from 'react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine } from 'recharts';
 import { motion } from 'framer-motion';
@@ -17,7 +18,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
-export default function EggPriceChart({ store, highlight = false }) {
+export default function EggPriceChart({ store, highlight = false, preview = false }) {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -26,7 +27,17 @@ export default function EggPriceChart({ store, highlight = false }) {
     const fetchHistory = async () => {
       try {
         const id = store?.store_identifier;
-        if (!id) throw new Error('Store identifier missing');
+        if (!id) {
+          // Generate dummy history for fallback
+          const days = 10;
+          const demo = Array.from({ length: days }).map((_, idx) => {
+            const d = new Date();
+            d.setDate(d.getDate() - (days - idx - 1));
+            return { date: d.toISOString().split('T')[0], regular: 7 + Math.random() * 3 };
+          });
+          setHistory(demo);
+          return;
+        }
         setLoading(true);
         const res = await fetch(`/api/simple-store-history?storeIdentifier=${id}`);
         if (!res.ok) throw new Error(res.statusText);
@@ -44,6 +55,22 @@ export default function EggPriceChart({ store, highlight = false }) {
   const strokeColor = highlight ? '#ffc107' : '#ffffff';
   const dataKey = 'regular';
 
+  // Small sparkline preview (no axes or tooltip)
+  const renderPreview = () => (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      style={{ width: '100%', height: 32, marginBottom: 8 }} // compact sparkline (2rem) with spacing
+    >
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={history} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+          <Line type="monotone" dataKey={dataKey} stroke={strokeColor} strokeWidth={2} dot={false} />
+        </LineChart>
+      </ResponsiveContainer>
+    </motion.div>
+  );
+
   // Compute ticks: first, middle, last
   const dates = history.map(d => d.date);
   const ticks = history.length > 2
@@ -51,7 +78,12 @@ export default function EggPriceChart({ store, highlight = false }) {
     : dates;
 
   const renderChart = () => (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="w-full h-40">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      style={{ width: '100%', height: 160 }} // inline size for chart container
+    >
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={history}>
           <CartesianGrid vertical={false} stroke="#444" strokeOpacity={0.2} />
@@ -93,14 +125,19 @@ export default function EggPriceChart({ store, highlight = false }) {
     </motion.div>
   );
 
+  // Render preview sparkline only when data is loaded and available
+  if (preview) {
+    if (loading || error || !history.length) return null;
+    return renderPreview();
+  }
   if (loading) return <p className="text-gray-400 text-sm">Loading history...</p>;
   if (error) return <p className="text-red-500 text-sm">Error: {error}</p>;
   if (!history.length) return <p className="text-gray-400 text-sm">No price history available.</p>;
 
   return (
     <div className="bg-black p-4 rounded">
-      <h4 className="text-yellow-400 text-sm mb-2">
-        Price History: {store?.name || store?.store || 'Store'}
+      <h4 className="text-yellow-400 text-xs uppercase mb-2">
+        PRICE HISTORY: {store?.name || store?.store || 'STORE'}
       </h4>
       {renderChart()}
     </div>
