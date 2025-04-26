@@ -336,7 +336,7 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
       `}</style>
 
       {/* Ticker-style store list with animations */}
-      <div className="ticker-list">
+      <div className="ticker-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
         {sortedStores.map((s, idx) => (
           <div key={s.store + idx} className={`store-item${expandedIndex === idx ? ' active' : ''}`}>
             <div
