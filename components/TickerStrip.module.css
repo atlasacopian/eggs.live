@@ -7,11 +7,11 @@
 .tickerContainer {
   border: 1px solid rgba(255, 193, 7, 0.3); /* Yolk yellow border */
   border-radius: 6px;
-  background-color: #000000 !important; /* Solid black - Force Override */
+  background-color: #ffffff !important; /* Solid white - force */
   padding: 8px 16px;
   box-shadow: 0 0 8px rgba(255, 193, 7, 0.15); /* Yolk yellow shadow */
   font-family: 'Roboto Mono', monospace;
-  color: var(--accent-color); /* Accent green text */
+  color: #000000; /* dark text */
   overflow: hidden;
   white-space: nowrap;
   position: relative; /* Needed for absolute positioning if used */
@@ -41,10 +41,10 @@
 }
 
 .whiteBackground {
-  background-color: #ffffff !important; /* Force white background */
-  color: #000000 !important;          /* Black text */
-  border: 1px solid #000000 !important; /* Black outline */
-  box-shadow: 0 0 4px rgba(0, 0, 0, 0.05);
+  background-color: #000000 !important; /* Force black background */
+  color: #ffffff !important;          /* White text */
+  border: 1px solid #ffffff !important; /* White outline */
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.05);
 }
 
 @keyframes tickerFade { from { opacity: 0; transform: translateY(-5px);} to { opacity:1; transform: translateY(0);} } 

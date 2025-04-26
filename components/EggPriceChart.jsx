@@ -18,7 +18,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
-export default function EggPriceChart({ store, highlight = false, preview = false }) {
+export default function EggPriceChart({ store, highlight = false, preview = false, priceType = 'regular' }) {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -53,7 +53,7 @@ export default function EggPriceChart({ store, highlight = false, preview = fals
   }, [store?.store_identifier]);
 
   const strokeColor = highlight ? '#ffc107' : '#ffffff';
-  const dataKey = 'regular';
+  const dataKey = priceType;
 
   // Small sparkline preview (no axes or tooltip)
   const renderPreview = () => (
@@ -100,7 +100,7 @@ export default function EggPriceChart({ store, highlight = false, preview = fals
             tick={{ fontSize: 12 }}
           />
           <YAxis
-            domain={[7, 10]}
+            // Automatic domain based on data
             axisLine={false}
             tickLine={false}
             stroke="#aaa"
@@ -114,8 +114,9 @@ export default function EggPriceChart({ store, highlight = false, preview = fals
             type="monotone"
             dataKey={dataKey}
             stroke={strokeColor}
-            strokeWidth={2}
-            dot={false}
+            strokeWidth={3}
+            dot={{ r: 4 }} // show dots for granularity
+            activeDot={{ r: 6 }}
             isAnimationActive={true}
             animationDuration={1500}
             animationEasing="ease-in-out"
@@ -134,11 +135,9 @@ export default function EggPriceChart({ store, highlight = false, preview = fals
   if (error) return <p className="text-red-500 text-sm">Error: {error}</p>;
   if (!history.length) return <p className="text-gray-400 text-sm">No price history available.</p>;
 
+  // Full chart container without title
   return (
     <div className="bg-black p-4 rounded">
-      <h4 className="text-yellow-400 text-xs uppercase mb-2">
-        PRICE HISTORY: {store?.name || store?.store || 'STORE'}
-      </h4>
       {renderChart()}
     </div>
   );

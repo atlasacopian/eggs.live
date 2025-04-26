@@ -210,7 +210,7 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
       fontFamily: 'Roboto Mono, monospace', 
       color: '#fff', 
       padding:'24px', 
-      background: 'transparent', 
+      background: 'rgba(0,0,0,0.85)', 
       borderRadius: '12px' // Larger rounding for main console
     }}>
       {/* Combined editable feed header */}
@@ -301,7 +301,7 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
       {/* Styles for hint text visibility on hover */}
       <style jsx>{`
         .store-item {
-          background: #111; /* Darker background for rows */
+          background: rgba(17,17,17,0.8); /* Semi-transparent dark rows */
           border: 1px solid #282828; /* Subtle dark border */
           border-radius: 8px !important; /* Force rounding */
           overflow: hidden; /* Ensure content doesn't break rounding */
@@ -462,10 +462,19 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
                   border: `1px solid #282828`, 
                   borderRadius: '8px',
                   margin: '8px 0 0 0',
+                  display: 'flex',
+                  gap: '16px',
                   overflow: 'visible'
                 }}
               >
-                <EggPriceChart store={s} />
+                {/* Regular price history chart */}
+                <div style={{ flex: 1 }}>
+                  <EggPriceChart store={s} priceType="regular" />
+                </div>
+                {/* Organic price history chart */}
+                <div style={{ flex: 1 }}>
+                  <EggPriceChart store={s} priceType="organic" />
+                </div>
               </div>
             )}
           </div>
