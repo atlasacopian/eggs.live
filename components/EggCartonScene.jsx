@@ -87,7 +87,13 @@ export default function EggCartonScene({ onInteractionStart }) {
   return (
     // Restore pointerEvents: none
     <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none' }}>
-      <Canvas camera={{ position: [4, 4, 8], fov:50 }} onCreated={({ scene }) => { scene.background = new THREE.Color(1,1,1) }}>
+      <Canvas
+        camera={{ position: [0, 5, 4], fov: 40 }}
+        onCreated={({ scene, camera }) => {
+          scene.background = new THREE.Color(1, 1, 1);
+          camera.lookAt(0, 0, 0);
+        }}
+      >
         <Experience onInteractionStart={onInteractionStart} />
       </Canvas>
     </div>
