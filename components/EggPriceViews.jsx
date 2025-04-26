@@ -261,14 +261,23 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
                'EGG PRICES'}
             </div>
 
-            {/* Make ZIP code large and editable */}
-            <div style={{ 
-              fontSize: '25px', // Reduced from 35px
-              fontWeight: '700', 
-              lineHeight: '1',
-              display: 'inline-block',
-              marginBottom: '8px' // Space below large ZIP
-            }}>
+            {/* Make ZIP code large and clickable */}
+            <div 
+              onClick={handleZipClick} // Add click handler
+              style={{ 
+                fontSize: '25px', 
+                fontWeight: '700', 
+                lineHeight: '1',
+                display: 'inline-block',
+                marginBottom: '8px',
+                cursor: 'pointer', // Make cursor a pointer
+                padding: '0 8px', // Add padding for better hover effect
+                borderRadius: '4px', // Add rounding
+                transition: 'background-color 0.2s ease' // Smooth transition
+              }}
+              // Add hover effect via className and CSS-in-JS
+              className="zip-display"
+            >
               {currentZip}
             </div>
 
@@ -315,6 +324,9 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
           background: #1a1a1a; /* Slightly lighter hover background */
           box-shadow: 0 4px 15px ${accentColor}33; /* More pronounced shadow */
           transform: translateY(-2px); /* Subtle lift effect */
+        }
+        .zip-display:hover {
+          background-color: rgba(255, 193, 7, 0.1); /* Subtle yellow background on hover */
         }
       `}</style>
 
