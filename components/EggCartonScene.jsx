@@ -7,7 +7,7 @@ import * as THREE from 'three'
 
 // Simple component to load the model
 function ModelPrimitive(props) {
-  const { scene } = useGLTF('/dozen eggs 3d.glb')
+  const { scene } = useGLTF('/placeholder egg.glb')
   // Reduce scale further
   return <primitive object={scene} scale={1.0} {...props} />
 }
