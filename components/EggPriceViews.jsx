@@ -73,7 +73,7 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
     const color = isNegative ? '#FF0000' : '#00FF00'; // Red for negative, Green for positive
     const arrow = isNegative ? '↓' : '↑' // Corrected arrows
     return (
-      <span style={{ marginLeft: 4, color, fontWeight: 600 }}>
+      <span style={{ display: 'block', marginTop: 4, marginLeft: 0, color, fontWeight: 600, fontSize: '0.75rem' }}>
         {arrow}{Math.abs(value).toFixed(1)}%
       </span>
     )
@@ -135,6 +135,13 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
     
     return sortDirection === 'asc' ? diff : -diff;
   })
+
+  // Auto-expand the first store so history is visible by default
+  useEffect(() => {
+    if (sortedStores.length > 0 && expandedIndex === null) {
+      setExpandedIndex(0);
+    }
+  }, [sortedStores, expandedIndex]);
 
   // Calculate cheapest based on the *original* filtered data, not the sorted one
   const getCheapestFromDataset = (key) => {
@@ -263,7 +270,8 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
 
             {/* Make ZIP code large and clickable */}
             <div 
-              onClick={handleZipClick} // Add click handler
+              onClick={handleZipClick}
+              title="Click to change ZIP code"
               style={{ 
                 fontSize: '25px', 
                 fontWeight: '700', 
@@ -275,10 +283,9 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
                 borderRadius: '4px', // Add rounding
                 transition: 'background-color 0.2s ease' // Smooth transition
               }}
-              // Add hover effect via className and CSS-in-JS
               className="zip-display"
             >
-              {currentZip}
+              {currentZip}  <span style={{ marginLeft: '4px', fontSize: '0.6em', opacity: 0.7 }}>🖉</span>
             </div>
 
             {/* Last Updated Text - Placed BELOW ZIP */}
@@ -350,16 +357,21 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
               }}
             >
               <div style={{
-                fontSize: '10px', marginBottom: '4px' 
+                fontSize: '1.25rem',
+                fontWeight: 700,
+                color: '#fff',
+                marginBottom: '4px'
               }}>
-                <strong>{s.store}</strong> — {s.distance?.toFixed(1)} MI
+                {s.store}
               </div>
               <div style={{
-                fontSize: '8px', 
-                color: '#666',
+                fontSize: '0.75rem',
+                color: '#aaa',
                 marginBottom: '12px',
                 paddingLeft: '24px'
-              }}>{formatAddress(s.address).display}</div>
+              }}>
+                {s.distance?.toFixed(1)} MI — {formatAddress(s.address).display}
+              </div>
               
               {/* New Price Display Section */}
               <div style={{
@@ -383,7 +395,10 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
                     fontSize: '1.35rem', // Larger price font size
                     fontWeight: 'bold',
                     color: '#fff',
-                    lineHeight: '1.2' // Adjust line height for large font
+                    lineHeight: '1.2', // Adjust line height for large font
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center'
                   }}>
                     {formatPrice(s.regular)} 
                     {/* Conditional pulse animation */}
@@ -414,7 +429,10 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
                     fontSize: '1.35rem', // Larger price font size
                     fontWeight: 'bold',
                     color: '#fff',
-                    lineHeight: '1.2' // Adjust line height
+                    lineHeight: '1.2', // Adjust line height for large font
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center'
                   }}>
                     {formatPrice(s.organic)}
                      {/* Conditional pulse animation */}
@@ -440,15 +458,11 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
                 className="price-history-panel"
                 style={{
                   padding: '12px 16px',
-                  background: '#1a1a1a', // Match hover background
-                  border: `1px solid #282828`, // Match default row border
-                  borderRadius: '8px', // Match row rounding
-                  margin: '8px 0 0 0', // Only top margin to separate from row
-                  transition: 'max-height 0.3s ease, opacity 0.3s ease',
-                  maxHeight: expandedIndex === idx ? '200px' : '0',
-                  opacity: expandedIndex === idx ? 1 : 0,
-                  overflowX: 'auto',
-                  overflowY: 'hidden'
+                  background: '#1a1a1a',
+                  border: `1px solid #282828`, 
+                  borderRadius: '8px',
+                  margin: '8px 0 0 0',
+                  overflow: 'visible'
                 }}
               >
                 <EggPriceChart store={s} />
