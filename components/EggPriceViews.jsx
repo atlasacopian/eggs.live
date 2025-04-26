@@ -210,7 +210,7 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
       fontFamily: 'Roboto Mono, monospace', 
       color: '#fff', 
       padding:'24px', 
-      background: '#000', 
+      background: 'transparent', 
       borderRadius: '12px' // Larger rounding for main console
     }}>
       {/* Combined editable feed header */}
