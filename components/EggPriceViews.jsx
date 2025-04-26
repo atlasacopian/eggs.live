@@ -208,9 +208,9 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
       width: '100%', 
       margin: '0 auto', 
       fontFamily: 'Roboto Mono, monospace', 
-      color: '#fff', 
+      color: '#000', 
       padding:'24px', 
-      background: '#000', 
+      background: '#f9f9f9', 
       borderRadius: '12px' // Larger rounding for main console
     }}>
       {/* Combined editable feed header */}
@@ -301,13 +301,14 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
       {/* Styles for hint text visibility on hover */}
       <style jsx>{`
         .store-item {
-          background: #111; /* Darker background for rows */
-          border: 1px solid #282828; /* Subtle dark border */
+          background: #fff; /* Light background for rows */
+          border: 1px solid #ddd; /* Light border */
           border-radius: 8px !important; /* Force rounding */
-          overflow: hidden; /* Ensure content doesn't break rounding */
+          overflow: hidden;
           transition: box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease, transform 0.2s ease; /* Faster transition, add transform */
           margin-bottom: 16px; /* Slightly reduced margin */
         }
+        .store-item .hint { color: #0070f3; } /* Light accent for hint */
         .store-item .hint {
           opacity: 0;
           transition: opacity 0.2s ease-out;
@@ -319,11 +320,10 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
           opacity: 1;
         }
         .store-item:hover {
-          /* Highlight border on hover */
-          border-color: ${accentColor}aa; /* Slightly softer neon border */
-          background: #1a1a1a; /* Slightly lighter hover background */
-          box-shadow: 0 4px 15px ${accentColor}33; /* More pronounced shadow */
-          transform: translateY(-2px); /* Subtle lift effect */
+          border-color: #bbb;
+          background: #f0f0f0;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+          transform: translateY(-2px);
         }
         .zip-display:hover {
           background-color: rgba(255, 193, 7, 0.1); /* Subtle yellow background on hover */
@@ -446,7 +446,7 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
 
               {/* Sparkline preview when collapsed */}
               {expandedIndex !== idx && (
-                <div style={{ width: '100%', paddingLeft: '24px', paddingRight: '24px', marginTop: '8px', height: '3rem' }}>
+                <div style={{ width: '100%', padding: '0 24px', marginTop: '8px' }}>
                   <EggPriceChart store={s} preview />
                 </div>
               )}
