@@ -38,8 +38,8 @@ function ChartFloor({ prices, progress = 1, muted = true, showLabels = false }) 
     plane.receiveShadow = true
     group.add(plane)
 
-    // Grid helper colored black for net
-    const grid = new THREE.GridHelper(100, 100, '#000000', '#000000')
+    // Grid helper in light gray for visibility on dark background
+    const grid = new THREE.GridHelper(100, 100, '#444444', '#444444')
     grid.material.opacity = 0.3
     grid.material.transparent = true
     group.add(grid)
