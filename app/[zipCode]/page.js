@@ -27,8 +27,8 @@ export default function ZipCodePage() {
 
   return (
     <main className="main" style={{ 
-      background: '#fff',
-      color: '#000',
+      background: '#000',
+      color: '#fff',
       position: 'relative', 
       minHeight: '100vh', 
       overflow: 'hidden', 
