@@ -236,12 +236,12 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
                 border: 'none',
                 borderBottom: '1px solid #ccc',
                 fontFamily: 'inherit',
-                fontSize: '5rem', // Keep editing size large
+                fontSize: '25px', // Match static display size
                 fontWeight: 'inherit',
                 letterSpacing: 'inherit',
                 color: 'inherit',
                 textAlign: 'center',
-                width: '180px', // Wider input for larger text
+                width: '6ch', // Fit exactly 5-digit zip
                 outline: 'none',
                 caretColor: accentColor
               }}
@@ -447,7 +447,8 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
                   transition: 'max-height 0.3s ease, opacity 0.3s ease',
                   maxHeight: expandedIndex === idx ? '200px' : '0',
                   opacity: expandedIndex === idx ? 1 : 0,
-                  overflow: 'hidden'
+                  overflowX: 'auto',
+                  overflowY: 'hidden'
                 }}
               >
                 <EggPriceChart store={s} />
