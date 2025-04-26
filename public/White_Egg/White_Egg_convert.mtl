@@ -1,0 +1,22 @@
+# 
+# Wavefront material file
+# Converted by the DEEP Exploration  Deep Exploration 6.5 x64 6.5.0.9182
+# Right Hemisphere, LTD
+# http://www.righthemisphere.com/
+# 
+
+newmtl Egg_white_002
+Ka 0.941177 0.941177 0.941177
+Kd 0.941177 0.941177 0.941177
+Ks 0.9 0.9 0.9
+illum 2
+Ns 16
+map_Kd 
+map_bump Egg_Bump.png
+bump Egg_Bump.png
+map_opacity 
+map_d 
+refl 
+map_kS 
+map_kA 
+map_Ns 
