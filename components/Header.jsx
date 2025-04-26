@@ -26,9 +26,18 @@ export default function Header() {
             letter-spacing: 0.8px;
           }
         }
+        .record-dot {
+          color: #ff0000;
+          display: inline-block;
+          animation: pulse 1.2s infinite ease-in-out;
+        }
+        @keyframes pulse {
+          0%, 100% { text-shadow: 0 0 4px #ff0000, 0 0 8px #ff0000; }
+          50% { text-shadow: 0 0 12px #ff0000, 0 0 24px #ff0000; }
+        }
       `}</style>
       <h1 style={baseH1Style}>
-        eggs<span style={{ color: '#000' }}>.</span>live
+        eggs<span className="record-dot">.</span>live
       </h1>
       <h3 style={baseH3Style}>FIND THE CHEAPEST DOZEN NEAR YOU</h3>
     </header>
