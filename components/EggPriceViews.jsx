@@ -337,54 +337,90 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
                 padding: '16px',
               }}
             >
-              <div style={{ fontSize: '7px', marginBottom: '4px' }}> {/* Reduced from 10px */}
+              <div style={{
+                fontSize: '10px', marginBottom: '4px' 
+              }}>
                 <strong>{s.store}</strong> — {s.distance?.toFixed(1)} MI
               </div>
               <div style={{
-                fontSize: '6px', // Reduced from 8px
+                fontSize: '8px', 
                 color: '#666',
                 marginBottom: '12px',
                 paddingLeft: '24px'
               }}>{formatAddress(s.address).display}</div>
+              
+              {/* New Price Display Section */}
               <div style={{
-                fontSize: '7px', // Reduced from 9px
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                justifyItems: 'end',
-                gap: '24px',
-                paddingLeft: '24px'
+                display: 'flex', 
+                justifyContent: 'space-around', // Distribute space between price columns
+                alignItems: 'flex-start', // Align items at the top
+                paddingLeft: '24px', 
+                paddingRight: '24px', 
+                marginTop: '8px' 
               }}>
-                <span style={{ marginRight: '24px', color: '#fff' }}>
-                  <span className="egg-icon">🥚</span> REG: {formatPrice(s.regular)}{' '}
-                  {/* Conditionally apply animation wrapper */}
-                  {s.regularChange != null && s.regularChange !== 0 ? (
-                    <motion.span
-                      animate={{ opacity: [1, 0.4, 1] }} // Animate opacity for pulse
-                      transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                    >
-                      {formatChange(s.regularChange)}
-                    </motion.span>
-                  ) : (
-                    // Render without animation if change is 0 or null
-                    formatChange(s.regularChange)
-                  )}
-                </span>
-                <span style={{ color: '#fff' }}>
-                  <span className="egg-icon">🥚</span> ORG: {formatPrice(s.organic)}{' '}
-                  {/* Conditionally apply animation wrapper */}
-                  {s.organicChange != null && s.organicChange !== 0 ? (
-                    <motion.span
-                      animate={{ opacity: [1, 0.4, 1] }} // Animate opacity for pulse
-                      transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                    >
-                      {formatChange(s.organicChange)}
-                    </motion.span>
-                  ) : (
-                     // Render without animation if change is 0 or null
-                    formatChange(s.organicChange)
-                  )}
-                </span>
+                {/* Regular Price Column */}
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{
+                    fontSize: '8px', 
+                    color: '#aaa', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '1px',
+                    marginBottom: '4px'
+                  }}>Regular</div>
+                  <div style={{
+                    fontSize: '1.35rem', // Larger price font size
+                    fontWeight: 'bold',
+                    color: '#fff',
+                    lineHeight: '1.2' // Adjust line height for large font
+                  }}>
+                    {formatPrice(s.regular)} 
+                    {/* Conditional pulse animation */}
+                    {s.regularChange != null && s.regularChange !== 0 ? (
+                      <motion.span
+                        animate={{ opacity: [1, 0.4, 1] }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                        style={{ display: 'inline-block' }} // Needed for motion span layout
+                      >
+                        {formatChange(s.regularChange)}
+                      </motion.span>
+                    ) : (
+                      formatChange(s.regularChange) // Render non-pulsing version for 0% change
+                    )}
+                  </div>
+                </div>
+
+                {/* Organic Price Column */}
+                 <div style={{ textAlign: 'center' }}>
+                  <div style={{
+                    fontSize: '8px', 
+                    color: '#aaa', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '1px',
+                    marginBottom: '4px'
+                  }}>Organic</div>
+                  <div style={{
+                    fontSize: '1.35rem', // Larger price font size
+                    fontWeight: 'bold',
+                    color: '#fff',
+                    lineHeight: '1.2' // Adjust line height
+                  }}>
+                    {formatPrice(s.organic)}
+                     {/* Conditional pulse animation */}
+                    {s.organicChange != null && s.organicChange !== 0 ? (
+                      <motion.span
+                        animate={{ opacity: [1, 0.4, 1] }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                         style={{ display: 'inline-block' }}
+                      >
+                        {formatChange(s.organicChange)}
+                      </motion.span>
+                    ) : (
+                      formatChange(s.organicChange)
+                    )}
+                  </div>
+                </div>
               </div>
+
               <div className="hint">View pricing history →</div>
             </div>
             {expandedIndex === idx && (
