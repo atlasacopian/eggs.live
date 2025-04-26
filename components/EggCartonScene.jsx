@@ -17,7 +17,7 @@ function ModelPrimitive(props) {
   })
   const scene = obj
   // Reduce scale further
-  return <primitive object={scene} scale={0.8} {...props} />
+  return <primitive object={scene} scale={0.5} {...props} />
 }
 
 // Static Experience component for egg carton
