@@ -136,13 +136,6 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
     return sortDirection === 'asc' ? diff : -diff;
   })
 
-  // Auto-expand the first store so history is visible by default
-  useEffect(() => {
-    if (sortedStores.length > 0 && expandedIndex === null) {
-      setExpandedIndex(0);
-    }
-  }, [sortedStores, expandedIndex]);
-
   // Calculate cheapest based on the *original* filtered data, not the sorted one
   const getCheapestFromDataset = (key) => {
     if (!availableStores.length) return { price: null, change: null, store: null, address: null };
@@ -451,6 +444,12 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
                 </div>
               </div>
 
+              {/* Sparkline preview when collapsed */}
+              {expandedIndex !== idx && (
+                <div style={{ width: '100%', paddingLeft: '24px', paddingRight: '24px', marginTop: '8px', height: '3rem' }}>
+                  <EggPriceChart store={s} preview />
+                </div>
+              )}
               <div className="hint">View pricing history →</div>
             </div>
             {expandedIndex === idx && (
