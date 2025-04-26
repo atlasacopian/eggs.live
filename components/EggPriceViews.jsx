@@ -208,9 +208,9 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
       width: '100%', 
       margin: '0 auto', 
       fontFamily: 'Roboto Mono, monospace', 
-      color: '#000', 
+      color: '#fff', 
       padding:'24px', 
-      background: '#f9f9f9', 
+      background: '#000', 
       borderRadius: '12px' // Larger rounding for main console
     }}>
       {/* Combined editable feed header */}
@@ -301,10 +301,11 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
       {/* Styles for hint text visibility on hover */}
       <style jsx>{`
         .store-item {
-          background: #fff; /* Light background for rows */
-          border: 1px solid #ddd; /* Light border */
+          background: #111; /* Darker background for rows */
+          border: 1px solid #282828; /* Subtle dark border */
           border-radius: 8px !important; /* Force rounding */
-          overflow: hidden;
+          overflow: hidden; /* Ensure content doesn't break rounding */
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05); /* Subtle shadow */
           transition: box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease, transform 0.2s ease; /* Faster transition, add transform */
           margin-bottom: 16px; /* Slightly reduced margin */
         }
@@ -320,10 +321,10 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
           opacity: 1;
         }
         .store-item:hover {
-          border-color: #bbb;
-          background: #f0f0f0;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-          transform: translateY(-2px);
+          border-color: ${accentColor}aa; /* Slightly softer neon border */
+          background: #1a1a1a; /* Slightly lighter hover background */
+          box-shadow: 0 4px 15px ${accentColor}33; /* More pronounced shadow */
+          transform: translateY(-2px); /* Subtle lift effect */
         }
         .zip-display:hover {
           background-color: rgba(255, 193, 7, 0.1); /* Subtle yellow background on hover */
