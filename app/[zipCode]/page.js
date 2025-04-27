@@ -93,7 +93,7 @@ export default function ZipCodePage() {
       </div>
 
       {/* 3D Background */}
-      <div style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
+      <div className="background-3d" style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
         <EggChartScene showHistory={true} />
       </div>
 
@@ -145,6 +145,11 @@ export default function ZipCodePage() {
         }
         .request-link:hover {
           text-decoration: underline;
+        }
+        @media (max-width: 768px) {
+          .background-3d {
+            display: none;
+          }
         }
       `}</style>
     </main>
