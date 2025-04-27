@@ -66,8 +66,8 @@ function Experience({ onInteractionStart }) {
   const [isMobile, setIsMobile] = useState(false);
   // Original tilt plus vertical rotation
   const initialRotationX = 0; // No tilt on X axis for upright orientation
-  const initialRotationY = 0; // Face front with no Y-axis rotation
-  const initialRotationZ = 0; // No Z-axis rotation for upright orientation
+  const initialRotationY = 0; // Reset Y-axis rotation
+  const initialRotationZ = Math.PI; // Flip 180° around Z-axis to correct orientation
 
   // Detect touch device on mount
   useEffect(() => {

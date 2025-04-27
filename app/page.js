@@ -37,14 +37,18 @@ export default function Home() {
       </div>
       {/* 3D Egg scene on top */}
       <EggCartonScene />
+      {/* Main header positioned below ticker */}
       <div
         style={{
-          position: 'relative',
+          position: 'absolute',
+          top: '160px', /* Moved down further to clear ticker completely */
+          left: 0,
+          right: 0,
           zIndex: 50,
-          width: '100%',
+          display: 'flex',
+          justifyContent: 'center',
           padding: '0 16px',
-          boxSizing: 'border-box',
-          marginTop: '40vh' /* Increased to fully clear ticker */,
+          boxSizing: 'border-box'
         }}
         className="header-container"
       >
