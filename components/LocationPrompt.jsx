@@ -40,8 +40,10 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
         <div
           className={`${styles.option} ${showZipInput ? styles.activeInput : ''}`}
           onClick={() => {
-            setShowZipInput(true)
-            setZipCode('')
+            if (!showZipInput) {
+              setShowZipInput(true)
+              setZipCode('')
+            }
           }}
         >
           {showZipInput ? (
@@ -54,7 +56,15 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
                 onChange={(e) => setZipCode(e.target.value)}
                 autoFocus
               />
-              {zipCode.length === 5 && <span className={styles.enterHint}>↵</span>}
+              {zipCode.length === 5 && (
+                <button
+                  type="submit"
+                  className={styles.enterHint}
+                  style={{ background: 'none', border: 'none', padding: 0, margin: 0, cursor: 'pointer' }}
+                >
+                  ↵
+                </button>
+              )}
             </form>
           ) : (
             '[ ENTER ZIP CODE ]'
