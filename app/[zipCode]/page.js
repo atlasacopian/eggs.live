@@ -123,7 +123,7 @@ export default function ZipCodePage() {
             />
           ) : (
             <div style={{ padding: '2rem', textAlign: 'center' }}>
-              <h2>Looks like we don&apos;t have data for {zipCode} yet.</h2>
+              <h2>It looks like we don&apos;t have data for {zipCode} yet.</h2>
               <p>
                 Want us to consider adding it?{' '}
                 <Link href="https://forms.gle/1guuqo2DSEJr4ifq8" className="request-link" target="_blank" rel="noopener noreferrer">
