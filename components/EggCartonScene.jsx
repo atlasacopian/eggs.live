@@ -2,8 +2,8 @@
 
 import { useRef, useEffect, Suspense, useState, useMemo } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { useGLTF, useTexture } from '@react-three/drei'
-import { Center, Html, Environment, ContactShadows } from '@react-three/drei'
+import { useGLTF, useTexture, Text } from '@react-three/drei'
+import { Center, Environment, ContactShadows } from '@react-three/drei'
 import * as THREE from 'three'
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
@@ -124,6 +124,19 @@ function Experience({ onInteractionStart }) {
         <Center ref={centerRef} rotation={[initialRotationX, initialRotationY, initialRotationZ]} position={[0, 0, 0]}>
           <group>
             <ModelPrimitive />
+            {/* Overlay 3D text on egg surface */}
+            <Text
+              position={[0, 0, 0.55]}
+              rotation={[0, initialRotationY, 0]}
+              fontSize={0.3}
+              color='#000000'
+              maxWidth={1.5}
+              anchorX='center'
+              anchorY='middle'
+            >
+              eggs.live
+              {'\n'}TRACKING THE EGG-CONOMY
+            </Text>
           </group>
         </Center>
       </Suspense>
