@@ -180,7 +180,7 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
 
   /* ---------- Render ---------- */
   return (
-    <div style={{ 
+    <div className="egg-price-views-wrapper" style={{ 
       maxWidth: 960, 
       width: '100%', 
       margin: '80px auto 0', 
@@ -191,7 +191,7 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
       borderRadius: 0
     }}>
       {/* Premium header card split into two panels */}
-      <motion.div
+      <motion.div className="header-cards"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
@@ -404,6 +404,19 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
           </div>
         ))}
       </div>
+
+      {/* Responsive adjustments */}
+      <style jsx>{`
+        @media (max-width: 768px) {
+          .header-cards {
+            flex-direction: column;
+          }
+          .egg-price-views-wrapper {
+            margin: 40px auto 0 !important;
+            padding: 16px !important;
+          }
+        }
+      `}</style>
     </div>
   )
 }
