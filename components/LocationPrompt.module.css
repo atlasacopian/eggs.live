@@ -149,4 +149,15 @@
   /* Note: .scanHeader class is not defined here, 
      it's using inline style in the component, 
      adjustments made there via <style jsx> */
+}
+
+/* Revert to original desktop button sizes */
+@media (min-width: 769px) {
+  .option {
+    font-size: 9px;
+    padding: 0.5rem;
+    min-height: 36px;
+    letter-spacing: 2px;
+    width: auto;
+  }
 } 
