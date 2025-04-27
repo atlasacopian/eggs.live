@@ -26,14 +26,16 @@ export default function Home() {
   }
 
   return (
-    <main className="main" style={{ color: '#000', position: 'relative', background: '#000', minHeight: '100vh', overflow: 'hidden' }}>
+    <main className="main" style={{ color: '#000', position: 'relative', background: '#fff', minHeight: '100vh', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', top: 16, left: 16, right: 16, zIndex: 10 }}>
-        <TickerStrip 
-          text="NATIONAL AVG: REG $6.23 <span style='color: #00FF00;'>↑</span> | ORG $6.98 <span style='color: #FF0000;'>↓</span>  🥚  123 STORES | 45 ZIP CODES 🥚" 
-          overrideBackgroundColor="white" 
+        <TickerStrip
+          text="NATIONAL AVG: REG $6.23 <span style='color: #00FF00;'>↑</span> | ORG $6.98 <span style='color: #FF0000;'>↓</span>  🥚  123 STORES | 45 ZIP CODES 🥚"
           fontSize="10px"
+          overrideBackgroundColor="#fff"
+          overrideBorderColor="#000"
         />
       </div>
+      {/* 3D Egg scene on top */}
       <EggCartonScene />
       <div
         style={{
