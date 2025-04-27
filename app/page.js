@@ -44,7 +44,7 @@ export default function Home() {
           width: '100%',
           padding: '0 16px',
           boxSizing: 'border-box',
-          marginTop: '15vh' /* Default margin */,
+          marginTop: '25vh' /* Bumped down so title clears ticker */,
         }}
         className="header-container"
       >

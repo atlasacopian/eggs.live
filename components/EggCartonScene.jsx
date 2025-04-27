@@ -67,7 +67,7 @@ function Experience({ onInteractionStart }) {
   // Original tilt plus vertical rotation
   const initialRotationX = THREE.MathUtils.degToRad(115); // 115° rotation on X axis (45° + 70°)
   const initialRotationY = Math.PI; // 180° rotation around Y axis (Math.PI radians = 180°)
-  const initialRotationZ = Math.PI; // 180° rotation around Z axis (Math.PI radians = 180°)
+  const initialRotationZ = THREE.MathUtils.degToRad(70); // 70° rotation around Z axis so egg stands upright
 
   // Detect touch device on mount
   useEffect(() => {
