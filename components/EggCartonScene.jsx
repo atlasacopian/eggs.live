@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, Suspense, useState, useMemo } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { useGLTF, useTexture, Text } from '@react-three/drei'
+import { useGLTF, useTexture, Decal } from '@react-three/drei'
 import { Center, Environment, ContactShadows } from '@react-three/drei'
 import * as THREE from 'three'
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
@@ -107,6 +107,27 @@ function Experience({ onInteractionStart }) {
     }
   })
 
+  // Generate a canvas texture for text decal
+  const textTexture = useMemo(() => {
+    const size = 512;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    // Clear
+    ctx.clearRect(0, 0, size, size);
+    // Draw text
+    ctx.fillStyle = '#000';
+    ctx.textAlign = 'center';
+    ctx.font = 'bold 60px Roboto Mono';
+    ctx.fillText('eggs.live', size / 2, size / 2 - 20);
+    ctx.font = '30px Roboto Mono';
+    ctx.fillText('TRACKING THE EGG-CONOMY', size / 2, size / 2 + 30);
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
+    return texture;
+  }, []);
+
   return (
     <>
       {/* Photorealistic studio environment */}
@@ -124,19 +145,14 @@ function Experience({ onInteractionStart }) {
         <Center ref={centerRef} rotation={[initialRotationX, initialRotationY, initialRotationZ]} position={[0, 0, 0]}>
           <group>
             <ModelPrimitive />
-            {/* Overlay 3D text on egg surface */}
-            <Text
-              position={[0, 0, 0.55]}
-              rotation={[0, initialRotationY, 0]}
-              fontSize={0.3}
-              color='#000000'
-              maxWidth={1.5}
-              anchorX='center'
-              anchorY='middle'
-            >
-              eggs.live
-              {'\n'}TRACKING THE EGG-CONOMY
-            </Text>
+            {/* Decal to apply text onto egg surface */}
+            <Decal
+              position={[0, 0, 0.52]}
+              rotation={[0, 0, initialRotationZ]}
+              scale={[0.6, 0.6, 0.6]}
+              map={textTexture}
+              transparent
+            />
           </group>
         </Center>
       </Suspense>
