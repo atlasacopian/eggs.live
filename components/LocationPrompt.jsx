@@ -54,6 +54,7 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
                 maxLength={5}
                 value={zipCode}
                 onChange={(e) => setZipCode(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleZipSubmit(e) }}
                 autoFocus
               />
               {zipCode.length === 5 && (
