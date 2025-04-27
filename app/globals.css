@@ -1,5 +1,5 @@
 :root {
-  --background-color: #ffffff;
+  --background-color: #ffffff; /* default */
   --text-color: #000000;
   --accent-color: #ffc107; /* egg yolk yellow */
 }
@@ -14,8 +14,8 @@ html.dark-theme, body.dark-theme {
 html, body {
   max-width: 100vw;
   overflow-x: hidden;
-  background: var(--background-color);
-  color: var(--text-color);
+  background: #000; /* Force solid black */
+  color: #fff;
   -webkit-font-smoothing: antialiased;
   height: 100%;
   margin: 0;

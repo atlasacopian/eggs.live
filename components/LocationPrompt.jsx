@@ -36,7 +36,7 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
         <div className={styles.option} onClick={handleLocationClick}>
           [ USE LOCATION ]
         </div>
-        <span style={{ color: '#fff', cursor: 'default' }}>OR</span>
+        <span style={{ color: '#000', cursor: 'default', fontSize: '9px', letterSpacing: '2px' }}>OR</span>
         <div
           className={`${styles.option} ${showZipInput ? styles.activeInput : ''}`}
           onClick={() => {

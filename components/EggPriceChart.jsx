@@ -28,14 +28,8 @@ export default function EggPriceChart({ store, highlight = false, preview = fals
       try {
         const id = store?.store_identifier;
         if (!id) {
-          // Generate dummy history for fallback
-          const days = 10;
-          const demo = Array.from({ length: days }).map((_, idx) => {
-            const d = new Date();
-            d.setDate(d.getDate() - (days - idx - 1));
-            return { date: d.toISOString().split('T')[0], regular: 7 + Math.random() * 3 };
-          });
-          setHistory(demo);
+          // No store identifier: do not load history
+          setHistory([]);
           return;
         }
         setLoading(true);
@@ -55,21 +49,82 @@ export default function EggPriceChart({ store, highlight = false, preview = fals
   const strokeColor = highlight ? '#ffc107' : '#ffffff';
   const dataKey = priceType;
 
-  // Small sparkline preview (no axes or tooltip)
-  const renderPreview = () => (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-      style={{ width: '100%', height: 32, marginBottom: 8 }} // compact sparkline (2rem) with spacing
-    >
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={history} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-          <Line type="monotone" dataKey={dataKey} stroke={strokeColor} strokeWidth={2} dot={false} />
-        </LineChart>
-      </ResponsiveContainer>
-    </motion.div>
-  );
+  // Compute dynamic domain for Y axis based on history data
+  const values = history.map(d => d[dataKey]).filter(v => typeof v === 'number');
+  const minVal = Math.min(...values);
+  const maxVal = Math.max(...values);
+  const domainMin = minVal - 0.2;
+  const domainMax = maxVal + 0.2;
+
+  // Unified chart renderer for both preview and full views
+  const ChartRenderer = () => {
+    const chartHeight = preview ? 24 : 160;
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: preview ? 0.3 : 0.5 }}
+        style={{ width: '100%', height: chartHeight }}
+      >
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart
+            data={history}
+            margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
+          >
+            {/* Render grid only in full view */}
+            {!preview && <CartesianGrid vertical={false} stroke="#444" strokeOpacity={0.2} />}
+            {/* Reference lines only in full view */}
+            {!preview && <ReferenceLine y={7} stroke="#555" strokeDasharray="3 3" />}
+            {!preview && <ReferenceLine y={8.5} stroke="#555" strokeDasharray="3 3" />}
+            {!preview && <ReferenceLine y={10} stroke="#555" strokeDasharray="3 3" />}
+            <XAxis
+              dataKey="date"
+              type="category"
+              scale="point"
+              padding={{ left: 0, right: 0 }}
+              ticks={ticks}
+              tickFormatter={!preview ? t => {
+                const d = new Date(t);
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                const dd = String(d.getDate()).padStart(2, '0');
+                const yy = String(d.getFullYear() % 100).padStart(2, '0');
+                return `${mm}/${dd}/${yy}`;
+              } : undefined}
+              axisLine={!preview}
+              tickLine={!preview}
+              hide={preview}
+              stroke="#aaa"
+              tick={{ fontSize: 10, fill: '#aaa', dy: 2 }}
+              tickMargin={4}
+            />
+            <YAxis
+              domain={[domainMin, domainMax]}
+              axisLine={!preview}
+              tickLine={!preview}
+              hide={preview}
+              stroke="#aaa"
+              tick={{ fontSize: 10, fill: '#aaa', dx: -4 }}
+              tickMargin={4}
+              tickFormatter={!preview ? v => `$${v.toFixed(2)}` : undefined}
+            />
+            {/* Tooltip only in full view */}
+            {!preview && <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#888', strokeDasharray: '3 3' }} />}
+            <Line
+              type="linear"
+              dataKey={dataKey}
+              stroke={strokeColor}
+              strokeWidth={preview ? 1 : 2}
+              dot={preview ? false : { r: 4 }}
+              activeDot={preview ? false : { r: 6 }}
+              isAnimationActive={true}
+              animationDuration={preview ? 800 : 1500}
+              animationEasing="ease-in-out"
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </motion.div>
+    );
+  };
 
   // Compute ticks: first, middle, last
   const dates = history.map(d => d.date);
@@ -77,68 +132,10 @@ export default function EggPriceChart({ store, highlight = false, preview = fals
     ? [dates[0], dates[Math.floor(dates.length / 2)], dates[dates.length - 1]]
     : dates;
 
-  const renderChart = () => (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      style={{ width: '100%', height: 160 }} // inline size for chart container
-    >
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={history}>
-          <CartesianGrid vertical={false} stroke="#444" strokeOpacity={0.2} />
-          <ReferenceLine y={7} stroke="#555" strokeDasharray="3 3" />
-          <ReferenceLine y={8.5} stroke="#555" strokeDasharray="3 3" />
-          <ReferenceLine y={10} stroke="#555" strokeDasharray="3 3" />
-          <XAxis
-            dataKey="date"
-            ticks={ticks}
-            tickFormatter={t => new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-            axisLine={false}
-            tickLine={false}
-            stroke="#aaa"
-            tick={{ fontSize: 12 }}
-          />
-          <YAxis
-            // Automatic domain based on data
-            axisLine={false}
-            tickLine={false}
-            stroke="#aaa"
-            tick={{ fontSize: 12 }}
-          />
-          <Tooltip
-            content={<CustomTooltip />}
-            cursor={{ stroke: '#888', strokeDasharray: '3 3' }}
-          />
-          <Line
-            type="monotone"
-            dataKey={dataKey}
-            stroke={strokeColor}
-            strokeWidth={3}
-            dot={{ r: 4 }} // show dots for granularity
-            activeDot={{ r: 6 }}
-            isAnimationActive={true}
-            animationDuration={1500}
-            animationEasing="ease-in-out"
-          />
-        </LineChart>
-      </ResponsiveContainer>
-    </motion.div>
-  );
-
-  // Render preview sparkline only when data is loaded and available
-  if (preview) {
-    if (loading || error || !history.length) return null;
-    return renderPreview();
-  }
+  // Render the full chart directly (parent panel provides background and padding)
   if (loading) return <p className="text-gray-400 text-sm">Loading history...</p>;
   if (error) return <p className="text-red-500 text-sm">Error: {error}</p>;
   if (!history.length) return <p className="text-gray-400 text-sm">No price history available.</p>;
 
-  // Full chart container without title
-  return (
-    <div className="bg-black p-4 rounded">
-      {renderChart()}
-    </div>
-  );
+  return <ChartRenderer />;
 }

@@ -3,19 +3,23 @@
 import React from 'react';
 import styles from './TickerStrip.module.css';
 
-// Accept an optional overrideBackgroundColor and fontSize prop
-export default function TickerStrip({ text, overrideBackgroundColor, fontSize = '14px' /* Default size */ }) {
+// Accept an optional overrideBackgroundColor, fontSize, and overrideBorderColor prop
+export default function TickerStrip({ text, overrideBackgroundColor, fontSize = '14px' /* Default size */, overrideBorderColor }) {
   // Prepare style object
   const containerStyle = {};
   if (overrideBackgroundColor) {
     containerStyle.backgroundColor = overrideBackgroundColor;
+  }
+  if (overrideBorderColor) {
+    // Override the border color
+    containerStyle.border = `1px solid ${overrideBorderColor}`;
   }
 
   const tickerItemStyle = {
     fontSize: fontSize // Apply the fontSize prop
   };
 
-  const extraClass = overrideBackgroundColor === 'white' ? styles.whiteBackground : '';
+  const extraClass = overrideBackgroundColor ? styles.whiteBackground : '';
 
   const content = text;
 

@@ -3,25 +3,15 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import EggPriceChart from './EggPriceChart'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 
-// Sample nearby store data – replace later with DB/API
-const nearbyStores = [
-  { store: 'SMART & FINAL', address: '1410 E 1ST ST', distance: 2.3, regular: 5.29, regularChange: -0.9, organic: 7.59, organicChange: -1.1 },
-  { store: "TRADER JOE'S", address: '1600 VINE ST', distance: 3.1, regular: 5.49, regularChange: -0.6, organic: 7.89, organicChange: -0.9 },
-  { store: 'WHOLE FOODS', address: '788 MISSION ST', distance: 0.8, regular: 6.59, regularChange: -0.3, organic: 8.89, organicChange: 0.7 },
-  { store: 'VONS', address: '1342 N ALVARADO ST', distance: 2.5, regular: 6.89, regularChange: 0.8, organic: 8.29, organicChange: 1.0 },
-  { store: "GELSON'S", address: '2725 YOSEMITE DR', distance: 3.4, regular: 7.19, regularChange: 0.4, organic: 9.29, organicChange: 0.6 },
-  { store: 'RALPHS', address: '2600 VERMONT AVE', distance: 1.2, regular: 7.79, regularChange: -1.4, organic: 9.49, organicChange: 2.1 },
-]
-
-export default function EggPriceViews({ zipCode: initialZipCode = '90026', stores = [], onHoverStore, onSelectStore }) {
+export default function EggPriceViews({ zipCode: initialZipCode = '90026', stores = [], onHoverStore, onSelectStore, lastUpdated, avgRegLA, avgOrgLA, avgRegNat, avgRegNatDate, avgOrgNat }) {
   const accentColor = '#ffc107' // Yolk yellow
   const [sortBy, setSortBy] = useState('distance') // Default sort by distance
   const [sortDirection, setSortDirection] = useState('asc')
   const [currentZip, setCurrentZip] = useState(initialZipCode)
-  const [isEditingZip, setIsEditingZip] = useState(false)
   const [expandedIndex, setExpandedIndex] = useState(null)
+  const [activePriceType, setActivePriceType] = useState('regular')
   const [locationInfo, setLocationInfo] = useState({ city: null, state: null, loading: true });
 
   useEffect(() => {
@@ -30,7 +20,7 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
 
   // Fetch City/State when ZIP changes
   useEffect(() => {
-    if (currentZip && currentZip.length === 5 && !isEditingZip) {
+    if (currentZip && currentZip.length === 5) {
       setLocationInfo(prev => ({ ...prev, loading: true }));
       fetch(`https://api.zippopotam.us/us/${currentZip}`)
         .then(res => {
@@ -50,17 +40,32 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
           setLocationInfo({ city: null, state: null, loading: false }); // Reset on error
         });
     } else {
-        // Reset if zip is invalid or being edited
+        // Reset if zip is invalid
         setLocationInfo({ city: null, state: null, loading: false });
     }
-  }, [currentZip, isEditingZip]); // Re-run when zip changes or editing stops
+  }, [currentZip]); // Re-run when zip changes
+
+  useEffect(() => {
+    setActivePriceType('regular')
+  }, [expandedIndex])
 
   const router = useRouter()
 
-  const now = new Date().toLocaleString('en-US', {
+  // Create a formatter with local timezone for date & time
+  const dateTimeFormatter = new Intl.DateTimeFormat('en-US', {
+    year: 'numeric', month: '2-digit', day: '2-digit',
     hour: 'numeric', minute: '2-digit', hour12: true,
-    weekday: 'short', month: 'short', day: 'numeric'
-  })
+    timeZoneName: 'short'
+  });
+  // Parse avgRegNatDate to display without timezone artifact
+  const formatApiDate = (isoDate) => {
+    const [year, month, day] = isoDate.split('-');
+    return `${parseInt(month, 10)}/${parseInt(day, 10)}/${year}`;
+  };
+  // Format updatedTime from API or fallback to now
+  const updatedTime = lastUpdated
+    ? dateTimeFormatter.format(new Date(lastUpdated))
+    : dateTimeFormatter.format(new Date());
 
   /* ---------- Helpers ---------- */
   const formatPrice = num => num?.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
@@ -88,20 +93,17 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
     return { display: displayAddress, link: mapsLink };
   };
 
-  // Choose incoming data if provided; otherwise fallback to demo array
-  const dataset = stores.length
-    ? stores.map(s => ({
-        // Ensure consistent naming and handle potential nulls
-        store: s.name ?? s.store ?? 'Unknown Store',
-        address: s.address ?? 'No Address',
-        distance: typeof s.distance === 'number' ? s.distance : null, // Ensure distance is number or null
-        regular: typeof s.regular_price === 'number' ? s.regular_price : null,
-        regularChange: typeof s.regular_change === 'number' ? s.regular_change : null, 
-        organic: typeof s.organic_price === 'number' ? s.organic_price : null,
-        organicChange: typeof s.organic_change === 'number' ? s.organic_change : null,
-        store_identifier: s.store_identifier
-      }))
-    : nearbyStores
+  // Map incoming store props to dataset array
+  const dataset = stores.map(s => ({
+    store: s.name ?? s.store ?? 'Unknown Store',
+    address: s.address ?? 'No Address',
+    distance: typeof s.distance === 'number' ? s.distance : null,
+    regular: typeof s.regular_price === 'number' ? s.regular_price : null,
+    regularChange: typeof s.regular_change === 'number' ? s.regular_change : null,
+    organic: typeof s.organic_price === 'number' ? s.organic_price : null,
+    organicChange: typeof s.organic_change === 'number' ? s.organic_change : null,
+    store_identifier: s.store_identifier
+  }));
 
   // Filter out stores completely missing price data
   const availableStores = dataset.filter(s => 
@@ -164,150 +166,74 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
   const orgList = localStores.map(s => s.organic).filter(v => v != null)
   const avgReg = regList.length ? regList.reduce((a, b) => a + b, 0) / regList.length : null
   const avgOrg = orgList.length ? orgList.reduce((a, b) => a + b, 0) / orgList.length : null
-
-  /* ---------- ZIP Editing Handlers ---------- */
-  const handleZipClick = () => {
-    setIsEditingZip(true);
-  };
-
-  const handleZipChange = (e) => {
-    // Allow only digits, max 5
-    const value = e.target.value.replace(/\D/g, '');
-    if (value.length <= 5) {
-      setCurrentZip(value);
-    }
-  };
-
-  const handleZipSubmit = (e) => {
-    e.preventDefault();
-    if (currentZip && currentZip.length === 5) {
-      setIsEditingZip(false);
-      router.push(`/${currentZip}`); // Navigate to new ZIP page
-    } else {
-      // Optionally, show an error or revert
-      setIsEditingZip(false);
-      setCurrentZip(initialZipCode); // Revert if invalid
-    }
-  };
-
-  const handleZipBlur = () => {
-      // If user clicks away, submit if valid, otherwise revert
-      if (currentZip && currentZip.length === 5) {
-          setIsEditingZip(false);
-          router.push(`/${currentZip}`);
-      } else {
-          setIsEditingZip(false);
-          setCurrentZip(initialZipCode); // Revert on blur if invalid
-      }
-  };
+  // Compute delta vs city-wide LA averages
+  const pctRegVsLA = avgRegLA ? ((avgReg - avgRegLA) / avgRegLA) * 100 : null
+  const pctOrgVsLA = avgOrgLA ? ((avgOrg - avgOrgLA) / avgOrgLA) * 100 : null
+  // Find highest organic price
+  const getMostExpensive = (key) => {
+    if (!availableStores.length) return { price: null, change: null, store: null, address: null }
+    const sorted = [...availableStores].filter(s => s[key] != null).sort((a,b) => b[key] - a[key])
+    const top = sorted[0]
+    return top ? { price: top[key], change: top[`${key}Change`], store: top.store, address: top.address } : { price: null, change: null, store: null, address: null }
+  }
+  const mostExpOrg = getMostExpensive('organic')
 
   /* ---------- Render ---------- */
   return (
     <div style={{ 
       maxWidth: 960, 
       width: '100%', 
-      margin: '0 auto', 
+      margin: '80px auto 0', 
       fontFamily: 'Roboto Mono, monospace', 
       color: '#fff', 
       padding:'24px', 
-      background: 'rgba(0,0,0,0.85)', 
-      borderRadius: '12px' // Larger rounding for main console
+      background: 'transparent', 
+      borderRadius: 0
     }}>
-      {/* Combined editable feed header */}
-      <h2 style={{ 
-        textAlign: 'center', 
-        letterSpacing: 2, 
-        marginBottom: 16, // Reduced bottom margin 
-        color: 'inherit', 
-        fontSize: '7px' // Reduced from 10px
-      }}>
-        {isEditingZip ? (
-          <form onSubmit={handleZipSubmit} style={{ display: 'inline-block' }}>
-            <input
-              className="zip-input"
-              type="text"
-              value={currentZip}
-              onChange={handleZipChange}
-              onBlur={handleZipBlur}
-              maxLength={5}
-              autoFocus
-              style={{
-                background: 'transparent',
-                border: 'none',
-                borderBottom: '1px solid #ccc',
-                fontFamily: 'inherit',
-                fontSize: '25px', // Match static display size
-                fontWeight: 'inherit',
-                letterSpacing: 'inherit',
-                color: 'inherit',
-                textAlign: 'center',
-                width: '6ch', // Fit exactly 5-digit zip
-                outline: 'none',
-                caretColor: accentColor
-              }}
-            />
-          </form>
-        ) : (
-          <>
-            {/* Location Text (City, State) - Placed ABOVE ZIP */}
-            <div style={{ 
-                fontSize: '7px', // Reduced from 10px
-                letterSpacing: 2, 
-                color: locationInfo.city ? '#fff' : '#666', // Dim if loading/error
-                marginBottom: '4px' 
-              }}> 
-              {locationInfo.loading ? 'Loading location...' : 
-               locationInfo.city ? `EGG PRICES IN ${locationInfo.city.toUpperCase()}, ${locationInfo.state?.toUpperCase()}` : 
-               'EGG PRICES'}
-            </div>
-
-            {/* Make ZIP code large and clickable */}
-            <div 
-              onClick={handleZipClick}
-              title="Click to change ZIP code"
-              style={{ 
-                fontSize: '25px', 
-                fontWeight: '700', 
-                lineHeight: '1',
-                display: 'inline-block',
-                marginBottom: '8px',
-                cursor: 'pointer', // Make cursor a pointer
-                padding: '0 8px', // Add padding for better hover effect
-                borderRadius: '4px', // Add rounding
-                transition: 'background-color 0.2s ease' // Smooth transition
-              }}
-              className="zip-display"
-            >
-              {currentZip}  <span style={{ marginLeft: '4px', fontSize: '0.6em', opacity: 0.7 }}>🖉</span>
-            </div>
-
-            {/* Last Updated Text - Placed BELOW ZIP */}
-            <p
-              style={{ 
-                textAlign: 'center', 
-                fontSize: 6, // Reduced from 8px
-                marginTop: 0, // Remove top margin
-                marginBottom: '8px', // Add space below
-                letterSpacing:1, 
-                color:accentColor 
-              }}
-            >
-              LAST UPDATED: {now.toUpperCase()}
-            </p>
-          </>
-        )}
-      </h2>
+      {/* Premium header card split into two panels */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}
+      >
+        {/* Panel 1: Location & ZIP */}
+        <motion.div whileHover={{ borderColor: accentColor, background: '#111', y: -2 }} style={{ flex: 1, background: '#000', border: `1px solid ${accentColor}33`, borderRadius: 8, padding: '16px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', textAlign: 'left' }}>
+          <div style={{ fontSize: '11px', color: '#fff', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>
+            EGG PRICES, PER DOZEN<br/>
+            IN LOS ANGELES, CA
+          </div>
+          <div style={{ fontSize: '56px', fontWeight: 700, color: '#fff', letterSpacing: '0.25ch', marginBottom: '6px' }}>
+            {currentZip}
+          </div>
+          <div style={{ fontSize: '9px', color: accentColor, textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: '4px' }}>
+            Last Updated: {updatedTime}
+          </div>
+        </motion.div>
+        {/* Panel 2: Averages & Deals */}
+        <motion.div className="stats-panel" whileHover={{ borderColor: accentColor, background: '#111', y: -2 }} style={{ flex: 1, background: '#000', border: `1px solid ${accentColor}33`, borderRadius: 8, padding: '16px', fontSize: '0.75rem', textTransform: 'uppercase', color: '#fff', letterSpacing: '0.025em', cursor: 'pointer' }}>
+          <div className="stats-header" style={{ fontWeight: 700, fontSize: '0.75rem', letterSpacing: '0.1em', marginBottom: '10px', borderBottom: '1px solid transparent', paddingBottom: '6px', transition: 'border-bottom-color 0.2s ease' }}>🥚 STATS</div>
+          <div style={{ marginBottom: '10px', lineHeight: 1.3 }}>
+            <div>Lowest Price: <strong>{formatPrice(cheapestReg.price)}</strong> Regular @ <a href={formatAddress(cheapestReg.address).link} target="_blank" rel="noopener noreferrer" className="address-link">{cheapestReg.store}</a></div>
+            <div>Highest Price: <strong>{formatPrice(mostExpOrg.price)}</strong> Organic @ <a href={formatAddress(mostExpOrg.address).link} target="_blank" rel="noopener noreferrer" className="address-link">{mostExpOrg.store}</a></div>
+          </div>
+          <div style={{ marginBottom: '10px', lineHeight: 1.3 }}>
+            <div>Regular Avg: <strong>{formatPrice(avgReg)}</strong> {pctRegVsLA != null && (<span style={{ marginLeft: 4, fontWeight: 600 }}>(<span style={{ color: pctRegVsLA < 0 ? '#FF0000' : '#00FF00' }}>{pctRegVsLA < 0 ? '↓' : '↑'}{Math.abs(pctRegVsLA).toFixed(1)}%</span> vs LA)</span>)}</div>
+            <div>Organic Avg: <strong>{formatPrice(avgOrg)}</strong> {pctOrgVsLA != null && (<span style={{ marginLeft: 4, fontWeight: 600 }}>(<span style={{ color: pctOrgVsLA < 0 ? '#FF0000' : '#00FF00' }}>{pctOrgVsLA < 0 ? '↓' : '↑'}{Math.abs(pctOrgVsLA).toFixed(1)}%</span> vs LA)</span>)}</div>
+          </div>
+          {avgRegNat != null && avgRegNatDate && (<div style={{ marginBottom: '6px', lineHeight: 1.3 }}>Regular National Avg: <strong>{formatPrice(avgRegNat)}</strong> (as of {formatApiDate(avgRegNatDate)})</div>)}
+          {avgOrgNat != null && (<div style={{ marginBottom: '0px', lineHeight: 1.3 }}>National Organic Avg: <strong>{formatPrice(avgOrgNat)}</strong></div>)}
+        </motion.div>
+      </motion.div>
 
       {/* Styles for hint text visibility on hover */}
       <style jsx>{`
         .store-item {
-          background: rgba(17,17,17,0.8); /* Semi-transparent dark rows */
-          border: 1px solid #282828; /* Subtle dark border */
-          border-radius: 8px !important; /* Force rounding */
-          overflow: hidden; /* Ensure content doesn't break rounding */
-          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05); /* Subtle shadow */
-          transition: box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease, transform 0.2s ease; /* Faster transition, add transform */
-          margin-bottom: 16px; /* Slightly reduced margin */
+          background: #000;
+          border: 1px solid ${accentColor}33;
+          border-radius: 8px;
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+          margin-bottom: 8px;
         }
         .store-item .hint { color: #0070f3; } /* Light accent for hint */
         .store-item .hint {
@@ -322,12 +248,32 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
         }
         .store-item:hover {
           border-color: ${accentColor}aa; /* Slightly softer neon border */
-          background: #1a1a1a; /* Slightly lighter hover background */
+          background: #111; /* Slightly lighter hover background */
           box-shadow: 0 4px 15px ${accentColor}33; /* More pronounced shadow */
           transform: translateY(-2px); /* Subtle lift effect */
         }
+        .zip-display {
+          position: relative;
+          width: 6ch;
+          font-size: 25px;
+          font-weight: 700;
+          line-height: 1;
+          display: inline-block;
+          margin-bottom: 8px;
+          cursor: pointer;
+          text-align: center;
+          font-variant-numeric: tabular-nums;
+          padding: 0;
+          color: inherit;
+        }
+        .zip-text { letter-spacing: 0.2ch; }
         .zip-display:hover {
           background-color: rgba(255, 193, 7, 0.1); /* Subtle yellow background on hover */
+        }
+        /* Removed underline for zip-display */
+        /* Ensure input shares same numeric spacing */
+        .zip-input {
+          font-variant-numeric: tabular-nums;
         }
       `}</style>
 
@@ -336,154 +282,128 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
         .zip-input::selection { background: rgba(255,193,7,0.15); color: ${accentColor}; }
       `}</style>
 
-      {/* Ticker-style store list with animations */}
-      <div className="ticker-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+      {/* Address link styling: gray by default, underline on hover */}
+      <style jsx>{`
+        .address-link,
+        .address-link:visited,
+        .address-link:link {
+          color: #aaa !important;
+          text-decoration: none !important;
+        }
+        .address-link:hover {
+          text-decoration: underline !important;
+        }
+      `}</style>
+
+      {/* Stats header divider color on panel hover */}
+      <style jsx>{`
+        .stats-panel:hover .stats-header {
+          border-bottom-color: ${accentColor};
+        }
+      `}</style>
+
+      {/* Store cards in a single horizontal scrollable row */}
+      <div className="ticker-list" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {sortedStores.map((s, idx) => (
-          <div key={s.store + idx} className={`store-item${expandedIndex === idx ? ' active' : ''}`}>
-            <div
-              className="ticker-row store-row"
-              onMouseEnter={() => onHoverStore && onHoverStore(s.store)}
-              onMouseLeave={() => onHoverStore && onHoverStore(null)}
-              onClick={() => setExpandedIndex(expandedIndex === idx ? null : idx)}
-              style={{
-                cursor: 'pointer',
-                padding: '16px',
-              }}
-            >
-              <div style={{
-                fontSize: '1.25rem',
-                fontWeight: 700,
-                color: '#fff',
-                marginBottom: '4px'
-              }}>
-                {s.store}
-              </div>
-              <div style={{
-                fontSize: '0.75rem',
-                color: '#aaa',
-                marginBottom: '12px',
-                paddingLeft: '24px'
-              }}>
-                {s.distance?.toFixed(1)} MI — {formatAddress(s.address).display}
-              </div>
-              
-              {/* New Price Display Section */}
-              <div style={{
-                display: 'flex', 
-                justifyContent: 'space-around', // Distribute space between price columns
-                alignItems: 'flex-start', // Align items at the top
-                paddingLeft: '24px', 
-                paddingRight: '24px', 
-                marginTop: '8px' 
-              }}>
-                {/* Regular Price Column */}
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{
-                    fontSize: '8px', 
-                    color: '#aaa', 
-                    textTransform: 'uppercase', 
-                    letterSpacing: '1px',
-                    marginBottom: '4px'
-                  }}>Regular</div>
-                  <div style={{
-                    fontSize: '1.35rem', // Larger price font size
-                    fontWeight: 'bold',
-                    color: '#fff',
-                    lineHeight: '1.2', // Adjust line height for large font
+          <div key={s.store + idx} className={`store-item${expandedIndex === idx ? ' active' : ''}`}>  
+            <div className="ticker-row store-row" onClick={() => setExpandedIndex(expandedIndex === idx ? null : idx)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', padding: '8px' }}>  
+              {/* Left: store & address */}  
+              <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>  
+                <span style={{ fontSize: '1rem', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>🥚 {s.store}</span>  
+                <span style={{ fontSize: '0.75rem', color: '#aaa', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>  
+                  {s.distance?.toFixed(1)} MI - <a href={formatAddress(s.address).link} target="_blank" rel="noopener noreferrer" className="address-link">{formatAddress(s.address).display}</a>  
+                </span>  
+              </div>  
+              {/* Right: prices, sparkline & toggle */}  
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>  
+                <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>  
+                  <div style={{ fontSize: '0.75rem', color: '#aaa', textTransform: 'uppercase' }}>Reg</div>  
+                  <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#fff', lineHeight: '1' }}>{formatPrice(s.regular)}</div>  
+                  {s.regularChange != null && s.regularChange !== 0 ? (
+                    <motion.span
+                      animate={{ opacity: [1, 0.4, 1] }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                      style={{ display: 'block', marginTop: 4, color: s.regularChange < 0 ? '#FF0000' : '#00FF00', fontWeight: 600, fontSize: '0.75rem' }}
+                    >
+                      {s.regularChange < 0 ? '↓' : '↑'}{Math.abs(s.regularChange).toFixed(1)}%
+                    </motion.span>
+                  ) : (
+                    <span style={{ display: 'block', marginTop: 4, color: '#888', fontWeight: 600, fontSize: '0.75rem' }}>→0.0%</span>
+                  )}  
+                </div>  
+                <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginRight: '16px' }}>  
+                  <div style={{ fontSize: '0.75rem', color: '#aaa', textTransform: 'uppercase' }}>Org</div>  
+                  <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#fff', lineHeight: '1' }}>{formatPrice(s.organic)}</div>  
+                  {s.organicChange != null && s.organicChange !== 0 ? (
+                    <motion.span
+                      animate={{ opacity: [1, 0.4, 1] }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                      style={{ display: 'block', marginTop: 4, color: s.organicChange < 0 ? '#FF0000' : '#00FF00', fontWeight: 600, fontSize: '0.75rem' }}
+                    >
+                      {s.organicChange < 0 ? '↓' : '↑'}{Math.abs(s.organicChange).toFixed(1)}%
+                    </motion.span>
+                  ) : (
+                    <span style={{ display: 'block', marginTop: 4, color: '#888', fontWeight: 600, fontSize: '0.75rem' }}>→0.0%</span>
+                  )}  
+                </div>  
+                <div style={{ width: 80, height: 24 }}>  
+                  <EggPriceChart store={s} preview priceType="regular" />  
+                </div>  
+                <span className="hint" style={{ whiteSpace: 'nowrap' }}>{expandedIndex === idx ? 'Hide history ↓' : 'View history →'}</span>  
+              </div>  
+            </div>  
+            <AnimatePresence>
+              {expandedIndex === idx && (
+                <motion.div
+                  className="price-history-panel"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  style={{
+                    width: '100%',
+                    marginTop: '8px',
+                    padding: '12px 16px',
+                    background: 'inherit',
+                    border: 'none',
+                    borderRadius: '0 0 8px 8px',
                     display: 'flex',
                     flexDirection: 'column',
-                    alignItems: 'center'
-                  }}>
-                    {formatPrice(s.regular)} 
-                    {/* Conditional pulse animation */}
-                    {s.regularChange != null && s.regularChange !== 0 ? (
-                      <motion.span
-                        animate={{ opacity: [1, 0.4, 1] }}
-                        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                        style={{ display: 'inline-block' }} // Needed for motion span layout
-                      >
-                        {formatChange(s.regularChange)}
-                      </motion.span>
-                    ) : (
-                      formatChange(s.regularChange) // Render non-pulsing version for 0% change
-                    )}
+                    gap: '16px',
+                    overflow: 'hidden'
+                  }}
+                >
+                  <div style={{ width: '100%' }}>
+                    <EggPriceChart store={s} priceType={activePriceType} />
                   </div>
-                </div>
-
-                {/* Organic Price Column */}
-                 <div style={{ textAlign: 'center' }}>
-                  <div style={{
-                    fontSize: '8px', 
-                    color: '#aaa', 
-                    textTransform: 'uppercase', 
-                    letterSpacing: '1px',
-                    marginBottom: '4px'
-                  }}>Organic</div>
-                  <div style={{
-                    fontSize: '1.35rem', // Larger price font size
-                    fontWeight: 'bold',
-                    color: '#fff',
-                    lineHeight: '1.2', // Adjust line height for large font
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center'
-                  }}>
-                    {formatPrice(s.organic)}
-                     {/* Conditional pulse animation */}
-                    {s.organicChange != null && s.organicChange !== 0 ? (
-                      <motion.span
-                        animate={{ opacity: [1, 0.4, 1] }}
-                        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                         style={{ display: 'inline-block' }}
-                      >
-                        {formatChange(s.organicChange)}
-                      </motion.span>
-                    ) : (
-                      formatChange(s.organicChange)
-                    )}
+                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', width: '90%', margin: '8px auto 0' }}>
+                    <span
+                      onClick={() => setActivePriceType('regular')}
+                      style={{
+                        cursor: 'pointer',
+                        color: activePriceType === 'regular' ? accentColor : '#888',
+                        textTransform: 'uppercase',
+                        fontWeight: activePriceType === 'regular' ? 'bold' : 'normal',
+                        fontSize: '0.75rem'
+                      }}
+                    >REGULAR</span>
+                    <span
+                      onClick={() => setActivePriceType('organic')}
+                      style={{
+                        cursor: 'pointer',
+                        color: activePriceType === 'organic' ? accentColor : '#888',
+                        textTransform: 'uppercase',
+                        fontWeight: activePriceType === 'organic' ? 'bold' : 'normal',
+                        fontSize: '0.75rem'
+                      }}
+                    >ORGANIC</span>
                   </div>
-                </div>
-              </div>
-
-              {/* Sparkline preview when collapsed */}
-              {expandedIndex !== idx && (
-                <div style={{ width: '100%', padding: '0 24px', marginTop: '8px' }}>
-                  <EggPriceChart store={s} preview />
-                </div>
+                </motion.div>
               )}
-              <div className="hint">View pricing history →</div>
-            </div>
-            {expandedIndex === idx && (
-              <div
-                className="price-history-panel"
-                style={{
-                  padding: '12px 16px',
-                  background: '#1a1a1a',
-                  border: `1px solid #282828`, 
-                  borderRadius: '8px',
-                  margin: '8px 0 0 0',
-                  display: 'flex',
-                  gap: '16px',
-                  overflow: 'visible'
-                }}
-              >
-                {/* Regular price history chart */}
-                <div style={{ flex: 1 }}>
-                  <EggPriceChart store={s} priceType="regular" />
-                </div>
-                {/* Organic price history chart */}
-                <div style={{ flex: 1 }}>
-                  <EggPriceChart store={s} priceType="organic" />
-                </div>
-              </div>
-            )}
+            </AnimatePresence>
           </div>
         ))}
       </div>
     </div>
   )
 }
-
-{/* Removed unused global pulse animation */}
-<style jsx global>{`
-`}</style> 

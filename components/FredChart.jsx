@@ -18,10 +18,12 @@ export default function FredChart({ symbol = 'APU0000708111', start = '1980-01-0
         const res = await fetch(`/api/fred?symbol=${symbol}&start=${start}&end=${end}`)
         const json = await res.json()
         if (json.observations) {
-          const formatted = json.observations.map(obs => ({
-            date: obs.date,
-            value: parseFloat(obs.value),
-          }))
+          const formatted = json.observations
+            .filter(obs => obs.value !== '.') // skip missing values
+            .map(obs => ({
+              date: obs.date,
+              value: parseFloat(obs.value),
+            }))
           setData(formatted)
         }
       } catch (e) {
@@ -36,34 +38,36 @@ export default function FredChart({ symbol = 'APU0000708111', start = '1980-01-0
   return (
     <div style={{
       position: 'absolute',
-      top: 0,
-      left: 0,
-      width: '100%',
-      height: '100%',
-      zIndex: 0,
-      pointerEvents: 'none',
+      top: '5%',
+      left: '5%',
+      width: '90%',
+      height: '90%',
+      zIndex: 1, // In front of egg for testing
+      pointerEvents: 'auto', // Enable tooltips
     }}>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 20, right: 20, bottom: 0, left: 0 }}>
           <defs>
             <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="rgb(0,255,255)" stopOpacity={0.8}/>
-              <stop offset="100%" stopColor="rgb(0,255,255)" stopOpacity={0.2}/>
+              <stop offset="0%" stopColor="#FFFFFF" stopOpacity={1.0}/>
+              <stop offset="100%" stopColor="#FFFFFF" stopOpacity={0.4}/>
             </linearGradient>
             <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="rgb(0,255,255)" stopOpacity={0.4}/>
-              <stop offset="100%" stopColor="rgb(0,255,255)" stopOpacity={0}/>
+              <stop offset="0%" stopColor="#FFFFFF" stopOpacity={0.5}/>
+              <stop offset="100%" stopColor="#FFFFFF" stopOpacity={0.1}/>
             </linearGradient>
           </defs>
           <Area type="monotone" dataKey="value" fill="url(#areaGradient)" stroke="none" />
-          <Line type="monotone" dataKey="value" stroke="url(#lineGradient)" strokeWidth={3} dot={false} />
+          <Line type="monotone" dataKey="value" stroke="url(#lineGradient)" strokeWidth={2} dot={false} />
           <XAxis dataKey="date" hide />
           <YAxis hide domain={[ 'dataMin', 'dataMax' ]} />
           <Tooltip
-            labelFormatter={date => new Date(date).toLocaleDateString()}
-            formatter={value => [`$${value.toFixed(2)}`, 'Avg Price']}
-            contentStyle={{ background: 'rgba(0,0,0,0.7)', border: 'none', borderRadius: 4 }}
-            itemStyle={{ color: '#0ff' }}
+            isAnimationActive={false}
+            labelFormatter={date => new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}
+            formatter={value => [`$${value.toFixed(2)}`, 'Avg Egg Price']}
+            contentStyle={{ background: 'rgba(0,0,0,0.8)', border: '1px solid #333', borderRadius: 4, color: '#fff' }}
+            itemStyle={{ color: '#fff' }}
+            cursor={{ stroke: '#666', strokeDasharray: '3 3' }}
           />
         </LineChart>
       </ResponsiveContainer>

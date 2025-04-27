@@ -34,7 +34,7 @@
   border: none;
   color: var(--accent-color);
   font-family: 'Roboto Mono', monospace;
-  font-size: 10px;
+  font-size: 9px; /* Match option font size */
   letter-spacing: 2px;
   width: 180px; text-align: center;
   padding-right: 25px;

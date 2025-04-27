@@ -18,11 +18,12 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     // Apply font class to html tag for global scope
-    <html lang="en" className={roboto_mono.className}>
+    <html lang="en" className={`${roboto_mono.className} dark-theme`}>
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         {/* Removed manual <link> tags for Google Fonts */}
       </head>
-      <body>
+      <body style={{ background: '#000' }}>
         {children}
       </body>
     </html>

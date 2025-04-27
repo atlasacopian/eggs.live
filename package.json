@@ -12,12 +12,14 @@
     "@react-three/drei": "^10.0.6",
     "@react-three/fiber": "^9.1.2",
     "@supabase/supabase-js": "^2.49.4",
+    "dotenv": "^16.5.0",
     "framer-motion": "^12.9.2",
     "next": "15.3.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "recharts": "^2.15.3",
-    "three": "^0.175.0"
+    "three": "^0.175.0",
+    "three-subdivide": "^1.1.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

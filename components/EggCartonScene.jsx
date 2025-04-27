@@ -1,23 +1,62 @@
 'use client'
 
-import { useRef, useEffect, Suspense, useState } from 'react'
-import { Canvas, useFrame, useLoader } from '@react-three/fiber'
-import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader'
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
-import { Center } from '@react-three/drei'
+import { useRef, useEffect, Suspense, useState, useMemo } from 'react'
+import { Canvas, useFrame } from '@react-three/fiber'
+import { useGLTF, useTexture } from '@react-three/drei'
+import { Center, Html, Environment, ContactShadows } from '@react-three/drei'
 import * as THREE from 'three'
+import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
-// Simple component to load the model
+// Preload the updated egg GLB so it's ready when the scene mounts
+useGLTF.preload('/updated_egg.glb')
+
+// Update ModelPrimitive for immediate load
 function ModelPrimitive(props) {
-  // Load material and OBJ
-  const materials = useLoader(MTLLoader, '/White_Egg/White_Egg_convert.mtl')
-  materials.preload()
-  const obj = useLoader(OBJLoader, '/White_Egg/White_Egg_convert.obj', (loader) => {
-    loader.setMaterials(materials)
-  })
-  const scene = obj
-  // Reduce scale further
-  return <primitive object={scene} scale={0.5} {...props} />
+  // Load GLB model using useGLTF and clone directly for fast initial rendering
+  const gltf = useGLTF('/updated_egg.glb')
+  // Load original bump and gloss textures from White_Egg
+  const [bumpMap, glossMap] = useTexture([
+    '/White_Egg/Egg_bump.png',
+    '/White_Egg/EGG_Gloss.png'
+  ])
+
+  // Tile textures to avoid UV seam
+  bumpMap.wrapS = bumpMap.wrapT = THREE.RepeatWrapping
+  glossMap.wrapS = glossMap.wrapT = THREE.RepeatWrapping
+
+  const model = useMemo(() => {
+    const cloned = gltf.scene.clone()
+    cloned.traverse((child) => {
+      if (child.isMesh && child.material) {
+        // Weld and smooth geometry to remove UV seam
+        let geo = child.geometry.clone()
+        geo = mergeVertices(geo)
+        if (geo.attributes.uv) {
+          geo.setAttribute('uv2', geo.attributes.uv)
+        }
+        geo.computeVertexNormals()
+        child.geometry = geo
+        // Apply original egg material properties
+        const mat = child.material;
+        // Use base white diffuse from MTL Kd
+        mat.color = new THREE.Color(0.941177, 0.941177, 0.941177);
+        // Subtle bump for light surface detail
+        mat.bumpMap = bumpMap
+        mat.bumpScale = 0.06
+        // Remove roughnessMap to avoid visible seam artifacts from the map
+        delete mat.roughnessMap
+        mat.roughness = 0.85
+        // Egg is non-metallic
+        mat.metalness = 0.0
+        // Increase environment reflection intensity
+        mat.envMapIntensity = 1.0
+        mat.needsUpdate = true;
+      }
+    })
+    return cloned
+  }, [gltf, bumpMap, glossMap])
+
+  return <primitive object={model} scale={0.375} {...props} />
 }
 
 // Static Experience component for egg carton
@@ -25,7 +64,10 @@ function Experience({ onInteractionStart }) {
   const centerRef = useRef()
   const mouse = useRef({ x: 0, y: 0 }) // For desktop mouse tracking
   const [isMobile, setIsMobile] = useState(false);
-  const initialRotationX = Math.PI / 4; // Keep initial tilt
+  // Original tilt plus vertical rotation
+  const initialRotationX = THREE.MathUtils.degToRad(115); // 115° rotation on X axis (45° + 70°)
+  const initialRotationY = Math.PI; // 180° rotation around Y axis (Math.PI radians = 180°)
+  const initialRotationZ = Math.PI; // 180° rotation around Z axis (Math.PI radians = 180°)
 
   // Detect touch device on mount
   useEffect(() => {
@@ -67,15 +109,22 @@ function Experience({ onInteractionStart }) {
 
   return (
     <>
-      {/* Lighting & eggs */}
-      <ambientLight intensity={0.8} />
-      <pointLight color='#ffc107' intensity={1.2} distance={20} decay={2} position={[0,5,10]} />
-      <directionalLight position={[10,10,5]} intensity={1.5} />
-      <directionalLight position={[-10,-10,-5]} intensity={1} />
+      {/* Photorealistic studio environment */}
+      <Environment preset="studio" background={false} />
+      {/* Hemispheric fill for softer gradients and seam removal */}
+      <hemisphereLight skyColor="#ffffff" groundColor="#ffffff" intensity={0.4} />
+      {/* Soft ambient light */}
+      <ambientLight intensity={0.2} />
+      {/* Directional lights for subtle highlights */}
+      <directionalLight position={[5, 5, 5]} intensity={0.6} />
+      <directionalLight position={[-5, 5, -5]} intensity={0.3} />
+      {/* Ground shadows */}
+      <ContactShadows resolution={1024} position={[0, -0.01, 0]} scale={10} blur={2} far={0.5} opacity={0.5} />
       <Suspense fallback={null}>
-        {/* Use new initial rotation */}
-        <Center ref={centerRef} rotation={[initialRotationX, 0, 0]} position={[0, 0.5, 0]}>
-          <ModelPrimitive />
+        <Center ref={centerRef} rotation={[initialRotationX, initialRotationY, initialRotationZ]} position={[0, 0, 0]}>
+          <group>
+            <ModelPrimitive />
+          </group>
         </Center>
       </Suspense>
     </>
@@ -85,17 +134,23 @@ function Experience({ onInteractionStart }) {
 // Main Scene component only sets up the Canvas
 export default function EggCartonScene({ onInteractionStart }) {
   return (
-    // Restore pointerEvents: none
-    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none' }}>
-      <Canvas
-        camera={{ position: [2, 3, 6], fov: 35 }}
-        onCreated={({ scene, camera }) => {
-          scene.background = new THREE.Color(1, 1, 1);
-          camera.lookAt(0, 1, 0); // aim slightly above origin to center the egg
-        }}
-      >
-        <Experience onInteractionStart={onInteractionStart} />
-      </Canvas>
-    </div>
+    <>
+      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none' }}>
+        <Canvas
+          camera={{ position: [2, 3, 6], fov: 35 }}
+          onCreated={({ scene, camera }) => {
+            scene.background = null; // True transparency
+            camera.lookAt(0, 0, 0); // aim at world origin to center the egg
+          }}
+        >
+          {/* Soft ambient fill to reduce harsh shadows */}
+          <ambientLight intensity={0.5} />
+          {/* Show model when ready, no loading UI */}
+          <Suspense fallback={null}>
+            <Experience onInteractionStart={onInteractionStart} />
+          </Suspense>
+        </Canvas>
+      </div>
+    </>
   )
 } 
