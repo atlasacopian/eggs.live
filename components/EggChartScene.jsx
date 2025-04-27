@@ -6,7 +6,7 @@ import * as THREE from 'three'
 
 // Detailed single egg GLB model
 function EggModel(props) {
-  const gltf = useGLTF('/white_egg.glb')
+  const gltf = useGLTF('/one_egg.glb')
   console.log('Loaded GLTF scene:', gltf.scene)
   // Clone and enable shadows
   const sceneObj = useMemo(() => {
@@ -22,7 +22,9 @@ function EggModel(props) {
   // Render the cloned scene centered under the model
   return (
     <Center {...props} top>
-      <primitive object={sceneObj} />
+      {/* Rotate the imported model 90deg around Z-axis */}
+      {/* Trial 1: Try rotating around Z-axis to make it stand upright */}
+      <primitive object={sceneObj} rotation={[0, 0, Math.PI / 2]} />
     </Center>
   )
 }
@@ -32,17 +34,19 @@ function ChartFloor({ prices, progress = 1, muted = true, showLabels = false }) 
   const { floorGroup } = useMemo(() => {
     const group = new THREE.Group()
 
-    // Floor plane (black)
-    const plane = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), new THREE.MeshStandardMaterial({ color: '#000' }))
+    // Transparent plane (disabled visibility) so chart below is not hidden
+    const planeMat = new THREE.MeshStandardMaterial({ color: '#000', transparent: true, opacity: 0 })
+    const plane = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), planeMat)
     plane.rotation.x = -Math.PI / 2
     plane.receiveShadow = true
     group.add(plane)
 
-    // Grid helper in light gray for visibility on dark background
-    const grid = new THREE.GridHelper(100, 100, '#444444', '#444444')
-    grid.material.opacity = 0.3
-    grid.material.transparent = true
-    group.add(grid)
+    // Comment out GridHelper creation and addition to remove 3D grid
+    // const gridColor = '#ffffff'
+    // const grid = new THREE.GridHelper(100, 100, gridColor, gridColor)
+    // grid.material.opacity = 0.8
+    // grid.material.transparent = true
+    // group.add(grid)
 
     return { floorGroup: group }
   }, [])
@@ -180,8 +184,7 @@ export default function EggChartScene({ showHistory = false }) {
 
   return (
     <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' /* Restore pointerEvents */ }}>
-      <Canvas shadows camera={{ position: [0, 2, 12], fov: 50 }} onCreated={({ camera, gl }) => { camRef.current = camera; gl.shadowMap.enabled = true; gl.shadowMap.type = THREE.PCFSoftShadowMap; }}>
-        <color attach="background" args={['black']} />
+      <Canvas shadows camera={{ position: [0, 2, 12], fov: 50 }} onCreated={({ camera, gl }) => { camRef.current = camera; gl.shadowMap.enabled = true; gl.shadowMap.type = THREE.PCFSoftShadowMap; gl.setClearColor(0x000000, 0); }}>
         <ambientLight intensity={0.5} />
         <spotLight position={[0, 10, 5]} intensity={1.2} angle={0.3} penumbra={0.5} castShadow />
         <spotLight position={[0, 10, -5]} intensity={0.6} angle={0.4} penumbra={0.5} castShadow />
