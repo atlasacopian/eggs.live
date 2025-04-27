@@ -67,8 +67,17 @@
   align-items:center;
   color: var(--accent-color);
   font-size: 20px;
-  opacity:0;
+  opacity: 0;
+  transition: transform 0.1s ease, opacity 0.1s ease;
   animation: enterFade 0.4s ease-out forwards;
+}
+
+/* Visual feedback when arrow is tapped */
+.enterHint:active {
+  /* Tint background for feedback and keep arrow visible */
+  background-color: rgba(255, 193, 7, 0.2);
+  opacity: 1;
+  border-radius: 4px;
 }
 
 /* restore zipInput focus */
