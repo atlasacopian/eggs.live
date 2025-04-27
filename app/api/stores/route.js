@@ -175,6 +175,26 @@ export async function GET(req) {
     } catch (err) {
       console.error('USDA fetch error', err);
     }
+    // If USDA organic average is still null, fallback to FRED series for organic eggs
+    if (avgOrgNat == null) {
+      try {
+        const fredKey = process.env.FRED_API_KEY;
+        const orgSeries = 'APU0000703121'; // FRED series for organic eggs
+        console.log('Fallback FRED fetch for organic series:', orgSeries);
+        const fredResOrg = await fetch(
+          `https://api.stlouisfed.org/fred/series/observations?series_id=${orgSeries}&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`
+        );
+        const fredJsonOrg = await fredResOrg.json();
+        const obsOrg = fredJsonOrg.observations?.[0];
+        if (obsOrg?.value != null) {
+          avgOrgNat = parseFloat(obsOrg.value);
+          avgOrgNatDate = obsOrg.date;
+          console.log('Fallback Organic FRED response:', avgOrgNat, avgOrgNatDate);
+        }
+      } catch (e) {
+        console.warn('Organic FRED fallback error', e);
+      }
+    }
     // Return stores, lastUpdated, and all averages
     return Response.json({
       stores: storesWithoutTarget,
