@@ -132,22 +132,25 @@ export async function GET(req) {
     try {
       const usdaKey = process.env.USDA_API_KEY;
       console.log('USDA_API_KEY present:', !!usdaKey);
-      // Build USDA AMS MN API query params (key in query string)
+      // Build query params for the Retail Egg Report
       const params = new URLSearchParams({
-        key: usdaKey,
-        reportTitle: 'Retail Egg Report',  // Required param name
-        commodity: 'Eggs',                 // Required param name
-        type: 'Organic',                   // Required param name
-        unit: 'Per Dozen',                 // Required param name
-        region: 'National',                // Required param name
-        frequency: 'Weekly',               // Required param name
-        statisticCategory: 'Retail Price'  // Required param name
+        reportTitle: 'Retail Egg Report',
+        commodity: 'Eggs',
+        type: 'Organic',
+        unit: 'Per Dozen',
+        region: 'National',
+        frequency: 'Weekly',
+        statisticCategory: 'Retail Price'
       });
-      // Build USDA AMS MN API URL with api_key query fallback
-      const usdaUrl = `https://api.ams.usda.gov/mn-api/v1/reports?${params.toString()}&api_key=${usdaKey}`;
-      console.log('Fetching USDA AMS reports with api_key param:', usdaUrl);
+      // Use USDA MARS API endpoint with Basic Auth (API key as username, empty password)
+      const usdaUrl = `https://marsapi.ams.usda.gov/services/v1.2/reports?${params.toString()}`;
+      console.log('Fetching USDA MARS API reports:', usdaUrl);
+      // Prepare Basic authentication header: base64(api_key + ':')
+      const credentials = Buffer.from(`${usdaKey}:`).toString('base64');
       const usdaRes = await fetch(usdaUrl, {
-        headers: { 'X-Api-Key': usdaKey }, // Use correct header casing per api.data.gov docs
+        headers: {
+          'Authorization': `Basic ${credentials}`
+        },
         next: { revalidate: 3600 }
       });
       console.log('USDA fetch status:', usdaRes.status, usdaRes.statusText);
