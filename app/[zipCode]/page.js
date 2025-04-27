@@ -78,7 +78,7 @@ export default function ZipCodePage() {
         color: '#fff',
         position: 'relative',
         minHeight: '100vh',
-        overflow: 'hidden',
+        /* allow vertical scroll */
         boxSizing: 'border-box',
         width: '100vw',
         margin: 0
