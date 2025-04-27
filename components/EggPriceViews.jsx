@@ -221,7 +221,12 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
             <div>Regular Avg: <strong>{formatPrice(avgReg)}</strong> {pctRegVsLA != null && (<span style={{ marginLeft: 4, fontWeight: 600 }}>(<span style={{ color: pctRegVsLA < 0 ? '#FF0000' : '#00FF00' }}>{pctRegVsLA < 0 ? '↓' : '↑'}{Math.abs(pctRegVsLA).toFixed(1)}%</span> vs LA)</span>)}</div>
             <div>Organic Avg: <strong>{formatPrice(avgOrg)}</strong> {pctOrgVsLA != null && (<span style={{ marginLeft: 4, fontWeight: 600 }}>(<span style={{ color: pctOrgVsLA < 0 ? '#FF0000' : '#00FF00' }}>{pctOrgVsLA < 0 ? '↓' : '↑'}{Math.abs(pctOrgVsLA).toFixed(1)}%</span> vs LA)</span>)}</div>
           </div>
-          {avgRegNat != null && avgRegNatDate && (<div style={{ marginBottom: '6px', lineHeight: 1.3 }}>Regular National Avg: <strong>{formatPrice(avgRegNat)}</strong> (as of {formatApiDate(avgRegNatDate)})</div>)}
+          {avgRegNat != null && avgRegNatDate && (
+            <div style={{ marginBottom: '6px', lineHeight: 1.3 }}>
+              Regular National Avg: <strong>{formatPrice(avgRegNat)}</strong>{' '}
+              <span style={{ color: '#aaa' }}>(as of {formatApiDate(avgRegNatDate)})</span>
+            </div>
+          )}
           {avgOrgNat != null && (<div style={{ marginBottom: '0px', lineHeight: 1.3 }}>National Organic Avg: <strong>{formatPrice(avgOrgNat)}</strong></div>)}
         </motion.div>
       </motion.div>
