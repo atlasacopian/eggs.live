@@ -132,28 +132,33 @@ export async function GET(req) {
     try {
       const usdaKey = process.env.USDA_API_KEY;
       console.log('USDA_API_KEY present:', !!usdaKey);
-      // Build USDA MN API query params (omit key here)
+      // Build USDA AMS MN API query params (key in query string)
       const params = new URLSearchParams({
-        reportName: 'Retail Egg Report',
-        commodityDesc: 'EGGS',
-        typeDesc: 'Organic',
-        unitDesc: 'Per Dozen',
-        market: 'NATIONAL',
-        frequencyDesc: 'Weekly',
-        statisticCatDesc: 'Retail Price'
+        key: usdaKey,
+        reportTitle: 'Retail Egg Report',  // Required param name
+        commodity: 'Eggs',                 // Required param name
+        type: 'Organic',                   // Required param name
+        unit: 'Per Dozen',                 // Required param name
+        region: 'National',                // Required param name
+        frequency: 'Weekly',               // Required param name
+        statisticCategory: 'Retail Price'  // Required param name
       });
-      // Use api.data.gov proxy for USDA AMS Market News
-      const usdaUrl = `https://api.data.gov/edale/mn-api/v1/reports?${params.toString()}`;
-      console.log('Fetching USDA Reports (via api.data.gov):', usdaUrl);
-      const usdaRes = await fetch(usdaUrl, {
-        headers: { 'X-API-KEY': usdaKey }, // Use correct header
-        next: { revalidate: 3600 }
-      });
+      const usdaUrl = `https://api.ams.usda.gov/mn-api/v1/reports?${params.toString()}`;
+      console.log('Fetching USDA AMS reports:', usdaUrl);
+      const usdaRes = await fetch(usdaUrl, { next: { revalidate: 3600 } });
+      console.log('USDA fetch status:', usdaRes.status, usdaRes.statusText);
+      const usdaText = await usdaRes.text();
+      console.log('USDA raw response text:', usdaText);
       if (!usdaRes.ok) {
         console.error('USDA API error status:', usdaRes.status);
       } else {
-        const usdaJson = await usdaRes.json();
-        console.log('USDA raw API response:', usdaJson);
+        let usdaJson;
+        try {
+          usdaJson = JSON.parse(usdaText);
+        } catch (e) {
+          console.error('Error parsing USDA JSON:', e);
+        }
+        console.log('USDA parsed JSON response:', usdaJson);
         const items = Array.isArray(usdaJson.data) ? usdaJson.data : [];
         // Filter and sort to get latest by reportDate or available date field
         const filtered = items
