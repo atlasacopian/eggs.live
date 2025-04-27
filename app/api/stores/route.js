@@ -132,27 +132,23 @@ export async function GET(req) {
     try {
       const usdaKey = process.env.USDA_API_KEY;
       console.log('USDA_API_KEY present:', !!usdaKey);
-      // Include both original and descriptive USDA params for broad compatibility
+      // Build USDA MN API query params (omit key here)
       const params = new URLSearchParams({
-        key: usdaKey,
-        reportTitle: 'Retail Egg Report',   // Original param
-        reportName: 'Retail Egg Report',    // Descriptive param
-        commodity: 'Eggs',                  // Original param
-        commodityDesc: 'EGGS',              // Descriptive param
-        type: 'Organic',                    // Original param
-        typeDesc: 'Organic',                // Descriptive param
-        unit: 'Per Dozen',                  // Original param
-        unitDesc: 'Per Dozen',              // Descriptive param
-        region: 'National',                 // Original param
-        market: 'NATIONAL',                 // Descriptive param
-        frequency: 'Weekly',                // Original param
-        frequencyDesc: 'Weekly',            // Descriptive param
-        statisticCategory: 'Retail Price',  // Original param
-        statisticCatDesc: 'Retail Price'    // Descriptive param
+        reportName: 'Retail Egg Report',
+        commodityDesc: 'EGGS',
+        typeDesc: 'Organic',
+        unitDesc: 'Per Dozen',
+        market: 'NATIONAL',
+        frequencyDesc: 'Weekly',
+        statisticCatDesc: 'Retail Price'
       });
-      const usdaUrl = `https://api.ams.usda.gov/mn-api/v1/reports?${params.toString()}`;
-      console.log('Fetching USDA REPORTS:', usdaUrl);
-      const usdaRes = await fetch(usdaUrl);
+      // Use api.data.gov proxy for USDA AMS Market News
+      const usdaUrl = `https://api.data.gov/edale/mn-api/v1/reports?${params.toString()}`;
+      console.log('Fetching USDA Reports (via api.data.gov):', usdaUrl);
+      const usdaRes = await fetch(usdaUrl, {
+        headers: { 'X-API-KEY': usdaKey }, // Use correct header
+        next: { revalidate: 3600 }
+      });
       if (!usdaRes.ok) {
         console.error('USDA API error status:', usdaRes.status);
       } else {
