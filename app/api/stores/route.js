@@ -132,54 +132,33 @@ export async function GET(req) {
     try {
       const usdaKey = process.env.USDA_API_KEY;
       console.log('USDA_API_KEY present:', !!usdaKey);
-      // Build query params for the Retail Egg Report
-      const params = new URLSearchParams({
-        reportTitle: 'Retail Egg Report',
-        commodity: 'Eggs',
-        type: 'Organic',
-        unit: 'Per Dozen',
-        region: 'National',
-        frequency: 'Weekly',
-        statisticCategory: 'Retail Price'
-      });
-      // Use USDA MARS API endpoint with Basic Auth (API key as username, empty password)
-      const usdaUrl = `https://marsapi.ams.usda.gov/services/v1.2/reports?${params.toString()}`;
-      console.log('Fetching USDA MARS API reports:', usdaUrl);
-      // Prepare Basic authentication header: base64(api_key + ':')
       const credentials = Buffer.from(`${usdaKey}:`).toString('base64');
-      const usdaRes = await fetch(usdaUrl, {
-        headers: {
-          'Authorization': `Basic ${credentials}`
-        },
+      // 1) Fetch list of available reports to find the Retail Egg Report slug
+      const listUrl = 'https://marsapi.ams.usda.gov/services/v1.2/reports';
+      const listRes = await fetch(listUrl, {
+        headers: { 'Authorization': `Basic ${credentials}` },
+        next: { revalidate: 86400 }
+      });
+      const listJson = await listRes.json();
+      const reports = listJson.results || [];
+      const retailReport = reports.find(r => r.report_name === 'Retail Egg Report');
+      if (!retailReport) console.error('Retail Egg Report not found in MARS API reports list');
+      // Use slug_name to fetch filtered data
+      const slug = retailReport?.slug_name;
+      const filterQ = 'commodity=Eggs;type=Organic;unit=Per Dozen;region=National;frequency=Weekly;statisticCategory=Retail Price';
+      const reportUrl = `https://marsapi.ams.usda.gov/services/v1.2/reports/${encodeURIComponent(slug)}?q=${encodeURIComponent(filterQ)}`;
+      console.log('Fetching MARS report data:', reportUrl);
+      const marsRes = await fetch(reportUrl, {
+        headers: { 'Authorization': `Basic ${credentials}` },
         next: { revalidate: 3600 }
       });
-      console.log('USDA fetch status:', usdaRes.status, usdaRes.statusText);
-      const usdaText = await usdaRes.text();
-      console.log('USDA raw response text:', usdaText);
-      if (!usdaRes.ok) {
-        console.error('USDA API error status:', usdaRes.status);
-      } else {
-        let usdaJson;
-        try {
-          usdaJson = JSON.parse(usdaText);
-        } catch (e) {
-          console.error('Error parsing USDA JSON:', e);
-        }
-        console.log('USDA parsed JSON response:', usdaJson);
-        const items = Array.isArray(usdaJson.data) ? usdaJson.data : [];
-        // Filter and sort to get latest by reportDate or available date field
-        const filtered = items
-          .filter(r => r.pricePerUnit != null)
-          .sort((a, b) => new Date(b.report_date || b.date) - new Date(a.report_date || a.date));
-        const rec = filtered[0];
-        console.log('Latest USDA organic record:', rec);
-        if (rec) {
-          // Fallback across possible field names for price
-          const rawPrice = rec.pricePerUnit ?? rec.value ?? rec.avgPrice ?? rec.price;
-          avgOrgNat = rawPrice != null ? parseFloat(rawPrice) : null;
-          avgOrgNatDate = rec.report_date ?? rec.date;
-        }
-      }
+      console.log('MARS fetch status:', marsRes.status, marsRes.statusText);
+      const marsJson = await marsRes.json();
+      console.log('MARS parsed JSON response:', marsJson);
+      const results = Array.isArray(marsJson.results) ? marsJson.results : [];
+      const latest = results[0] || {};
+      avgOrgNat = latest.pricePerUnit != null ? parseFloat(latest.pricePerUnit) : null;
+      avgOrgNatDate = latest.report_date || latest.published_date;
     } catch (err) {
       console.error('USDA fetch error', err);
     }
