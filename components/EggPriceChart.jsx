@@ -71,8 +71,8 @@ export default function EggPriceChart({ store, highlight = false, preview = fals
             data={history}
             margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
           >
-            {/* Render grid only in full view */}
-            {!preview && <CartesianGrid vertical={false} stroke="#444" strokeOpacity={0.2} />}
+            {/* Render subtle grid only in full view */}
+            {!preview && <CartesianGrid vertical={false} stroke="#444" strokeOpacity={0.1} />}
             {/* Reference lines only in full view */}
             {!preview && <ReferenceLine y={7} stroke="#555" strokeDasharray="3 3" />}
             {!preview && <ReferenceLine y={8.5} stroke="#555" strokeDasharray="3 3" />}
@@ -90,20 +90,20 @@ export default function EggPriceChart({ store, highlight = false, preview = fals
                 const yy = String(d.getFullYear() % 100).padStart(2, '0');
                 return `${mm}/${dd}/${yy}`;
               } : undefined}
-              axisLine={!preview}
-              tickLine={!preview}
+              axisLine={false}
+              tickLine={false}
               hide={preview}
-              stroke="#aaa"
-              tick={{ fontSize: 10, fill: '#aaa', dy: 2 }}
+              stroke="#666"
+              tick={{ fontSize: 10, fill: '#666', dy: 2 }}
               tickMargin={4}
             />
             <YAxis
               domain={[domainMin, domainMax]}
-              axisLine={!preview}
-              tickLine={!preview}
+              axisLine={false}
+              tickLine={false}
               hide={preview}
-              stroke="#aaa"
-              tick={{ fontSize: 10, fill: '#aaa', dx: -4 }}
+              stroke="#666"
+              tick={{ fontSize: 10, fill: '#666', dx: -4 }}
               tickMargin={4}
               tickFormatter={!preview ? v => `$${v.toFixed(2)}` : undefined}
             />
