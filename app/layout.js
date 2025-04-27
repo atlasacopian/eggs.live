@@ -20,7 +20,7 @@ export default function RootLayout({ children }) {
     // Apply font class to html tag for global scope
     <html lang="en" className={`${roboto_mono.className} dark-theme`}>
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         {/* Removed manual <link> tags for Google Fonts */}
       </head>
       <body style={{ background: '#000' }}>
