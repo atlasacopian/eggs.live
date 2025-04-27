@@ -69,7 +69,7 @@ export default function EggPriceChart({ store, highlight = false, preview = fals
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={history}
-            margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
+            margin={{ top: 0, right: 0, left: 0, bottom: 20 }}
           >
             {/* Render subtle grid only in full view */}
             {!preview && <CartesianGrid vertical={false} stroke="#444" strokeOpacity={0.1} />}
@@ -95,7 +95,7 @@ export default function EggPriceChart({ store, highlight = false, preview = fals
               hide={preview}
               stroke="#666"
               tick={{ fontSize: 10, fill: '#666', dy: 2 }}
-              tickMargin={4}
+              tickMargin={8}
             />
             <YAxis
               domain={[domainMin, domainMax]}
@@ -104,7 +104,7 @@ export default function EggPriceChart({ store, highlight = false, preview = fals
               hide={preview}
               stroke="#666"
               tick={{ fontSize: 10, fill: '#666', dx: -4 }}
-              tickMargin={4}
+              tickMargin={8}
               tickFormatter={!preview ? v => `$${v.toFixed(2)}` : undefined}
             />
             {/* Tooltip only in full view */}
