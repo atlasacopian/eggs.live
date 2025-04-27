@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useEffect, Suspense, useState, useMemo } from 'react'
+import { useRef, useEffect, Suspense, useState, useMemo, forwardRef } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { useGLTF, useTexture, Decal } from '@react-three/drei'
 import { Center, Environment, ContactShadows } from '@react-three/drei'
@@ -11,7 +11,7 @@ import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 useGLTF.preload('/updated_egg.glb')
 
 // Update ModelPrimitive for immediate load
-function ModelPrimitive(props) {
+const ModelPrimitive = forwardRef((props, ref) => {
   // Load GLB model using useGLTF and clone directly for fast initial rendering
   const gltf = useGLTF('/updated_egg.glb')
   // Load original bump and gloss textures from White_Egg
@@ -56,12 +56,14 @@ function ModelPrimitive(props) {
     return cloned
   }, [gltf, bumpMap, glossMap])
 
-  return <primitive object={model} scale={0.375} {...props} />
-}
+  return <primitive ref={ref} object={model} scale={0.375} {...props} />
+})
+ModelPrimitive.displayName = 'ModelPrimitive'
 
 // Static Experience component for egg carton
 function Experience({ onInteractionStart }) {
   const centerRef = useRef()
+  const eggRef = useRef()
   const mouse = useRef({ x: 0, y: 0 }) // For desktop mouse tracking
   const [isMobile, setIsMobile] = useState(false);
   // Original tilt plus vertical rotation
@@ -144,9 +146,9 @@ function Experience({ onInteractionStart }) {
       <Suspense fallback={null}>
         <Center ref={centerRef} rotation={[initialRotationX, initialRotationY, initialRotationZ]} position={[0, 0, 0]}>
           <group>
-            <ModelPrimitive />
-            {/* Decal to apply text onto egg surface */}
+            <ModelPrimitive ref={eggRef} />
             <Decal
+              mesh={eggRef.current}
               position={[0, 0, 0.52]}
               rotation={[0, 0, initialRotationZ]}
               scale={[0.6, 0.6, 0.6]}
