@@ -206,8 +206,8 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
           <div style={{ fontSize: '56px', fontWeight: 700, color: '#fff', letterSpacing: '0.25ch', marginBottom: '6px' }}>
             {currentZip}
           </div>
-          <div style={{ fontSize: '9px', color: accentColor, textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: '4px' }}>
-            Last Updated: {updatedTime}
+          <div style={{ fontSize: '9px', color: accentColor, textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: '4px', display: 'flex', alignItems: 'center' }}>
+            <span className="pulsing-dot" /> Last Updated: {updatedTime}
           </div>
         </motion.div>
         {/* Panel 2: Averages & Deals */}
@@ -274,6 +274,21 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
         /* Ensure input shares same numeric spacing */
         .zip-input {
           font-variant-numeric: tabular-nums;
+        }
+        /* Pulsing dot to indicate active update */
+        @keyframes pulsing {
+          0% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.4; transform: scale(1.2); }
+          100% { opacity: 1; transform: scale(1); }
+        }
+        .pulsing-dot {
+          display: inline-block;
+          width: 0.5em;
+          height: 0.5em;
+          border-radius: 50%;
+          background: ${accentColor};
+          margin-right: 0.5em;
+          animation: pulsing 1.5s infinite ease-in-out;
         }
       `}</style>
 
