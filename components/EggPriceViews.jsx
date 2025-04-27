@@ -212,7 +212,7 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
         </motion.div>
         {/* Panel 2: Averages & Deals */}
         <motion.div className="stats-panel" whileHover={{ borderColor: accentColor, background: '#111', y: -2 }} style={{ flex: 1, background: '#000', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, padding: '16px', fontSize: '0.75rem', textTransform: 'uppercase', color: '#fff', letterSpacing: '0.025em', cursor: 'pointer' }}>
-          <div className="stats-header" style={{ fontWeight: 700, fontSize: '0.75rem', letterSpacing: '0.1em', marginBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.15)', paddingBottom: '6px', transition: 'border-bottom-color 0.2s ease' }}>🥚 STATS</div>
+          <div className="stats-header" style={{ fontWeight: 700, fontSize: '0.75rem', letterSpacing: '0.1em', marginBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.15)', paddingBottom: '6px', transition: 'border-bottom-color 0.2s ease' }}>🥚 MARKET STATS</div>
           <div style={{ marginBottom: '10px', lineHeight: 1.3 }}>
             <div>Lowest Price: <strong>{formatPrice(cheapestReg.price)}</strong> Regular @ <a href={formatAddress(cheapestReg.address).link} target="_blank" rel="noopener noreferrer" className="address-link">{cheapestReg.store}</a></div>
             <div>Highest Price: <strong>{formatPrice(mostExpOrg.price)}</strong> Organic @ <a href={formatAddress(mostExpOrg.address).link} target="_blank" rel="noopener noreferrer" className="address-link">{mostExpOrg.store}</a></div>
