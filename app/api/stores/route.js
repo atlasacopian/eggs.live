@@ -132,16 +132,23 @@ export async function GET(req) {
     try {
       const usdaKey = process.env.USDA_API_KEY;
       console.log('USDA_API_KEY present:', !!usdaKey);
-      // Use AMS Retail Egg Report API parameter names
+      // Include both original and descriptive USDA params for broad compatibility
       const params = new URLSearchParams({
         key: usdaKey,
-        reportName: 'Retail Egg Report',            // Correct param for report title
-        commodityDesc: 'EGGS',                      // Commodity description
-        typeDesc: 'Organic',                        // Type description
-        unitDesc: 'Per Dozen',                      // Unit description
-        market: 'NATIONAL',                         // Market (region) code
-        frequencyDesc: 'Weekly',                    // Frequency description
-        statisticCatDesc: 'Retail Price'            // Statistic category description
+        reportTitle: 'Retail Egg Report',   // Original param
+        reportName: 'Retail Egg Report',    // Descriptive param
+        commodity: 'Eggs',                  // Original param
+        commodityDesc: 'EGGS',              // Descriptive param
+        type: 'Organic',                    // Original param
+        typeDesc: 'Organic',                // Descriptive param
+        unit: 'Per Dozen',                  // Original param
+        unitDesc: 'Per Dozen',              // Descriptive param
+        region: 'National',                 // Original param
+        market: 'NATIONAL',                 // Descriptive param
+        frequency: 'Weekly',                // Original param
+        frequencyDesc: 'Weekly',            // Descriptive param
+        statisticCategory: 'Retail Price',  // Original param
+        statisticCatDesc: 'Retail Price'    // Descriptive param
       });
       const usdaUrl = `https://api.ams.usda.gov/mn-api/v1/reports?${params.toString()}`;
       console.log('Fetching USDA REPORTS:', usdaUrl);
@@ -159,8 +166,10 @@ export async function GET(req) {
         const rec = filtered[0];
         console.log('Latest USDA organic record:', rec);
         if (rec) {
-          avgOrgNat = parseFloat(rec.pricePerUnit);
-          avgOrgNatDate = rec.report_date || rec.date;
+          // Fallback across possible field names for price
+          const rawPrice = rec.pricePerUnit ?? rec.value ?? rec.avgPrice ?? rec.price;
+          avgOrgNat = rawPrice != null ? parseFloat(rawPrice) : null;
+          avgOrgNatDate = rec.report_date ?? rec.date;
         }
       }
     } catch (err) {
