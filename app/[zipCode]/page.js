@@ -138,12 +138,14 @@ export default function ZipCodePage() {
         </div>
       </div>
       {/* Request link styling */}
-      <style jsx>{`
-        .request-link {
-          color: #ffc107;
+      <style jsx global>{`
+        a.request-link,
+        a.request-link:visited {
+          color: #ffc107 !important;
           text-decoration: none;
         }
-        .request-link:hover {
+        a.request-link:hover,
+        a.request-link:active {
           text-decoration: underline;
         }
         @media (max-width: 768px) {
