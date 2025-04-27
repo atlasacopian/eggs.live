@@ -143,9 +143,13 @@ export async function GET(req) {
         frequency: 'Weekly',               // Required param name
         statisticCategory: 'Retail Price'  // Required param name
       });
-      const usdaUrl = `https://api.ams.usda.gov/mn-api/v1/reports?${params.toString()}`;
-      console.log('Fetching USDA AMS reports:', usdaUrl);
-      const usdaRes = await fetch(usdaUrl, { next: { revalidate: 3600 } });
+      // Build USDA AMS MN API URL with api_key query fallback
+      const usdaUrl = `https://api.ams.usda.gov/mn-api/v1/reports?${params.toString()}&api_key=${usdaKey}`;
+      console.log('Fetching USDA AMS reports with api_key param:', usdaUrl);
+      const usdaRes = await fetch(usdaUrl, {
+        headers: { 'X-Api-Key': usdaKey }, // Use correct header casing per api.data.gov docs
+        next: { revalidate: 3600 }
+      });
       console.log('USDA fetch status:', usdaRes.status, usdaRes.statusText);
       const usdaText = await usdaRes.text();
       console.log('USDA raw response text:', usdaText);
