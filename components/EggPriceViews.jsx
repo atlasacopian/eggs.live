@@ -198,7 +198,7 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
         style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}
       >
         {/* Panel 1: Location & ZIP */}
-        <motion.div whileHover={{ borderColor: accentColor, background: '#111', y: -2 }} style={{ flex: 1, background: '#000', border: `1px solid ${accentColor}33`, borderRadius: 8, padding: '16px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', textAlign: 'left' }}>
+        <motion.div whileHover={{ borderColor: accentColor, background: '#111', y: -2 }} style={{ flex: 1, background: '#000', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, padding: '16px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', textAlign: 'left' }}>
           <div style={{ fontSize: '11px', color: '#fff', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>
             EGG PRICES, PER DOZEN<br/>
             IN LOS ANGELES, CA
@@ -211,7 +211,7 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
           </div>
         </motion.div>
         {/* Panel 2: Averages & Deals */}
-        <motion.div className="stats-panel" whileHover={{ borderColor: accentColor, background: '#111', y: -2 }} style={{ flex: 1, background: '#000', border: `1px solid ${accentColor}33`, borderRadius: 8, padding: '16px', fontSize: '0.75rem', textTransform: 'uppercase', color: '#fff', letterSpacing: '0.025em', cursor: 'pointer' }}>
+        <motion.div className="stats-panel" whileHover={{ borderColor: accentColor, background: '#111', y: -2 }} style={{ flex: 1, background: '#000', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, padding: '16px', fontSize: '0.75rem', textTransform: 'uppercase', color: '#fff', letterSpacing: '0.025em', cursor: 'pointer' }}>
           <div className="stats-header" style={{ fontWeight: 700, fontSize: '0.75rem', letterSpacing: '0.1em', marginBottom: '10px', borderBottom: '1px solid transparent', paddingBottom: '6px', transition: 'border-bottom-color 0.2s ease' }}>🥚 STATS</div>
           <div style={{ marginBottom: '10px', lineHeight: 1.3 }}>
             <div>Lowest Price: <strong>{formatPrice(cheapestReg.price)}</strong> Regular @ <a href={formatAddress(cheapestReg.address).link} target="_blank" rel="noopener noreferrer" className="address-link">{cheapestReg.store}</a></div>
@@ -230,7 +230,7 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
       <style jsx>{`
         .store-item {
           background: #000;
-          border: 1px solid #fff;
+          border: 1px solid rgba(255,255,255,0.15);
           border-radius: 8px;
           box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
           margin-bottom: 8px;
