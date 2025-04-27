@@ -132,16 +132,16 @@ export async function GET(req) {
     try {
       const usdaKey = process.env.USDA_API_KEY;
       console.log('USDA_API_KEY present:', !!usdaKey);
-      // Build USDA report query with required parameters
+      // Use AMS Retail Egg Report API parameter names
       const params = new URLSearchParams({
         key: usdaKey,
-        reportTitle: 'Retail Egg Report',
-        commodity: 'Eggs',
-        type: 'Organic',
-        unit: 'Per Dozen',
-        region: 'National',
-        frequency: 'Weekly',
-        statisticCategory: 'Retail Price'
+        reportName: 'Retail Egg Report',            // Correct param for report title
+        commodityDesc: 'EGGS',                      // Commodity description
+        typeDesc: 'Organic',                        // Type description
+        unitDesc: 'Per Dozen',                      // Unit description
+        market: 'NATIONAL',                         // Market (region) code
+        frequencyDesc: 'Weekly',                    // Frequency description
+        statisticCatDesc: 'Retail Price'            // Statistic category description
       });
       const usdaUrl = `https://api.ams.usda.gov/mn-api/v1/reports?${params.toString()}`;
       console.log('Fetching USDA REPORTS:', usdaUrl);
