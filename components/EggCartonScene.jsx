@@ -65,9 +65,9 @@ function Experience({ onInteractionStart }) {
   const mouse = useRef({ x: 0, y: 0 }) // For desktop mouse tracking
   const [isMobile, setIsMobile] = useState(false);
   // Original tilt plus vertical rotation
-  const initialRotationX = THREE.MathUtils.degToRad(115); // 115° rotation on X axis (45° + 70°)
-  const initialRotationY = Math.PI; // 180° rotation around Y axis (Math.PI radians = 180°)
-  const initialRotationZ = THREE.MathUtils.degToRad(70); // 70° rotation around Z axis so egg stands upright
+  const initialRotationX = 0; // No tilt on X axis for upright orientation
+  const initialRotationY = 0; // Face front with no Y-axis rotation
+  const initialRotationZ = 0; // No Z-axis rotation for upright orientation
 
   // Detect touch device on mount
   useEffect(() => {

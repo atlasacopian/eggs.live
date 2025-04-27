@@ -40,11 +40,11 @@ export default function Home() {
       <div
         style={{
           position: 'relative',
-          zIndex: 5,
+          zIndex: 50,
           width: '100%',
           padding: '0 16px',
           boxSizing: 'border-box',
-          marginTop: '25vh' /* Bumped down so title clears ticker */,
+          marginTop: '40vh' /* Increased to fully clear ticker */,
         }}
         className="header-container"
       >
