@@ -103,7 +103,7 @@
 
 .promptWrapper {
   position: fixed;
-  bottom: 30vh; /* position at bottom of 3D egg */
+  bottom: 25vh; /* move prompts lower on screen */
   left: 50%;
   transform: translateX(-50%);
   z-index: 20;
