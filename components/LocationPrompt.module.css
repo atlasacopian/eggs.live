@@ -127,11 +127,11 @@
 /* Add media query for mobile adjustments */
 @media (max-width: 768px) {
   .option {
-    font-size: 9px !important; /* Match OR text size */
-    padding: 0.5rem 0.75rem; /* Slightly reduced padding */
-    min-height: 36px; /* Standard tap size */
+    font-size: 9px !important;
+    padding: 0.5rem 0.75rem;
+    min-height: 36px;
     letter-spacing: 2px;
-    width: 100px; /* More compact width */
+    width: auto !important;
     box-sizing: border-box;
   }
 
@@ -146,15 +146,21 @@
     right: 2px;
   }
 
-  /* Ensure OR text matches option size */
-  .option + span {
+  /* Ensure OR text matches option size and spacing */
+  .option + span,
+  span + .option {
     font-size: 9px !important;
     letter-spacing: 2px !important;
+    margin: 0 1rem !important;
   }
 
   /* Note: .scanHeader class is not defined here, 
      it's using inline style in the component, 
      adjustments made there via <style jsx> */
+
+  .bracket {
+    padding: 0 .2em;
+  }
 }
 
 /* Revert to original desktop button sizes */
@@ -166,4 +172,9 @@
     letter-spacing: 2px;
     width: auto;
   }
+}
+
+.bracket {
+  display: inline-block;
+  padding: 0 .25em;
 } 

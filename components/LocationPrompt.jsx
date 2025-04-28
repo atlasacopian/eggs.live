@@ -47,24 +47,23 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
           }}
         >
           {showZipInput ? (
-            <form onSubmit={handleZipSubmit} style={{ display: 'inline-block', position: 'relative' }}>
+            <form onSubmit={handleZipSubmit} style={{ display: 'inline-flex', alignItems: 'center', position: 'relative' }}>
+              <span className={styles.bracket}>[</span>
               <input
                 className={styles.zipInput}
                 type="text"
                 maxLength={5}
                 value={zipCode}
                 onChange={(e) => setZipCode(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleZipSubmit(e) }}
                 autoFocus
               />
+              <span className={styles.bracket}>]</span>
               {zipCode.length === 5 && (
                 <button
                   type="submit"
                   className={styles.enterHint}
                   style={{ background: 'none', border: 'none', padding: 0, margin: 0, cursor: 'pointer' }}
-                >
-                  ↵
-                </button>
+                >↵</button>
               )}
             </form>
           ) : (
