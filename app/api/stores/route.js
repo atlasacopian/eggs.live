@@ -63,7 +63,7 @@ export async function GET(req) {
       console.log('Attempting to fetch place_ids for addresses:', addresses);
       // Query the stores table to get place_id based on address
       const { data: idData, error: idError } = await sb
-        .from('stores')
+        .from('la_stores')
         .select('address, place_id')
         .in('address', addresses);
 

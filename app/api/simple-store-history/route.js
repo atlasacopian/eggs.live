@@ -17,7 +17,7 @@ export async function GET(req) {
 
   // Directly query the egg_prices table using the identifier
   const { data, error } = await sb
-    .from('egg_prices')
+    .from('la_egg_prices')
     .select('date, avg_regular_dozen_price, avg_organic_dozen_price')
     .eq('store_identifier', storeIdentifier) // Use the passed identifier directly
     .order('date', { ascending: true });
