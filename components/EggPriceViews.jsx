@@ -176,7 +176,12 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
       </div>
     )
   }
-  const regList = localStores.map(s => s.regular).filter(v => v != null)
+  const regList = localStores.map(s => s.regular).filter(v => v != null);
+  const orgList = localStores.map(s => s.organic).filter(v => v != null);
+  const avgReg = regList.length ? regList.reduce((a, b) => a + b, 0) / regList.length : null;
+  const avgOrg = orgList.length ? orgList.reduce((a, b) => a + b, 0) / orgList.length : null;
+  const pctRegVsLA = avgRegLA ? ((avgReg - avgRegLA) / avgRegLA) * 100 : null;
+  const pctOrgVsLA = avgOrgLA ? ((avgOrg - avgOrgLA) / avgOrgLA) * 100 : null;
 
   // Render
   return (
@@ -218,8 +223,8 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
             <div>Highest Price: <strong>{formatPrice(cheapestOrg.price)}</strong> Organic @ <a href={formatAddress(cheapestOrg.address).link} target="_blank" rel="noopener noreferrer" className="address-link">{cheapestOrg.store}</a></div>
           </div>
           <div style={{ marginBottom: '10px', lineHeight: 1.3 }}>
-            <div>Regular Avg: <strong>{formatPrice(localStores.length ? localStores.map(s => s.regular).reduce((a, b) => a + b, 0) / localStores.length : null)}</strong> {pctRegVsLA != null && (<span style={{ marginLeft: 4, fontWeight: 600 }}>(<span style={{ color: pctRegVsLA < 0 ? '#FF0000' : '#00FF00' }}>{pctRegVsLA < 0 ? '↓' : '↑'}{Math.abs(pctRegVsLA).toFixed(1)}%</span> vs LA)</span>)}</div>
-            <div>Organic Avg: <strong>{formatPrice(localStores.length ? localStores.map(s => s.organic).reduce((a, b) => a + b, 0) / localStores.length : null)}</strong> {pctOrgVsLA != null && (<span style={{ marginLeft: 4, fontWeight: 600 }}>(<span style={{ color: pctOrgVsLA < 0 ? '#FF0000' : '#00FF00' }}>{pctOrgVsLA < 0 ? '↓' : '↑'}{Math.abs(pctOrgVsLA).toFixed(1)}%</span> vs LA)</span>)}</div>
+            <div>Regular Avg: <strong>{formatPrice(avgReg)}</strong> {pctRegVsLA != null && (<span style={{ marginLeft: 4, fontWeight: 600 }}>(<span style={{ color: pctRegVsLA < 0 ? '#FF0000' : '#00FF00' }}>{pctRegVsLA < 0 ? '↓' : '↑'}{Math.abs(pctRegVsLA).toFixed(1)}%</span> vs LA)</span>)}</div>
+            <div>Organic Avg: <strong>{formatPrice(avgOrg)}</strong> {pctOrgVsLA != null && (<span style={{ marginLeft: 4, fontWeight: 600 }}>(<span style={{ color: pctOrgVsLA < 0 ? '#FF0000' : '#00FF00' }}>{pctOrgVsLA < 0 ? '↓' : '↑'}{Math.abs(pctOrgVsLA).toFixed(1)}%</span> vs LA)</span>)}</div>
           </div>
           {avgRegNat != null && avgRegNatDate && (
             <div style={{ marginBottom: '6px', lineHeight: 1.3 }}>
