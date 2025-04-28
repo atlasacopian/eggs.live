@@ -49,18 +49,7 @@ export async function GET(req) {
 
   if (rpcError) {
     console.error('Supabase RPC error', rpcError)
-    // Fallback: pick first 10 stores matching zip
-    const { data: fallbackData, error: fbErr } = await sb
-      .from('stores')
-      .select('name,address,zip_code')
-      .eq('zip_code', zip)
-      .limit(10)
-
-    if (fbErr) {
-      console.error('Supabase fallback error', fbErr)
-      return Response.json({ error: fbErr.message }, { status: 500 })
-    }
-    storesFromRpc = fallbackData
+    return Response.json({ error: rpcError.message }, { status: 500 })
   }
 
   let finalStores = storesFromRpc ?? [];
