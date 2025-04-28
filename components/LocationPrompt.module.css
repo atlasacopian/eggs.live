@@ -163,7 +163,9 @@
   }
 
   .container {
-    gap: 0.5rem; /* tighter gap on mobile */
+    width: 100vw;
+    justify-content: center;
+    gap: 0.25rem !important;
   }
 }
 
