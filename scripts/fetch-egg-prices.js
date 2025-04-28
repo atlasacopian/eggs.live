@@ -85,9 +85,9 @@ async function summarizeEggPrices(token, locationId) {
   const { data } = await res.json()
   if (!data?.length) {
     console.log(`⏺ store ${locationId}: no products returned`)
-    return null
+  } else {
+    console.log(`⏺ store ${locationId}: raw products = ${data.length}`)
   }
-  console.log(`⏺ store ${locationId}: raw products = ${data.length}`)
 
   const regPrices = []
   const orgPrices = []
