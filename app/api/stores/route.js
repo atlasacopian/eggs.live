@@ -39,7 +39,13 @@ export async function GET(req) {
   const sb = supabaseServer()
 
   // Call an RPC defined in Supabase that returns enriched records
-  let { data: storesFromRpc, error: rpcError } = await sb.rpc('get_stores_with_prices', { zip_in: zip, lat_in: latitude, lon_in: longitude })
+  let { data: storesFromRpc, error: rpcError } = await sb.rpc('get_kroger_store_prices', {
+    zip_in: zip,
+    lat_in: latitude,
+    lon_in: longitude,
+    radius_miles: 3,
+    limit_n: 20
+  });
 
   if (rpcError) {
     console.error('Supabase RPC error', rpcError)
