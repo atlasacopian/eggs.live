@@ -30,7 +30,7 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
   }
 
   return (
-    <div className={styles.promptWrapper}>
+    <div style={{ position: 'static', marginTop: '20vh', zIndex: 20, textAlign: 'center' }}>
       {/* Buttons Container */}
       <div className={styles.container}>
         <div className={styles.option} onClick={handleLocationClick}>
@@ -62,6 +62,7 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
                   type="submit"
                   className={styles.enterHint}
                   style={{ background: 'none', border: 'none', padding: 0, margin: '0 0.25em', cursor: 'pointer', position: 'static' }}
+                  onClick={(e) => { e.preventDefault(); handleZipSubmit(e); }}
                 >↵</button>
               )}
               <span className={styles.bracket}>]</span>
