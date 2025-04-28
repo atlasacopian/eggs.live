@@ -25,9 +25,12 @@
   /* For desktop, fixed width will be set in media query */
 }
 
-.option:hover {
+/* Unified hover and focus styling on .option, including focus-within when input is active */
+.option:hover,
+.option:focus-within {
   color: var(--accent-color);
-  background-color: rgba(255, 193, 7, 0.15); /* match new accent-color #ffc107 */
+  background-color: rgba(255, 193, 7, 0.15);
+  border: 1px solid var(--accent-color);
 }
 
 .zipInput {
@@ -43,11 +46,6 @@
   height: 36px; /* match option container height */
   line-height: 36px; /* vertically center text and cursor */
   padding-right: 25px;
-}
-
-.activeInput {
-  background: rgba(255, 193, 7, 0.05);
-  cursor: text;
 }
 
 /* New style for valid input */
@@ -105,9 +103,11 @@
   color: #fff; /* white to contrast dark background */
 }
 
-/* Hide brackets when the option is activeInput (input mode) */
-.activeInput::before,
-.activeInput::after { display:none; }
+/* Brackets inherit accent color when parent option is hovered or input focused */
+.option:hover .bracket,
+.option:focus-within .bracket {
+  color: var(--accent-color);
+}
 
 .promptWrapper {
   position: fixed;
@@ -216,9 +216,4 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-}
-
-/* Keep brackets colored when in active input mode */
-.activeInput .bracket {
-  color: var(--accent-color);
 } 

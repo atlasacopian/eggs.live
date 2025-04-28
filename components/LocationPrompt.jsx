@@ -38,8 +38,13 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
         </div>
         <span className={styles.orText}>OR</span>
         <div
-          className={`${styles.option} ${showZipInput ? styles.activeInput : ''}`}
-          onClick={() => { if (!showZipInput) { setShowZipInput(true); setZipCode(''); } }}
+          className={styles.option}
+          onClick={() => {
+            if (!showZipInput) {
+              setShowZipInput(true)
+              setZipCode('')
+            }
+          }}
         >
           {!showZipInput ? (
             '[ ENTER ZIP CODE ]'
