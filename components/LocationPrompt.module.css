@@ -72,6 +72,9 @@
   opacity: 0;
   transition: transform 0.1s ease, opacity 0.1s ease;
   animation: enterFade 0.4s ease-out forwards;
+  background: none;
+  border: none;
+  outline: none;
 }
 
 /* Visual feedback when arrow is tapped */
@@ -180,11 +183,11 @@
     padding: 0.5rem;
     min-height: 36px;
     letter-spacing: 2px;
-    width: 18ch; /* fixed width matching input and placeholder */
+    width: 20ch; /* fixed width matching input, brackets and placeholder */
     box-sizing: border-box;
   }
   .zipInput {
-    width: 18ch; /* match option width */
+    width: 18ch; /* match input width for typed content */
   }
 }
 
