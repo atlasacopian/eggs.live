@@ -32,11 +32,11 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
   return (
     <div style={{ position: 'fixed', bottom: '20vh', left: '50%', transform: 'translateX(-50%)', zIndex: 20, textAlign: 'center' }}>
       {/* Buttons Container */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', justifyContent: 'center' }}>
+      <div className={styles.container}>
         <div className={styles.option} onClick={handleLocationClick}>
           [ USE LOCATION ]
         </div>
-        <span style={{ color: '#000', cursor: 'default', fontSize: '9px', letterSpacing: '2px' }}>OR</span>
+        <span className={styles.orText}>OR</span>
         <div
           className={`${styles.option} ${showZipInput ? styles.activeInput : ''}`}
           onClick={() => {

@@ -161,6 +161,10 @@
   .bracket {
     padding: 0 .2em;
   }
+
+  .container {
+    gap: 0.5rem; /* tighter gap on mobile */
+  }
 }
 
 /* Revert to original desktop button sizes */
@@ -177,4 +181,11 @@
 .bracket {
   display: inline-block;
   padding: 0 .25em;
+}
+
+.orText {
+  color: #000000;
+  cursor: default;
+  font-size: 9px;
+  letter-spacing: 2px;
 } 
