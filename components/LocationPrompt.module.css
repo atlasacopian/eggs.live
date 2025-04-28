@@ -178,7 +178,7 @@
 /* Revert to original desktop button sizes */
 @media (min-width: 769px) {
   .option {
-    width: 22ch; /* fixed width to ensure highlight covers [ ], input, and arrow */
+    width: 24ch; /* ensure highlight fully covers brackets and arrow */
     box-sizing: border-box;
   }
   .zipInput {
