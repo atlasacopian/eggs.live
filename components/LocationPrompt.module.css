@@ -126,13 +126,17 @@
 
 /* Add media query for mobile adjustments */
 @media (max-width: 768px) {
-  .option {
+  /* Buttons fixed width; active input auto width */
+  .option:not(.activeInput) {
     font-size: 9px !important;
     padding: 0.5rem 0.75rem;
     min-height: 36px;
     letter-spacing: 2px;
-    width: 100px !important; /* fixed width for centering */
+    width: 100px !important;
     box-sizing: border-box;
+  }
+  .activeInput {
+    width: auto !important;
   }
 
   .zipInput {
@@ -142,8 +146,9 @@
   }
   
   .enterHint {
-    font-size: 14px;
-    right: 2px;
+    position: static !important;
+    right: auto !important;
+    margin-left: 0.15rem !important;
   }
 
   /* Ensure OR text matches option size and spacing */
@@ -159,16 +164,13 @@
      adjustments made there via <style jsx> */
 
   .bracket {
-    padding: 0 .2em;
+    padding: 0 .15em;
   }
 
   .container {
     display: flex !important;
     justify-content: center !important;
     gap: 0.25rem !important;
-  }
-  .enterHint {
-    right: 8px !important;
   }
 }
 
