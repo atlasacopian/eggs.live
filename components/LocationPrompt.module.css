@@ -178,7 +178,7 @@
 /* Revert to original desktop button sizes */
 @media (min-width: 769px) {
   .option {
-    padding: 0.5rem 0.5rem; /* tightened horizontal padding even more */
+    padding: 0.5rem 0.5rem; /* tightened horizontal padding */
     box-sizing: border-box;
   }
   .zipInput {
@@ -186,8 +186,11 @@
     box-sizing: border-box;
   }
   .enterHint {
-    position: static; /* inline with input */
-    margin: 0 0.25em;
+    position: absolute; /* out of flow so container width doesn't change */
+    right: 0.5rem; /* align arrow inside padding */
+    top: 50%;
+    transform: translateY(-50%);
+    margin: 0;
   }
 }
 
