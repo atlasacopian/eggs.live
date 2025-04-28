@@ -30,7 +30,7 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
   }
 
   return (
-    <div style={{ position: 'absolute', bottom: '20vh', left: '50%', transform: 'translateX(-50%)', zIndex: 20, textAlign: 'center' }}>
+    <div style={{ position: 'static', marginTop: '20vh', zIndex: 20, textAlign: 'center' }}>
       {/* Buttons Container */}
       <div className={styles.container}>
         <div className={styles.option} onClick={handleLocationClick}>
