@@ -105,10 +105,9 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
     store_identifier: s.store_identifier
   }));
 
-  // Filter out stores completely missing price data
-  const availableStores = dataset.filter(s => 
-      s.regular != null || s.organic != null
-  );
+  // Filter stores that have any price data; if none, fall back to showing all stores
+  const priceFiltered = dataset.filter(s => s.regular != null || s.organic != null);
+  const availableStores = priceFiltered.length > 0 ? priceFiltered : dataset;
 
   /* ---------- Sorting ---------- */
   const toggleSort = key => {
@@ -162,23 +161,24 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
 
   // Compute average regular and organic prices for stores within 3 miles
   const localStores = availableStores.filter(s => typeof s.distance === 'number' && s.distance <= 3)
-  const regList = localStores.map(s => s.regular).filter(v => v != null)
-  const orgList = localStores.map(s => s.organic).filter(v => v != null)
-  const avgReg = regList.length ? regList.reduce((a, b) => a + b, 0) / regList.length : null
-  const avgOrg = orgList.length ? orgList.reduce((a, b) => a + b, 0) / orgList.length : null
-  // Compute delta vs city-wide LA averages
-  const pctRegVsLA = avgRegLA ? ((avgReg - avgRegLA) / avgRegLA) * 100 : null
-  const pctOrgVsLA = avgOrgLA ? ((avgOrg - avgOrgLA) / avgOrgLA) * 100 : null
-  // Find highest organic price
-  const getMostExpensive = (key) => {
-    if (!availableStores.length) return { price: null, change: null, store: null, address: null }
-    const sorted = [...availableStores].filter(s => s[key] != null).sort((a,b) => b[key] - a[key])
-    const top = sorted[0]
-    return top ? { price: top[key], change: top[`${key}Change`], store: top.store, address: top.address } : { price: null, change: null, store: null, address: null }
-  }
-  const mostExpOrg = getMostExpensive('organic')
 
-  /* ---------- Render ---------- */
+  // If no stores within 3 miles, show request fallback
+  if (localStores.length === 0) {
+    return (
+      <div className="egg-price-views-wrapper" style={{ color: '#fff', textAlign: 'center', padding: '32px' }}>
+        <h2>It looks like we don't have data for ZIP code {currentZip} yet.</h2>
+        <p>
+          Want us to consider adding it? {' '}
+          <a href="https://forms.gle/1guuqo2DSEJr4ifq8" target="_blank" rel="noopener noreferrer" style={{ color: '#ffc107', textDecoration: 'underline' }}>
+            Submit a request here.
+          </a>
+        </p>
+      </div>
+    )
+  }
+  const regList = localStores.map(s => s.regular).filter(v => v != null)
+
+  // Render
   return (
     <div className="egg-price-views-wrapper" style={{ 
       maxWidth: 960, 
@@ -215,11 +215,11 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
           <div className="stats-header" style={{ fontWeight: 700, fontSize: '0.75rem', letterSpacing: '0.1em', marginBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.15)', paddingBottom: '6px', transition: 'border-bottom-color 0.2s ease' }}>🥚 MARKET STATS</div>
           <div style={{ marginBottom: '10px', lineHeight: 1.3 }}>
             <div>Lowest Price: <strong>{formatPrice(cheapestReg.price)}</strong> Regular @ <a href={formatAddress(cheapestReg.address).link} target="_blank" rel="noopener noreferrer" className="address-link">{cheapestReg.store}</a></div>
-            <div>Highest Price: <strong>{formatPrice(mostExpOrg.price)}</strong> Organic @ <a href={formatAddress(mostExpOrg.address).link} target="_blank" rel="noopener noreferrer" className="address-link">{mostExpOrg.store}</a></div>
+            <div>Highest Price: <strong>{formatPrice(cheapestOrg.price)}</strong> Organic @ <a href={formatAddress(cheapestOrg.address).link} target="_blank" rel="noopener noreferrer" className="address-link">{cheapestOrg.store}</a></div>
           </div>
           <div style={{ marginBottom: '10px', lineHeight: 1.3 }}>
-            <div>Regular Avg: <strong>{formatPrice(avgReg)}</strong> {pctRegVsLA != null && (<span style={{ marginLeft: 4, fontWeight: 600 }}>(<span style={{ color: pctRegVsLA < 0 ? '#FF0000' : '#00FF00' }}>{pctRegVsLA < 0 ? '↓' : '↑'}{Math.abs(pctRegVsLA).toFixed(1)}%</span> vs LA)</span>)}</div>
-            <div>Organic Avg: <strong>{formatPrice(avgOrg)}</strong> {pctOrgVsLA != null && (<span style={{ marginLeft: 4, fontWeight: 600 }}>(<span style={{ color: pctOrgVsLA < 0 ? '#FF0000' : '#00FF00' }}>{pctOrgVsLA < 0 ? '↓' : '↑'}{Math.abs(pctOrgVsLA).toFixed(1)}%</span> vs LA)</span>)}</div>
+            <div>Regular Avg: <strong>{formatPrice(localStores.length ? localStores.map(s => s.regular).reduce((a, b) => a + b, 0) / localStores.length : null)}</strong> {pctRegVsLA != null && (<span style={{ marginLeft: 4, fontWeight: 600 }}>(<span style={{ color: pctRegVsLA < 0 ? '#FF0000' : '#00FF00' }}>{pctRegVsLA < 0 ? '↓' : '↑'}{Math.abs(pctRegVsLA).toFixed(1)}%</span> vs LA)</span>)}</div>
+            <div>Organic Avg: <strong>{formatPrice(localStores.length ? localStores.map(s => s.organic).reduce((a, b) => a + b, 0) / localStores.length : null)}</strong> {pctOrgVsLA != null && (<span style={{ marginLeft: 4, fontWeight: 600 }}>(<span style={{ color: pctOrgVsLA < 0 ? '#FF0000' : '#00FF00' }}>{pctOrgVsLA < 0 ? '↓' : '↑'}{Math.abs(pctOrgVsLA).toFixed(1)}%</span> vs LA)</span>)}</div>
           </div>
           {avgRegNat != null && avgRegNatDate && (
             <div style={{ marginBottom: '6px', lineHeight: 1.3 }}>
