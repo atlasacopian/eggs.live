@@ -103,7 +103,7 @@
 
 .promptWrapper {
   position: fixed;
-  bottom: 8vh; /* near bottom */
+  bottom: 30vh; /* position at bottom of 3D egg */
   left: 50%;
   transform: translateX(-50%);
   z-index: 20;
