@@ -70,10 +70,14 @@ async function upsert(locations) {
     zip: l.address?.zipCode ?? null,
     raw_json: l,
   }))
-  await sb.from('kroger_stores').upsert(rows, {
+  const { data: upserted, error: upsertError } = await sb.from('kroger_stores').upsert(rows, {
     onConflict: 'location_id',
   })
-  console.log(`↳ upserted ${rows.length} stores`)
+  if (upsertError) {
+    console.error('❌ Upsert to kroger_stores failed:', upsertError)
+    process.exit(1)
+  }
+  console.log(`↳ upserted ${upserted?.length ?? rows.length} stores`)
 }
 
 async function main() {
