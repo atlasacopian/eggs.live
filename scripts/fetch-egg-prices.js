@@ -138,7 +138,7 @@ async function main() {
     }
     // bulk insert every 100 rows
     if (batch.length >= 100) {
-      await sb.from('egg_price_summary').insert(batch)
+      await sb.from('kroger_egg_prices').insert(batch)
       console.log(`↳ inserted ${batch.length} rows`)
       batch.length = 0
     }
@@ -149,7 +149,7 @@ async function main() {
     await new Promise((r) => setTimeout(r, 120)) // throttle ~8 req/s
   }
   if (batch.length) {
-    await sb.from('egg_price_summary').insert(batch)
+    await sb.from('kroger_egg_prices').insert(batch)
     console.log(`↳ inserted ${batch.length} rows`)
   }
   console.timeEnd('egg-price-import')
