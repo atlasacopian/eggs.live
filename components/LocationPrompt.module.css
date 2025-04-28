@@ -126,17 +126,14 @@
 
 /* Add media query for mobile adjustments */
 @media (max-width: 768px) {
-  /* Buttons fixed width; active input auto width */
-  .option:not(.activeInput) {
+  /* Fixed width for both options to center OR */
+  .option {
     font-size: 9px !important;
     padding: 0.5rem 0.75rem;
     min-height: 36px;
     letter-spacing: 2px;
     width: 100px !important;
     box-sizing: border-box;
-  }
-  .activeInput {
-    width: auto !important;
   }
 
   .zipInput {
