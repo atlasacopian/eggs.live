@@ -21,8 +21,7 @@
   align-items: center; /* Center text vertically */
   justify-content: center; /* Center text horizontally */
   white-space: nowrap;
-  min-width: 18ch; /* ensure consistent width across modes */
-  min-height: 36px; /* Ensure minimum tap height */
+  /* For desktop, we'll set a fixed width to match placeholder length */
 }
 
 .option:hover {
@@ -37,7 +36,7 @@
   font-family: 'Roboto Mono', monospace;
   font-size: 9px; /* Match option font size */
   letter-spacing: 2px;
-  width: auto; /* Use content width on desktop */
+  width: 100%; /* fill the option container */
   text-align: center;
   padding-right: 25px;
 }
@@ -179,15 +178,16 @@
 /* Revert to original desktop button sizes */
 @media (min-width: 769px) {
   .option {
-    font-size: 9px;
-    padding: 0.5rem;
-    min-height: 36px;
-    letter-spacing: 2px;
-    width: 20ch; /* fixed width matching input, brackets and placeholder */
+    width: 22ch; /* fixed width to ensure highlight covers [ ], input, and arrow */
     box-sizing: border-box;
   }
   .zipInput {
-    width: 18ch; /* match input width for typed content */
+    width: 18ch; /* fixed input width matching placeholder */
+    box-sizing: border-box;
+  }
+  .enterHint {
+    position: static; /* inline with input */
+    margin: 0 0.25em;
   }
 }
 
