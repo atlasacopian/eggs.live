@@ -127,23 +127,29 @@
 /* Add media query for mobile adjustments */
 @media (max-width: 768px) {
   .option {
-    font-size: 14px; /* Increased for mobile tap targets */
-    padding: 0.75rem 1rem; /* More comfortable padding */
-    min-height: 48px; /* Larger tap area */
-    letter-spacing: 2px; /* Consistent with desktop */
-    width: 140px; /* Uniform width */
+    font-size: 9px !important; /* Match OR text size */
+    padding: 0.5rem 0.75rem; /* Slightly reduced padding */
+    min-height: 36px; /* Standard tap size */
+    letter-spacing: 2px;
+    width: 100px; /* More compact width */
     box-sizing: border-box;
   }
 
   .zipInput {
-     width: 80px; /* Further reduced */
-     font-size: 8px; /* Kept small */
-     padding-right: 15px; /* Reduce padding */
+    width: 80px;
+    font-size: 8px;
+    padding-right: 15px;
   }
   
   .enterHint {
-    font-size: 14px; /* Reduce hint size */
+    font-size: 14px;
     right: 2px;
+  }
+
+  /* Ensure OR text matches option size */
+  .option + span {
+    font-size: 9px !important;
+    letter-spacing: 2px !important;
   }
 
   /* Note: .scanHeader class is not defined here, 
