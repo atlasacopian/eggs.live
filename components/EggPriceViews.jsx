@@ -106,8 +106,7 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
   }));
 
   // Filter stores that have any price data; if none, fall back to showing all stores
-  const priceFiltered = dataset.filter(s => s.regular != null || s.organic != null);
-  const availableStores = priceFiltered.length > 0 ? priceFiltered : dataset;
+  const availableStores = dataset.filter(s => s.regular != null || s.organic != null);
 
   /* ---------- Sorting ---------- */
   const toggleSort = key => {
@@ -343,7 +342,11 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>  
                 <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>  
                   <div style={{ fontSize: '0.75rem', color: '#aaa', textTransform: 'uppercase' }}>Reg</div>  
-                  <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#fff', lineHeight: '1' }}>{formatPrice(s.regular)}</div>  
+                  <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#fff', lineHeight: '1' }}>
+                    {s.regular != null
+                      ? formatPrice(s.regular)
+                      : (s.organic != null ? "No Data Available" : "Out of Stock")}
+                  </div>  
                   {s.regularChange != null && s.regularChange !== 0 ? (
                     <motion.span
                       animate={{ opacity: [1, 0.4, 1] }}
@@ -358,7 +361,11 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
                 </div>  
                 <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginRight: '16px' }}>  
                   <div style={{ fontSize: '0.75rem', color: '#aaa', textTransform: 'uppercase' }}>Org</div>  
-                  <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#fff', lineHeight: '1' }}>{formatPrice(s.organic)}</div>  
+                  <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#fff', lineHeight: '1' }}>
+                    {s.organic != null
+                      ? formatPrice(s.organic)
+                      : (s.regular != null ? "No Data Available" : "Out of Stock")}
+                  </div>  
                   {s.organicChange != null && s.organicChange !== 0 ? (
                     <motion.span
                       animate={{ opacity: [1, 0.4, 1] }}
