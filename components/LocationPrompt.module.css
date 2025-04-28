@@ -21,6 +21,7 @@
   align-items: center; /* Center text vertically */
   justify-content: center; /* Center text horizontally */
   white-space: nowrap;
+  min-width: 18ch; /* ensure consistent width across modes */
   min-height: 36px; /* Ensure minimum tap height */
 }
 
@@ -36,7 +37,8 @@
   font-family: 'Roboto Mono', monospace;
   font-size: 9px; /* Match option font size */
   letter-spacing: 2px;
-  width: 180px; text-align: center;
+  width: auto; /* Use content width on desktop */
+  text-align: center;
   padding-right: 25px;
 }
 
@@ -83,7 +85,7 @@
 /* restore zipInput focus */
 .zipInput:focus {
   outline: none;
-  letter-spacing: 3px;
+  letter-spacing: 2px; /* maintain consistent spacing */
 }
 
 .scanHeader {
@@ -178,7 +180,11 @@
     padding: 0.5rem;
     min-height: 36px;
     letter-spacing: 2px;
-    width: auto;
+    width: 18ch; /* fixed width matching input and placeholder */
+    box-sizing: border-box;
+  }
+  .zipInput {
+    width: 18ch; /* match option width */
   }
 }
 
