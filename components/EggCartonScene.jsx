@@ -63,7 +63,6 @@ ModelPrimitive.displayName = 'ModelPrimitive'
 // Static Experience component for egg carton
 export function Experience({ onInteractionStart }) {
   const centerRef = useRef()
-  const pulseRef = useRef()
   const mouse = useRef({ x: 0, y: 0 }) // For desktop mouse tracking
   const [isMobile, setIsMobile] = useState(false);
 
@@ -102,13 +101,6 @@ export function Experience({ onInteractionStart }) {
         centerRef.current.rotation.x = THREE.MathUtils.lerp(centerRef.current.rotation.x, targetX, 0.1)
       }
     }
-    // Animate radar pulse under the egg
-    if (pulseRef.current) {
-      const t = state.clock.elapsedTime;
-      const scale = 1 + 0.1 * Math.sin(t * 2);
-      pulseRef.current.scale.set(scale, scale, scale);
-      pulseRef.current.material.opacity = 0.2 + 0.05 * (Math.sin(t * 2) + 1);
-    }
   })
 
   return (
@@ -128,11 +120,6 @@ export function Experience({ onInteractionStart }) {
         <Center ref={centerRef} position={[0, 0, 0]} rotation={[0, 0, Math.PI]}>
           <group>
             <ModelPrimitive />
-            {/* Orange radar pulse ring under the egg */}
-            <mesh ref={pulseRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]}>
-              <ringGeometry args={[1.5, 1.8, 64]} />
-              <meshBasicMaterial color="#FFA500" transparent opacity={0.2} toneMapped={false} />
-            </mesh>
           </group>
         </Center>
       </Suspense>
