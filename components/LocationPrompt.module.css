@@ -8,6 +8,7 @@
 }
 
 .option {
+  font-family: 'Roboto Mono', monospace; /* ensure consistent monospace width */
   position: relative; 
   cursor: pointer; 
   text-transform: uppercase;
@@ -21,7 +22,7 @@
   align-items: center; /* Center text vertically */
   justify-content: center; /* Center text horizontally */
   white-space: nowrap;
-  /* For desktop, we'll set a fixed width to match placeholder length */
+  /* For desktop, fixed width will be set in media query */
 }
 
 .option:hover {
@@ -181,11 +182,12 @@
 /* Revert to original desktop button sizes */
 @media (min-width: 769px) {
   .option {
-    padding: 0.5rem 0.5rem; /* tightened horizontal padding */
+    width: 18ch; /* fixed width matching placeholder length */
+    padding: 0.5rem; /* uniform padding */
     box-sizing: border-box;
   }
   .zipInput {
-    width: 18ch; /* fixed input width matching placeholder */
+    width: 100%; /* fill the option container */
     box-sizing: border-box;
   }
   .enterHint {
