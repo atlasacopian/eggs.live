@@ -178,7 +178,7 @@
 /* Revert to original desktop button sizes */
 @media (min-width: 769px) {
   .option {
-    padding: 0.5rem 0.75rem; /* further tighten horizontal padding */
+    padding: 0.5rem 0.5rem; /* tightened horizontal padding even more */
     box-sizing: border-box;
   }
   .zipInput {
