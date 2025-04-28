@@ -178,8 +178,7 @@
     padding: 0.5rem;
     min-height: 36px;
     letter-spacing: 2px;
-    width: 180px; /* fixed to match input width and prevent expansion */
-    box-sizing: border-box;
+    width: auto;
   }
 }
 

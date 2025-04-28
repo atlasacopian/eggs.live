@@ -57,7 +57,7 @@ function ChartFloor({ prices, progress = 1, muted = true, showLabels = false }) 
     // Determine dynamic Y scaling
     const minP = Math.min(...prices)
     const maxP = Math.max(...prices)
-    const height = 15 // vertical range units
+    const height = 10 // vertical range units
     const width = 100
     const count = prices.length
     const segment = width / (count - 1)
