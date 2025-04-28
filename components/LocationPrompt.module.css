@@ -36,8 +36,11 @@
   font-family: 'Roboto Mono', monospace;
   font-size: 9px; /* Match option font size */
   letter-spacing: 2px;
-  width: 100%; /* fill the option container */
+  width: 18ch; /* fixed input width matching placeholder in desktop */
+  box-sizing: border-box;
   text-align: center;
+  height: 36px; /* match option container height */
+  line-height: 36px; /* vertically center text and cursor */
   padding-right: 25px;
 }
 
@@ -204,4 +207,16 @@
   cursor: default;
   font-size: 9px;
   letter-spacing: 2px;
+}
+
+/* Flex container for the zip form to center input and button */
+.zipForm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Keep brackets colored when in active input mode */
+.activeInput .bracket {
+  color: var(--accent-color);
 } 
