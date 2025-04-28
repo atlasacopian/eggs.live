@@ -34,7 +34,9 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
       {/* Buttons Container */}
       <div className={styles.container}>
         <div className={styles.option} onClick={handleLocationClick}>
-          [ USE LOCATION ]
+          <span className={styles.bracket}>[</span>
+          &nbsp;USE&nbsp;LOCATION&nbsp;
+          <span className={styles.bracket}>]</span>
         </div>
         <span className={styles.orText}>OR</span>
         <div
@@ -47,9 +49,11 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
           }}
         >
           {!showZipInput ? (
-            '[ ENTER ZIP CODE ]'
+            <>
+              <span className={styles.bracket}>[</span>&nbsp;ENTER&nbsp;ZIP&nbsp;CODE&nbsp;<span className={styles.bracket}>]</span>
+            </>
           ) : (
-            <div className={styles.zipForm}>
+            <form className={styles.zipForm} onSubmit={handleZipSubmit}>
               <span className={styles.bracket}>[</span>
               <input
                 className={styles.zipInput}
@@ -59,13 +63,9 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
                 onChange={(e) => setZipCode(e.target.value)}
                 autoFocus
               />
-              <button
-                type="submit"
-                className={styles.enterHint}
-                onClick={(e) => { e.preventDefault(); handleZipSubmit(e); }}
-              >↵</button>
+              <button type="submit" className={styles.enterHint}>↵</button>
               <span className={styles.bracket}>]</span>
-            </div>
+            </form>
           )}
         </div>
       </div>

@@ -56,6 +56,12 @@ export default function EggPriceChart({ store, highlight = false, preview = fals
   const domainMin = minVal - 0.2;
   const domainMax = maxVal + 0.2;
 
+  // Compute ticks: first, middle, last
+  const dates = history.map(d => d.date);
+  const ticks = history.length > 2
+    ? [dates[0], dates[Math.floor(dates.length / 2)], dates[dates.length - 1]]
+    : dates;
+
   // Unified chart renderer for both preview and full views
   const ChartRenderer = () => {
     const chartHeight = preview ? 24 : 160;
@@ -125,12 +131,6 @@ export default function EggPriceChart({ store, highlight = false, preview = fals
       </motion.div>
     );
   };
-
-  // Compute ticks: first, middle, last
-  const dates = history.map(d => d.date);
-  const ticks = history.length > 2
-    ? [dates[0], dates[Math.floor(dates.length / 2)], dates[dates.length - 1]]
-    : dates;
 
   // Render the full chart directly (parent panel provides background and padding)
   if (loading) return <p className="text-gray-400 text-sm">Loading history...</p>;

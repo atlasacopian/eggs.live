@@ -426,14 +426,35 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
       </div>
 
       {/* Responsive adjustments */}
-      <style jsx>{`
+      <style jsx global>{`
         @media (max-width: 768px) {
-          .header-cards {
-            flex-direction: column;
+          .egg-price-views-wrapper .header-cards { flex-direction: column !important; }
+          .egg-price-views-wrapper .stats-panel { margin-top: 16px !important; }
+
+          /* Stack store-row vertically */
+          .egg-price-views-wrapper .ticker-list .store-row {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 4px !important;
           }
-          .egg-price-views-wrapper {
-            margin: 40px auto 0 !important;
-            padding: 16px !important;
+
+          /* Full width for store name/address */
+          .egg-price-views-wrapper .ticker-list .store-row > div:first-child {
+            width: 100% !important;
+          }
+
+          /* Prices and sparkline side-by-side on mobile */
+          .egg-price-views-wrapper .ticker-list .store-row > div:nth-child(2) {
+            width: 100% !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            gap: 8px !important;
+          }
+
+          /* Hide only the hint arrow */
+          .egg-price-views-wrapper .ticker-list .store-row .hint {
+            display: none !important;
           }
         }
       `}</style>

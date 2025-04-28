@@ -15,22 +15,29 @@
   letter-spacing: 2px; 
   font-size: 9px; /* Default desktop size */
   color: #000000;
-  padding: 0.5rem; 
+  padding: 0 0.75rem; /* horizontal padding only */
   border-radius: 4px; 
   transition: color 0.2s ease-out, background-color 0.2s ease-out;
   display: inline-flex; /* Use flex for alignment */
   align-items: center; /* Center text vertically */
   justify-content: center; /* Center text horizontally */
   white-space: nowrap;
-  /* For desktop, fixed width will be set in media query */
+  /* For desktop, width will naturally adjust to content */
+  /* Set a default transparent border so hover/focus styles do not change overall size */
+  border: 1px solid transparent;
+  width: 24ch; /* fixed constant width so highlight never shrinks */
+  height: 36px; /* fixed height prevents taller ZIP input */
 }
 
 /* Unified hover and focus styling on .option, including focus-within when input is active */
 .option:hover,
-.option:focus-within {
+.option:focus-within,
+.option:active,
+.option:focus {
   color: var(--accent-color);
   background-color: rgba(255, 193, 7, 0.15);
-  border: 1px solid var(--accent-color);
+  /* Switch border from transparent to accent colour without size jump */
+  border-color: var(--accent-color);
 }
 
 .zipInput {
@@ -40,12 +47,12 @@
   font-family: 'Roboto Mono', monospace;
   font-size: 9px; /* Match option font size */
   letter-spacing: 2px;
-  width: 18ch; /* fixed input width matching placeholder in desktop */
+  width: 10ch; /* add extra room so brackets don't appear to shift */
   box-sizing: border-box;
-  text-align: center;
-  height: 36px; /* match option container height */
-  line-height: 36px; /* vertically center text and cursor */
-  padding-right: 25px;
+  text-align: center; /* centre digits horizontally */
+  height: 100%; /* match parent option height */
+  line-height: 36px; /* ensure vertical centering */
+  padding-right: 2.5ch; /* reserve space for arrow overlay */
 }
 
 /* New style for valid input */
@@ -61,16 +68,20 @@
 
 @keyframes enterFade { from { opacity: 0; transform: translateY(-2px);} to { opacity:1; transform: translateY(0);} }
 
+/* Arrow button shown after ZIP input */
 .enterHint {
+  /* arrow sits absolutely so it doesn't affect input centering */
+  margin-left: 0; /* margin handled via absolute positioning */
   position: absolute;
-  right: 5px;
-  top: 0;
-  bottom:0;
-  display:flex;
-  align-items:center;
+  right: 0.75ch; /* dial in arrow distance */
+  top: 50%;
+  display: flex;
+  align-items: center;
   color: var(--accent-color);
-  font-size: 20px;
-  opacity: 0;
+  font-size: 11px; /* slightly smaller for balance */
+  line-height: 1; /* prevent baseline shift */
+  transform: translateY(-45%);
+  opacity: 0; /* start hidden and fade in via animation */
   transition: transform 0.1s ease, opacity 0.1s ease;
   animation: enterFade 0.4s ease-out forwards;
   background: none;
@@ -105,7 +116,9 @@
 
 /* Brackets inherit accent color when parent option is hovered or input focused */
 .option:hover .bracket,
-.option:focus-within .bracket {
+.option:focus-within .bracket,
+.option:active .bracket,
+.option:focus .bracket {
   color: var(--accent-color);
 }
 
@@ -134,68 +147,52 @@
 
 /* Add media query for mobile adjustments */
 @media (max-width: 768px) {
-  /* Fixed width for both options to center OR */
+  /* Reset option width */
   .option {
-    font-size: 9px !important;
-    padding: 0.5rem 0.75rem;
-    min-height: 36px;
-    letter-spacing: 2px;
-    width: 100px !important;
-    box-sizing: border-box;
+    width: auto !important;
   }
 
-  .zipInput {
-    width: 80px;
-    font-size: 8px;
-    padding-right: 15px;
-  }
-  
-  .enterHint {
-    position: static !important;
-    right: auto !important;
-    margin-left: 0.15rem !important;
-  }
-
-  /* Ensure OR text matches option size and spacing */
-  .option + span,
-  span + .option {
-    font-size: 9px !important;
-    letter-spacing: 2px !important;
-    margin: 0 1rem !important;
-  }
-
-  /* Note: .scanHeader class is not defined here, 
-     it's using inline style in the component, 
-     adjustments made there via <style jsx> */
-
-  .bracket {
-    padding: 0 .15em;
-  }
-
-  .container {
-    display: flex !important;
+  /* Use grid to lock bracket, input, arrow, bracket positions */
+  .zipForm {
+    display: grid !important;
+    grid-template-columns: auto 1fr auto auto !important;
+    align-items: center !important;
     justify-content: center !important;
-    gap: 0.25rem !important;
+    gap: 0.5rem !important;
+    width: auto !important;
   }
+
+  /* Position brackets at grid edges */
+  .zipForm > .bracket:first-of-type { grid-column: 1 !important; }
+  .zipForm > .bracket:last-of-type { grid-column: 4 !important; }
+
+  /* Expand input in second grid cell */
+  .zipInput {
+    grid-column: 2 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+    letter-spacing: 2px !important;
+    font-size: 8px !important;
+  }
+
+  /* Place enter arrow in third grid cell */
+  .enterHint { grid-column: 3 !important; }
 }
 
 /* Revert to original desktop button sizes */
 @media (min-width: 769px) {
   .option {
-    width: 18ch; /* fixed width matching placeholder length */
     padding: 0.5rem; /* uniform padding */
     box-sizing: border-box;
   }
   .zipInput {
-    width: 100%; /* fill the option container */
+    width: 9ch;
     box-sizing: border-box;
   }
+  /* Arrow already static, extra spacing included in width */
   .enterHint {
-    position: absolute; /* out of flow so container width doesn't change */
-    right: 0.5rem; /* align arrow inside padding */
-    top: 50%;
-    transform: translateY(-50%);
-    margin: 0;
+    margin-left: 0.25rem;
   }
 }
 
@@ -215,5 +212,15 @@
 .zipForm {
   display: inline-flex;
   align-items: center;
+  height: 100%;
   justify-content: center;
+  position: relative; /* allow arrow absolute positioning */
+}
+
+.option .bracket:first-child {
+  margin-right: 0.35ch;
+}
+
+.option .bracket:last-child {
+  margin-left: 0.35ch;
 } 
