@@ -83,7 +83,11 @@ async function summarizeEggPrices(token, locationId) {
   })
   if (!res.ok) return null
   const { data } = await res.json()
-  if (!data?.length) return null
+  if (!data?.length) {
+    console.log(`⏺ store ${locationId}: no products returned`)
+    return null
+  }
+  console.log(`⏺ store ${locationId}: raw products = ${data.length}`)
 
   const regPrices = []
   const orgPrices = []
@@ -100,6 +104,7 @@ async function summarizeEggPrices(token, locationId) {
     if (isOrganic(desc)) orgPrices.push(price)
     else regPrices.push(price)
   }
+  console.log(`⏺ store ${locationId}: regular dozen = ${regPrices.length}, organic dozen = ${orgPrices.length}`)
 
   const calc = (arr, fn) => (arr.length ? fn(arr) : null)
   const avg = (arr) => arr.reduce((a, b) => a + b, 0) / arr.length
