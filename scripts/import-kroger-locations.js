@@ -77,16 +77,26 @@ async function upsert(locations) {
 }
 
 async function main() {
-  const start = Date.now()
-  // Simple 1-degree lat x 1.25-degree lon grid (about 1k points)
-  for (let lat = 24.5; lat <= 49.5; lat += 0.5) {
-    for (let lon = -124.5; lon <= -67.0; lon += 0.625) {
-      console.log(`📍 circle lat=${lat.toFixed(1)} lon=${lon.toFixed(1)}`)
-      await fetchCircle(lat.toFixed(3), lon.toFixed(3))
-      await new Promise((r) => setTimeout(r, 200)) // throttle ~300 req/min
+  // Paginated fetch: 100 stores per page until exhausted
+  console.time('kroger-store-import')
+  let page = 1
+  while (true) {
+    const url = new URL('https://api.kroger.com/v1/locations')
+    url.searchParams.set('filter.limit', 100)
+    url.searchParams.set('page[number]', page)
+    console.log(`📍 fetching page=${page}`)
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${KROGER_ACCESS_TOKEN}` } })
+    if (!res.ok) {
+      console.error(`Request failed ${res.status}: ${await res.text()}`)
+      break
     }
+    const { data } = await res.json()
+    if (!data?.length) break
+    await upsert(data)
+    console.log(`↳ upserted page ${page} (${data.length} stores)`)
+    page++
   }
-  console.log(`✅ finished in ${(Date.now() - start) / 1000}s`)
+  console.timeEnd('kroger-store-import')
   process.exit(0)
 }
 
