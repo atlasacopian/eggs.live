@@ -281,19 +281,19 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
           font-variant-numeric: tabular-nums;
         }
         /* Pulsing dot to indicate active update */
-        @keyframes pulsing {
-          0% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.4; transform: scale(1.2); }
-          100% { opacity: 1; transform: scale(1); }
+        @keyframes radar {
+          0% { transform: scale(0.5); box-shadow: 0 0 0 0 ${accentColor}; opacity: 1; }
+          70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(255,193,7,0); opacity: 0; }
+          100% { transform: scale(0.5); box-shadow: 0 0 0 0 rgba(255,193,7,0); opacity: 1; }
         }
         .pulsing-dot {
           display: inline-block;
-          width: 0.5em;
-          height: 0.5em;
+          width: 0.3em;
+          height: 0.3em;
           border-radius: 50%;
           background: ${accentColor};
           margin-right: 0.5em;
-          animation: pulsing 1.5s infinite ease-in-out;
+          animation: radar 2s infinite ease-out;
         }
       `}</style>
 
