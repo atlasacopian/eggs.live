@@ -138,8 +138,12 @@ async function main() {
     }
     // bulk insert every 100 rows
     if (batch.length >= 100) {
-      await sb.from('kroger_egg_prices').insert(batch)
-      console.log(`↳ inserted ${batch.length} rows`)
+      const { data: inserted, error: insertError } = await sb.from('kroger_egg_prices').insert(batch)
+      if (insertError) {
+        console.error('❌ Insert to kroger_egg_prices failed:', insertError)
+        process.exit(1)
+      }
+      console.log(`↳ inserted ${inserted.length} rows`)
       batch.length = 0
     }
     processed++
@@ -149,8 +153,12 @@ async function main() {
     await new Promise((r) => setTimeout(r, 120)) // throttle ~8 req/s
   }
   if (batch.length) {
-    await sb.from('kroger_egg_prices').insert(batch)
-    console.log(`↳ inserted ${batch.length} rows`)
+    const { data: inserted, error: insertError } = await sb.from('kroger_egg_prices').insert(batch)
+    if (insertError) {
+      console.error('❌ Insert to kroger_egg_prices failed:', insertError)
+      process.exit(1)
+    }
+    console.log(`↳ inserted ${inserted.length} rows`)
   }
   console.timeEnd('egg-price-import')
   process.exit(0)
