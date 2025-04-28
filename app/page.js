@@ -40,7 +40,6 @@ export default function Home() {
         background: '#fff',
         minHeight: '100vh',
         overflow: 'hidden',
-        overscrollBehavior: 'none'
       }}
     >
       <div style={{ position: 'absolute', top: 16, left: 16, right: 16, zIndex: 10 }}>

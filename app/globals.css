@@ -17,7 +17,6 @@ html, body {
   overflow-x: hidden;
   background: var(--background-color);
   color: var(--text-color);
-  overscroll-behavior: none;
   -webkit-font-smoothing: antialiased;
   height: 100%;
   margin: 0;
