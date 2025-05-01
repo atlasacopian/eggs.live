@@ -10,7 +10,7 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
 }
 const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
 
-async function main() {
+export async function run() {
   const series = 'APU0000703111'
   const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${series}&api_key=${FRED_API_KEY}&file_type=json&sort_order=desc&limit=1`
   const res = await fetch(url)
@@ -45,7 +45,9 @@ async function main() {
   process.exit(0)
 }
 
-main().catch((err) => {
-  console.error(err)
-  process.exit(1)
-}) 
+if (import.meta.url === `file://${process.argv[1]}`) {
+  run().catch((err) => {
+    console.error(err)
+    process.exit(1)
+  })
+} 
