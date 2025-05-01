@@ -250,6 +250,11 @@ async function main() {
   const storeIds = await fetchStoreIds()
   console.log(`📦 processing ${storeIds.length} stores`)
 
+  // --- TEMPORARY LIMIT FOR TESTING (REMOVED) ---
+  // storeIds = storeIds.slice(0, 10);
+  // console.log(`🚨 TEMPORARY: Limiting run to first ${storeIds.length} stores for testing.`);
+  // -------------------------------------------
+
   let processed = 0
   for (const loc of storeIds) {
     let row = null
