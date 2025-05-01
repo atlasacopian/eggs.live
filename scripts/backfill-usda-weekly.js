@@ -61,6 +61,7 @@ export async function run({ latestOnly = false } = {}) {
   const rows = json.results || []
   console.log(`   ↳ received ${rows.length.toLocaleString()} rows`)
 
+  // Fetch the latest date from Supabase ONLY if running in latestOnly mode
   const lastRefDate = latestOnly ? await getLatestRefDate() : null
 
   function parseUsdaDate(str = '') {
@@ -72,9 +73,7 @@ export async function run({ latestOnly = false } = {}) {
 
   for (const r of rows) {
     // Skip if older/equal to last stored date when in latestOnly mode
-    if (lastRefDate && parseUsdaDate(r.report_date) <= lastRefDate) continue
-    // NOTE: we no longer apply a published_date cutoff so that historical
-    //       data (2005-2023) is captured.
+    if (latestOnly && lastRefDate && parseUsdaDate(r.report_date) <= lastRefDate) continue
 
     if (!r.package_size) continue
     if (!isDozen(r.package_size)) continue
@@ -88,8 +87,9 @@ export async function run({ latestOnly = false } = {}) {
     agg.set(r.report_date, entry)
   }
 
-  await flush(agg)
-  console.log('🎉 USDA weekly backfill complete')
+  console.log(`Aggregated map size before flush: ${agg.size}`);
+  await flush(agg); // Flush potentially empty map if nothing new found
+  console.log(`🎉 USDA weekly sync ${latestOnly ? '(latest only)' : '(full)'} complete`);
 }
 
 async function flush(map) {
@@ -129,6 +129,7 @@ async function flush(map) {
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const latestMode = process.argv.includes('--latest')
+  // Run with the determined mode
   run({ latestOnly: latestMode }).catch((err) => {
     console.error(err)
     process.exit(1)
