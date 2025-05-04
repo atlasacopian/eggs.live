@@ -32,7 +32,6 @@ export default function ClientZipPage({ zipCode }) {
         <TickerStrip
           text="NATIONAL AVG: REG DOZEN $6.23 <span style='color: #00FF00;'>↑</span> | ORG DOZEN $6.98 <span style='color: #FF0000;'>↓</span>  🥚  123 STORES | 45 ZIP CODES 🥚"
           fontSize="10px"
-          overrideBackgroundColor="#000"
         />
       </div>
       {/* Local store price list */}
