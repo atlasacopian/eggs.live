@@ -1,4 +1,4 @@
-name: Sync USDA USDA Weekly Egg Prices
+name: USDA Egg Prices (daily)
 
 on:
   # Runs every day at 12:00 UTC (adjust as needed)
