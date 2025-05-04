@@ -5,15 +5,9 @@ import dynamic from 'next/dynamic';
 import TickerStrip from '../../components/TickerStrip.jsx';
 import { getStoresNearZip } from '../../lib/api';
 
-// Dynamically load the chart without SSR in a client component
-const ZipFREDChart = dynamic(
-  () => import('../../components/ZipFREDChart.jsx'),
-  { ssr: false }
-);
-
 // Dynamically load the classic price list view
 const EggPriceViewsClassic = dynamic(
-  () => import('../../components/EggPriceViews'),
+  () => import('../../components/EggPriceViews.jsx'),
   { ssr: false }
 );
 
@@ -52,10 +46,6 @@ export default function ClientZipPage({ zipCode }) {
           stores={stores}
           lastUpdated={lastUpdated}
         />
-      </div>
-      {/* Historical FRED chart below */}
-      <div style={{ marginTop: '32px', padding: '0 24px' }}>
-        <ZipFREDChart />
       </div>
     </main>
   );
