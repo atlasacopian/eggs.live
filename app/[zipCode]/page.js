@@ -27,7 +27,6 @@ import BackButton from '../../components/BackButton';
 import TickerStrip from '../../components/TickerStrip';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import { getStoresNearZip } from '../../lib/api';
-import BirdFluEvents from '../../components/BirdFluEvents';
 // Temporarily commented out for build test - Restore this later!
 // import BirdFluEvents from '@/components/BirdFluEvents.jsx'; 
 const HistoricalEggPriceCard = dynamicImport(
