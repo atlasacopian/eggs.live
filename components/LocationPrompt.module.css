@@ -74,7 +74,7 @@
   /* arrow sits absolutely so it doesn't affect input centering */
   margin-left: 0;
   position: absolute;
-  right: 1.2ch;    /* keep arrow inside brackets without covering ] */
+  right: 2.5ch;    /* shift arrow left so it doesn't cover closing bracket */
   top: 50%;
   display: flex;
   align-items: center;
