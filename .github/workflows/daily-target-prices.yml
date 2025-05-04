@@ -1,9 +1,9 @@
-name: Fetch Target Egg Prices Daily
+name: Target US Egg Prices (daily)
 
 on:
   schedule:
-    # Runs every day at 06:00 UTC (adjust as needed)
-    - cron: '0 6 * * *'
+    # Runs every day at 00:00 UTC (midnight)
+    - cron: '0 0 * * *'
   workflow_dispatch: {}
 
 jobs:
