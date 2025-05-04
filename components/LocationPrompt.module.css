@@ -48,12 +48,12 @@
   font-family: 'Roboto Mono', monospace;
   font-size: 9px; /* Match option font size */
   letter-spacing: 2px;
-  width: 10ch; /* add extra room so brackets don't appear to shift */
+  width: 13ch;              /* matches width of "ENTER ZIP CODE" text */
   box-sizing: border-box;
-  text-align: center; /* centre digits horizontally */
-  height: 100%; /* match parent option height */
-  line-height: 36px; /* ensure vertical centering */
-  padding-right: 2.5ch; /* reserve space for arrow overlay */
+  text-align: center;
+  height: 100%;
+  line-height: 36px;
+  padding-right: 3ch;       /* leave space for arrow */
 }
 
 /* New style for valid input */
@@ -72,9 +72,9 @@
 /* Arrow button shown after ZIP input */
 .enterHint {
   /* arrow sits absolutely so it doesn't affect input centering */
-  margin-left: 0; /* margin handled via absolute positioning */
+  margin-left: 0;
   position: absolute;
-  right: 0.75ch; /* dial in arrow distance */
+  right: 1.5ch;    /* keep arrow inside brackets without covering ] */
   top: 50%;
   display: flex;
   align-items: center;
