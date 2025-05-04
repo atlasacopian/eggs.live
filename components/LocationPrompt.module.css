@@ -48,7 +48,7 @@
   font-family: 'Roboto Mono', monospace;
   font-size: 9px; /* Match option font size */
   letter-spacing: 2px;
-  width: 13ch;              /* matches width of "ENTER ZIP CODE" text */
+  width: 100%;              /* fill parent zipForm width */
   box-sizing: border-box;
   text-align: center;
   height: 100%;
@@ -74,7 +74,7 @@
   /* arrow sits absolutely so it doesn't affect input centering */
   margin-left: 0;
   position: absolute;
-  right: 1.5ch;    /* keep arrow inside brackets without covering ] */
+  right: 1.2ch;    /* keep arrow inside brackets without covering ] */
   top: 50%;
   display: flex;
   align-items: center;
@@ -187,9 +187,10 @@
 .zipForm {
   display: inline-flex;
   align-items: center;
-  height: 100%;
   justify-content: center;
+  height: 100%;
   position: relative; /* allow arrow absolute positioning */
+  width: 18ch; /* constant width so highlight doesn't shrink */
 }
 
 .option .bracket:first-child {
