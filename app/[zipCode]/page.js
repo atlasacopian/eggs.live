@@ -12,32 +12,44 @@ const EggChartScene = dynamicImport(
   () => import('../../components/EggChartScene'),
   { ssr: false }
 );
-
-// Client-only price views (classic & terminal)
+// Client-only price views
 const EggPriceViewsClassic = dynamicImport(
   () => import('../../components/EggPriceViews'),
   { ssr: false }
 );
-
 const EggPriceViewsTerminal = dynamicImport(
   () => import('../../components/EggPriceViewsTerminal'),
   { ssr: false }
 );
 
+// Static imports
 import BackButton from '../../components/BackButton';
 import TickerStrip from '../../components/TickerStrip';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import { getStoresNearZip } from '../../lib/api';
-// Use absolute path alias for BirdFluEvents and add extension
-// Temporarily commented out for build test
-// import BirdFluEvents from '@/components/BirdFluEvents.jsx';
-
-// After dynamic import section
-const HistoricalEggPriceCard = dynamicImport(() => import('../../components/HistoricalEggPriceCard'), { ssr: false })
-const EggStockChart = dynamicImport(() => import('../../components/EggStockChart'), { ssr: false })
-const ComparisonStockChart = dynamicImport(() => import('../../components/ComparisonStockChart'), { ssr: false })
-const ComparisonTicker = dynamicImport(() => import('../../components/ComparisonTicker'), { ssr: false })
-const ComparisonListView = dynamicImport(() => import('../../components/ComparisonListView'), { ssr: false })
+import BirdFluEvents from '../../components/BirdFluEvents';
+// Temporarily commented out for build test - Restore this later!
+// import BirdFluEvents from '@/components/BirdFluEvents.jsx'; 
+const HistoricalEggPriceCard = dynamicImport(
+  () => import('../../components/HistoricalEggPriceCard'),
+  { ssr: false }
+);
+const EggStockChart = dynamicImport(
+  () => import('../../components/EggStockChart'),
+  { ssr: false }
+);
+const ComparisonStockChart = dynamicImport(
+  () => import('../../components/ComparisonStockChart'),
+  { ssr: false }
+);
+const ComparisonTicker = dynamicImport(
+  () => import('../../components/ComparisonTicker'),
+  { ssr: false }
+);
+const ComparisonListView = dynamicImport(
+  () => import('../../components/ComparisonListView'),
+  { ssr: false }
+);
 
 // Define comparison tickers to render additional charts
 const comparisonTickers = ['CALM', 'VITL', 'POST', 'TSN'];
