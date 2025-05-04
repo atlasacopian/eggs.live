@@ -1,9 +1,9 @@
 name: USDA Egg Prices (daily)
 
 on:
-  # Runs every day at 12:00 UTC (adjust as needed)
+  # Runs every day at 00:15 UTC
   schedule:
-    - cron: '0 12 * * *'
+    - cron: '15 0 * * *'
   # Allow a manual run from the Actions tab
   workflow_dispatch:
 
