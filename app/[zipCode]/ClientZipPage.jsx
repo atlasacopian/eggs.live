@@ -26,10 +26,6 @@ export default function ClientZipPage({ zipCode }) {
       .finally(() => setLoadingStores(false));
   }, [zipCode]);
 
-  if (loadingStores) {
-    return <div style={{ color: '#fff', padding: 32 }}>Loading store data…</div>;
-  }
-
   return (
     <main style={{ background: '#000', color: '#fff', minHeight: '100vh', padding: 24 }}>
       <div style={{ position: 'absolute', top: 16, left: 16, right: 16, zIndex: 10 }}>
