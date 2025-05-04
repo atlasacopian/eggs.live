@@ -135,7 +135,10 @@ export default function EggPriceChart({ store, highlight = false, preview = fals
   // Render the full chart directly (parent panel provides background and padding)
   if (loading) return <p className="text-gray-400 text-sm">Loading history...</p>;
   if (error) return <p className="text-red-500 text-sm">Error: {error}</p>;
-  if (!history.length) return <p className="text-gray-400 text-sm">No price history available.</p>;
+  // If preview and no history, render nothing. Otherwise show the standard message.
+  if (!history.length) {
+    return preview ? null : <p className="text-gray-400 text-sm">No price history available.</p>;
+  }
 
   return <ChartRenderer />;
 }
