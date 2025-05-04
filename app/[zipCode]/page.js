@@ -28,7 +28,7 @@ import BackButton from '../../components/BackButton';
 import TickerStrip from '../../components/TickerStrip';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import { getStoresNearZip } from '../../lib/api';
-import BirdFluEvents from '../../components/BirdFluEvents';
+import BirdFluEvents from '@/components/BirdFluEvents';
 
 // After dynamic import section
 const HistoricalEggPriceCard = dynamicImport(() => import('../../components/HistoricalEggPriceCard'), { ssr: false })
