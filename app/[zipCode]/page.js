@@ -28,7 +28,9 @@ import BackButton from '../../components/BackButton';
 import TickerStrip from '../../components/TickerStrip';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import { getStoresNearZip } from '../../lib/api';
-import BirdFluEvents from '@/components/BirdFluEvents';
+// Use absolute path alias for BirdFluEvents and add extension
+// Temporarily commented out for build test
+// import BirdFluEvents from '@/components/BirdFluEvents.jsx';
 
 // After dynamic import section
 const HistoricalEggPriceCard = dynamicImport(() => import('../../components/HistoricalEggPriceCard'), { ssr: false })
@@ -145,7 +147,8 @@ export default function ZipCodePage() {
         </div>
         {/* Bird Flu Data */}
         <div style={{ marginTop: '32px', padding: '0 24px', color: '#fff' }}>
-          <BirdFluEvents limit={10} />
+          {/* Temporarily commented out for build test */}
+          {/* <BirdFluEvents limit={10} /> */}
         </div>
         {/* Stock Comparison Components */}
         <div style={{ marginTop: '32px', padding: '0 24px' }}>
