@@ -34,14 +34,16 @@ export default function ClientZipPage({ zipCode }) {
           fontSize="10px"
         />
       </div>
-      {/* Local store price list */}
-      <div style={{ marginTop: 80, maxWidth: 960, marginInline: 'auto' }}>
-        <EggPriceViewsClassic
-          zipCode={zipCode}
-          stores={stores}
-          lastUpdated={lastUpdated}
-        />
-      </div>
+      {/* Local store price list: render only once stores have loaded to avoid no-data placeholder during fetch */}
+      {!loadingStores && (
+        <div style={{ marginTop: 80, maxWidth: 960, marginInline: 'auto' }}>
+          <EggPriceViewsClassic
+            zipCode={zipCode}
+            stores={stores}
+            lastUpdated={lastUpdated}
+          />
+        </div>
+      )}
     </main>
   );
 } 
