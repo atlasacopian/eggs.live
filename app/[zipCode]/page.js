@@ -2,8 +2,8 @@
 
 import React from 'react';
 import { useParams } from 'next/navigation';
-import TickerStrip from '../../components/TickerStrip';
-import HistoricalEggPriceCard from '../../components/HistoricalEggPriceCard.jsx';
+import TickerStrip from '@/components/TickerStrip';
+import HistoricalEggPriceCard from '@/components/HistoricalEggPriceCard';
 
 export default function ZipCodePage() {
   const { zipCode } = useParams();
