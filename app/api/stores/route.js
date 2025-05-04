@@ -241,4 +241,4 @@ export async function GET(req) {
     avgOrgNat,
     avgOrgNatDate
   });
-}     // Forcing a redeploy check
+}
