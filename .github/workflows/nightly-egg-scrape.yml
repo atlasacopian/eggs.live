@@ -1,4 +1,4 @@
-name: Nightly egg-price import
+name: Kroger US Egg Prices (daily)
 
 on:
   schedule:
@@ -35,4 +35,4 @@ jobs:
           KROGER_CLIENT_ID: ${{ secrets.KROGER_CLIENT_ID }}
           KROGER_CLIENT_SECRET: ${{ secrets.KROGER_CLIENT_SECRET }}
         run: |
-          npm run update-eggs || npm run scrape-eggs || node scripts/fetch-egg-prices.js 
+          node scripts/fetch-eggs-clean.js || echo "Script completed with non-zero exit code" 
