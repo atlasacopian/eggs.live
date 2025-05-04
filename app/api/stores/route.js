@@ -192,44 +192,54 @@ export async function GET(req) {
     : null;
   console.log('Calculated overall lastUpdated:', lastUpdated);
 
-  // --- Fetch National Averages (Keep unless requested otherwise) ---
+  // --- Fetch National Averages ---
   let avgRegNat = null, avgRegNatDate = null, avgOrgNat = null, avgOrgNatDate = null;
 
-  /* --- Temporarily Comment Out FRED ---
   // Simplified FRED fetch logic
   try {
     const fredKey = process.env.FRED_API_KEY;
     if (fredKey) { 
-    const regSeries = 'APU0000703111';
-    let fredRes = await fetch(
+      const regSeries = 'APU0000703111';
+      let fredRes = await fetch(
         `https://api.stlouisfed.org/fred/series/observations?series_id=${regSeries}&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`
       );
       let fredJson = await fredRes.json();
       if (fredRes.ok && !fredJson.error_code) {
-    const obs = fredJson.observations?.[0];
-          avgRegNat = obs?.value != null && obs.value !== '.' ? parseFloat(obs.value) : null;
-    avgRegNatDate = obs?.date || null;
+        const obs = fredJson.observations?.[0];
+        avgRegNat = obs?.value != null && obs.value !== '.' ? parseFloat(obs.value) : null;
+        avgRegNatDate = obs?.date || null;
       } else {
-         console.warn('FRED error:', fredJson.error_message || `Status ${fredRes.status}`);
-  }
+        console.warn('FRED error:', fredJson.error_message || `Status ${fredRes.status}`);
+      }
     }
     else { console.warn("FRED_API_KEY missing"); }
-   } catch(err) { console.error("FRED Error", err); }
-   */
+  } catch(err) { console.error("FRED Error", err); }
    
-  /* --- Temporarily Comment Out USDA ---
   // Simplified USDA fetch logic
   try {
     const usdaKey = process.env.USDA_API_KEY;
-     if (usdaKey) { 
-        // Placeholder: Add actual USDA MARS API logic here if needed, 
-        // similar to the previous version, finding the Retail Egg report
-        // and fetching the organic average.
-        console.warn("USDA Fetch logic placeholder - add implementation if needed");
-     }
-     else { console.warn("USDA_API_KEY missing"); }
-    } catch(err) { console.error("USDA Error", err); }
-  */
+    if (usdaKey) { 
+      // Placeholder: Add actual USDA MARS API logic here if needed, 
+      // similar to the previous version, finding the Retail Egg report
+      // and fetching the organic average.
+      // For now, let's assume your scheduled script updates a 'national_averages' table
+      const { data: usdaData, error: usdaError } = await sb
+        .from('national_averages')
+        .select('organic_price, date')
+        .eq('source', 'USDA') // Assuming a 'source' column
+        .order('date', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (usdaError) {
+        console.error('Error fetching USDA average:', usdaError);
+      } else if (usdaData) {
+        avgOrgNat = usdaData.organic_price;
+        avgOrgNatDate = usdaData.date;
+      }
+    }
+    else { console.warn("USDA_API_KEY missing"); }
+  } catch(err) { console.error("USDA Error", err); }
 
   // --- Return Combined Data ---
   return Response.json({
