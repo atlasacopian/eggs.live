@@ -1,22 +1,56 @@
 import { supabaseServer } from '@/lib/supabase'
 
+// Helper function to get latest prices from an array of price records
+function getLatestPrices(priceRecords, idField = 'store_id') {
+    const priceMap = {};
+    // Sort by date descending to process latest first
+    priceRecords.sort((a, b) => new Date(b.captured_at) - new Date(a.captured_at));
+
+    for (const priceRec of priceRecords) {
+        const storeId = priceRec[idField];
+        if (!priceMap[storeId]) {
+            priceMap[storeId] = { regular_price: null, organic_price: null, updated_at: null };
+        }
+        const priceDate = new Date(priceRec.captured_at);
+
+        // Assign price if not already found (since we sorted by date desc)
+        if (priceRec.product_type === 'regular' && priceMap[storeId].regular_price === null) {
+            priceMap[storeId].regular_price = priceRec.avg_price; // Assuming avg_price holds the value for both tables
+        } else if (priceRec.product_type === 'organic' && priceMap[storeId].organic_price === null) {
+            priceMap[storeId].organic_price = priceRec.avg_price;
+        }
+
+        // Track the latest date seen for this store
+        if (!priceMap[storeId].updated_at || priceDate > priceMap[storeId].updated_at) {
+             priceMap[storeId].updated_at = priceDate;
+        }
+    }
+     // Convert date object back to ISO string
+    Object.values(priceMap).forEach(p => {
+      if (p.updated_at instanceof Date) {
+        p.updated_at = p.updated_at.toISOString();
+      }
+    });
+    return priceMap;
+}
+
+
 export async function GET(req) {
+  console.log('--- EXECUTING LATEST STORES API V3 ---');
   console.log('📦 [api/stores] GET invoked with URL:', req.url);
   const { searchParams } = new URL(req.url)
   const zip = searchParams.get('zip')
   const lat = searchParams.get('lat')
   const lon = searchParams.get('lon')
 
-  console.log('📦 [api/stores] searchParams:', {
-    zip: searchParams.get('zip'),
-    lat: searchParams.get('lat'),
-    lon: searchParams.get('lon')
-  });
+  console.log('📦 [api/stores] searchParams:', { zip, lat, lon });
 
   let latitude = lat
   let longitude = lon
+  const radiusMiles = 3;
+  const storeLimit = 20;
 
-  // If lat/lon missing but zip provided, fetch coordinates from free API
+  // --- Geocoding ---
   if ((!latitude || !longitude) && zip) {
     try {
       const geoRes = await fetch(`https://api.zippopotam.us/us/${zip}`, { next:{ revalidate: 86400 } })
@@ -25,161 +59,187 @@ export async function GET(req) {
         latitude = geo?.places?.[0]?.latitude
         longitude = geo?.places?.[0]?.longitude
         console.log(`Geocoded ${zip} to:`, { latitude, longitude });
-      } else {
-        console.warn(`Failed to geocode zip ${zip}. Status: ${geoRes.status}`);
-      }
-    } catch (e) {
-      console.warn('Zip geocode failed', e)
+      } else { console.warn(`Failed to geocode zip ${zip}. Status: ${geoRes.status}`); }
+    } catch (e) { console.warn('Zip geocode failed', e) }
+  }
+
+  const sb = supabaseServer();
+  let allStores = [];
+
+  // --- Fetch and Process Kroger Data ---
+  /* --- Keep Kroger Commented Out ---
+  if (latitude && longitude) {
+    console.log(`Calling RPC nearby_kroger_stores with: lat=${latitude}, lon=${longitude}`);
+    let { data: nearbyKrogerStores, error: krogerStoresError } = await sb.rpc('nearby_kroger_stores', {
+        lat_in: latitude, lon_in: longitude, radius_miles: radiusMiles
+    });
+
+    if (krogerStoresError) {
+        console.error('Supabase RPC error (nearby_kroger_stores)', krogerStoresError);
+    } else if (nearbyKrogerStores && nearbyKrogerStores.length > 0) {
+        console.log(`Found ${nearbyKrogerStores.length} nearby Kroger stores.`);
+        const krogerStoreIds = nearbyKrogerStores.map(s => s.store_id); // Assumes RPC returns 'store_id'
+
+        // Query kroger_egg_prices_new for these stores
+        let { data: krogerPrices, error: krogerPricesError } = await sb
+            .from('kroger_egg_prices_new') // *** ADJUST if your Kroger price table name is different ***
+            .select('location_id, product_type, avg_price, captured_at') // *** ADJUST columns if needed ***
+            .in('location_id', krogerStoreIds); // *** ADJUST ID column if different ***
+
+        if (krogerPricesError) {
+            console.error('Error fetching Kroger prices:', krogerPricesError);
+        } else if (krogerPrices) {
+            console.log(`Fetched ${krogerPrices.length} price records for Kroger stores.`);
+            const priceMap = getLatestPrices(krogerPrices, 'location_id'); // Pass ID field name
+
+            // Harmonize Kroger data
+            const krogerStoresData = nearbyKrogerStores.map(store => {
+                 const prices = priceMap[store.store_id] || {};
+                 return {
+                     name: `${store.name || store.store_id}`, // Assuming name comes from RPC
+                     address: store.address,
+                     city: store.city,
+                     state: store.state,
+                     zip: store.zip,
+                     regular_price: prices.regular_price,
+                     organic_price: prices.organic_price,
+                     distance: store.distance,
+                     updated_at: prices.updated_at,
+                     brand: 'Kroger/Affiliate', // Or derive from name if possible
+                     store_identifier: `K${store.store_id}`
+                 };
+            });
+            allStores.push(...krogerStoresData);
+            console.log(`Added ${krogerStoresData.length} Kroger stores to results.`);
+        }
     }
+  } else {
+      console.warn('Skipping Kroger fetch due to missing coordinates.');
   }
+  */ // --- End Kroger Comment Out ---
 
-  // Log the final coords being sent to RPC
-  console.log(`Calling RPC with: zip=${zip}, lat=${latitude}, lon=${longitude}`);
+  // --- Fetch and Process Target Data ---
+  // /* --- Temporarily Comment Out Target ---
+  if (latitude && longitude) {
+    console.log(`✅ Calling RPC nearby_target_stores with: lat=${latitude}, lon=${longitude}, radius=${radiusMiles}`);
+    let { data: nearbyTargetStores, error: targetStoresError } = await sb.rpc('nearby_target_stores', {
+        lat_in: latitude, lon_in: longitude, radius_miles: radiusMiles
+    });
 
-  const sb = supabaseServer()
+    if (targetStoresError) {
+        console.error('❌ Supabase RPC error (nearby_target_stores)', targetStoresError);
+    } else if (nearbyTargetStores && nearbyTargetStores.length > 0) {
+        console.log(`✅ Found ${nearbyTargetStores.length} nearby Target stores. IDs:`, nearbyTargetStores.map(s => s.store_id));
+        const targetStoreIds = nearbyTargetStores.map(s => s.store_id);
 
-  // Call an RPC defined in Supabase that returns enriched records
-  let { data: storesFromRpc, error: rpcError } = await sb.rpc('get_kroger_store_prices', {
-    zip_in: zip,
-    lat_in: latitude,
-    lon_in: longitude,
-    radius_miles: 3,
-    limit_n: 20
-  });
+        // Query target_egg_price_stats for these stores
+        console.log(`🔄 Querying target_egg_price_stats for ${targetStoreIds.length} IDs...`);
+        let { data: targetPrices, error: targetPricesError } = await sb
+            .from('target_egg_price_stats')
+            .select('store_id, product_type, avg_price, captured_at')
+            .in('store_id', targetStoreIds);
 
-  if (rpcError) {
-    console.error('Supabase RPC error', rpcError)
-    return Response.json({ error: rpcError.message }, { status: 500 })
-  }
+        if (targetPricesError) {
+            console.error('❌ Error fetching Target prices:', targetPricesError);
+        } else if (targetPrices) {
+             console.log(`✅ Fetched ${targetPrices.length} price records for Target stores.`);
+             const priceMap = getLatestPrices(targetPrices, 'store_id');
+             console.log('🗺️ Generated priceMap:', JSON.stringify(priceMap)); // Log the price map
 
-  let finalStores = storesFromRpc ?? [];
-
-  // WORKAROUND: Fetch missing identifiers
-  if (finalStores.length > 0) {
-    // Get unique addresses from the RPC results
-    const addresses = [...new Set(finalStores.map(s => s.address).filter(Boolean))];
-    
-    if (addresses.length > 0) {
-      console.log('Attempting to fetch place_ids for addresses:', addresses);
-      // Query the stores table to get place_id based on address
-      const { data: idData, error: idError } = await sb
-        .from('la_stores')
-        .select('address, place_id')
-        .in('address', addresses);
-
-      if (idError) {
-        console.warn('Could not fetch place_ids:', idError.message);
-      } else if (idData) {
-        // Create a map for easy lookup: address -> place_id
-        const addressToIdMap = idData.reduce((map, item) => {
-          map[item.address] = item.place_id;
-          return map;
-        }, {}); 
-
-        console.log('Address to place_id map created:', addressToIdMap);
-
-        // Add the store_identifier (place_id) to the original results
-        finalStores = finalStores.map(store => ({
-          ...store,
-          store_identifier: addressToIdMap[store.address] || null // Add the ID from the map
-        }));
-      }
+             // Harmonize Target data
+             const targetStoresData = nearbyTargetStores.map(store => {
+                  const prices = priceMap[store.store_id] || {};
+                  return {
+                      name: `Target (${store.name || store.store_id})`,
+                      address: store.address,
+                      city: store.city,
+                      state: store.state,
+                      zip: store.zip,
+                      regular_price: prices.regular_price,
+                      organic_price: prices.organic_price,
+                      distance: store.distance,
+                      updated_at: prices.updated_at,
+                      brand: 'Target',
+                      store_identifier: `T${store.store_id}`
+                  };
+             });
+             allStores.push(...targetStoresData);
+             console.log(`➕ Added ${targetStoresData.length} Target stores to results. Current allStores count: ${allStores.length}`);
+        } else {
+             console.log('❓ Fetched 0 price records for nearby Target stores.');
+        }
+    } else {
+         console.log('❓ nearby_target_stores returned 0 stores.');
     }
+  } else {
+      console.warn('⏭️ Skipping Target fetch due to missing coordinates.');
   }
-  // End of Workaround
+  // */ // --- End Target Comment Out ---
 
-  // Filter out Target stores for now since their prices are wrong
-  const storesWithoutTarget = finalStores.filter(store => !/target/i.test(store.name || ''));
-  // Determine the latest updated_at across all stores
-  const lastUpdated = storesWithoutTarget.length > 0
-    ? storesWithoutTarget.reduce((maxTs, store) => {
-        const ts = store.updated_at || maxTs;
-        return ts > maxTs ? ts : maxTs;
-      }, storesWithoutTarget[0].updated_at)
+  // --- Combine, Sort, Limit ---
+  console.log('🔄 Final processing. Current allStores count:', allStores.length);
+  allStores.sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity));
+  const finalStores = allStores.slice(0, storeLimit);
+  console.log(`✅ Returning combined total of ${finalStores.length} stores.`);
+
+  // --- Calculate Overall Last Updated ---
+  const lastUpdated = finalStores.length > 0
+    ? finalStores.reduce((maxTs, store) => {
+        if (!store.updated_at) return maxTs;
+        let currentMaxTs = (maxTs instanceof Date) ? maxTs : new Date(0);
+        const currentStoreTs = new Date(store.updated_at);
+        return currentStoreTs > currentMaxTs ? currentStoreTs : currentMaxTs;
+      }, new Date(0)).toISOString()
     : null;
-  // Fetch city‐wide LA averages from RPC
-  const { data: laAvgsData, error: laAvgsError } = await sb.rpc('get_la_egg_price_averages');
-  if (laAvgsError) console.warn('LA averages RPC error', laAvgsError.message);
-  const laAvgs = laAvgsData && laAvgsData.length > 0 ? laAvgsData[0] : { avg_reg: null, avg_org: null };
-  // Fetch national regular egg price from FRED (with fallback on default series)
-  let avgRegNat = null;
-  let avgRegNatDate = null;
+  console.log('Calculated overall lastUpdated:', lastUpdated);
+
+  // --- Fetch National Averages (Keep unless requested otherwise) ---
+  let avgRegNat = null, avgRegNatDate = null, avgOrgNat = null, avgOrgNatDate = null;
+
+  /* --- Temporarily Comment Out FRED ---
+  // Simplified FRED fetch logic
   try {
     const fredKey = process.env.FRED_API_KEY;
-    // Always use the standard conventional eggs series ID
+    if (fredKey) { 
     const regSeries = 'APU0000703111';
-    console.log('Attempting FRED fetch for series:', regSeries);
     let fredRes = await fetch(
-      `https://api.stlouisfed.org/fred/series/observations?series_id=${regSeries}&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`
-    );
-    let fredJson = await fredRes.json();
-    if (fredJson.error_code) {
-      console.warn('FRED error:', fredJson.error_message, '- retrying default series APU0000703111');
-      fredRes = await fetch(
         `https://api.stlouisfed.org/fred/series/observations?series_id=${regSeries}&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`
       );
-      fredJson = await fredRes.json();
-    }
-    console.log('FRED raw response:', fredJson);
+      let fredJson = await fredRes.json();
+      if (fredRes.ok && !fredJson.error_code) {
     const obs = fredJson.observations?.[0];
-    avgRegNat = obs?.value != null ? parseFloat(obs.value) : null;
+          avgRegNat = obs?.value != null && obs.value !== '.' ? parseFloat(obs.value) : null;
     avgRegNatDate = obs?.date || null;
-  } catch (err) {
-    console.warn('FRED fetch error', err.message);
+      } else {
+         console.warn('FRED error:', fredJson.error_message || `Status ${fredRes.status}`);
   }
-  // Fetch national organic average from USDA AMS Retail Egg Report API
-  let avgOrgNat = null;
-  let avgOrgNatDate = null;
+    }
+    else { console.warn("FRED_API_KEY missing"); }
+   } catch(err) { console.error("FRED Error", err); }
+   */
+   
+  /* --- Temporarily Comment Out USDA ---
+  // Simplified USDA fetch logic
   try {
     const usdaKey = process.env.USDA_API_KEY;
-    console.log('USDA_API_KEY present:', !!usdaKey);
-    const credentials = Buffer.from(`${usdaKey}:`).toString('base64');
-    // 1) Fetch list of available reports to find the Retail Egg Report slug
-    const listUrl = 'https://marsapi.ams.usda.gov/services/v1.2/reports';
-    const listRes = await fetch(listUrl, {
-      headers: { 'Authorization': `Basic ${credentials}` },
-      next: { revalidate: 86400 }
-    });
-    const listJson = await listRes.json();
-    const reports = listJson.results || [];
-    console.log('🚀 [api/stores] Total MARS reports count:', reports.length);
-    // Log first 20 reports for inspection
-    console.log('🚀 [api/stores] First 20 MARS report slugs:', reports.slice(0,20).map(r => ({ slug_id: r.slug_id, slug_name: r.slug_name, report_name: r.report_name })));
-    // Find any report whose name mentions 'Egg' (case-insensitive)
-    const eggReports = reports.filter(r => /egg/i.test(r.report_name));
-    console.log('MARS candidate egg reports:', eggReports.map(r => ({ slug: r.slug_name, name: r.report_name })));  
-    const retailReport = eggReports[0];
-    if (!retailReport) {
-      console.error('No Egg-related report found in MARS API reports list');
-    }
-    // Use slug_name to fetch filtered data
-    const slug = retailReport?.slug_name;
-    const filterQ = 'commodity=Eggs;type=Organic;unit=Per Dozen;region=National;frequency=Weekly;statisticCategory=Retail Price';
-    const reportUrl = `https://marsapi.ams.usda.gov/services/v1.2/reports/${encodeURIComponent(slug)}?q=${encodeURIComponent(filterQ)}`;
-    console.log('Fetching MARS report data:', reportUrl);
-    const marsRes = await fetch(reportUrl, {
-      headers: { 'Authorization': `Basic ${credentials}` },
-      next: { revalidate: 3600 }
-    });
-    console.log('MARS fetch status:', marsRes.status, marsRes.statusText);
-    const marsJson = await marsRes.json();
-    console.log('MARS parsed JSON response:', marsJson);
-    const results = Array.isArray(marsJson.results) ? marsJson.results : [];
-    const latest = results[0] || {};
-    avgOrgNat = latest.pricePerUnit != null ? parseFloat(latest.pricePerUnit) : null;
-    avgOrgNatDate = latest.report_date || latest.published_date;
-  } catch (err) {
-    console.error('USDA fetch error', err);
-  }
-  // Return stores, lastUpdated, and all averages
+     if (usdaKey) { 
+        // Placeholder: Add actual USDA MARS API logic here if needed, 
+        // similar to the previous version, finding the Retail Egg report
+        // and fetching the organic average.
+        console.warn("USDA Fetch logic placeholder - add implementation if needed");
+     }
+     else { console.warn("USDA_API_KEY missing"); }
+    } catch(err) { console.error("USDA Error", err); }
+  */
+
+  // --- Return Combined Data ---
   return Response.json({
-    stores: storesWithoutTarget,
+    stores: finalStores,
     lastUpdated,
-    avgRegLA: laAvgs.avg_reg,
-    avgOrgLA: laAvgs.avg_org,
+    // LA Averages are removed
     avgRegNat,
     avgRegNatDate,
     avgOrgNat,
     avgOrgNatDate
   });
-} 
+}     // Forcing a redeploy check
