@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import dynamicImport from 'next/dynamic';
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 // Client-only 3D background
@@ -13,9 +13,14 @@ const EggChartScene = dynamicImport(
   { ssr: false }
 );
 
-// Client-only price views
-const EggPriceViews = dynamicImport(
+// Client-only price views (classic & terminal)
+const EggPriceViewsClassic = dynamicImport(
   () => import('../../components/EggPriceViews'),
+  { ssr: false }
+);
+
+const EggPriceViewsTerminal = dynamicImport(
+  () => import('../../components/EggPriceViewsTerminal'),
   { ssr: false }
 );
 
@@ -23,6 +28,17 @@ import BackButton from '../../components/BackButton';
 import TickerStrip from '../../components/TickerStrip';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import { getStoresNearZip } from '../../lib/api';
+import BirdFluEvents from '../../components/BirdFluEvents';
+
+// After dynamic import section
+const HistoricalEggPriceCard = dynamicImport(() => import('../../components/HistoricalEggPriceCard'), { ssr: false })
+const EggStockChart = dynamicImport(() => import('../../components/EggStockChart'), { ssr: false })
+const ComparisonStockChart = dynamicImport(() => import('../../components/ComparisonStockChart'), { ssr: false })
+const ComparisonTicker = dynamicImport(() => import('../../components/ComparisonTicker'), { ssr: false })
+const ComparisonListView = dynamicImport(() => import('../../components/ComparisonListView'), { ssr: false })
+
+// Define comparison tickers to render additional charts
+const comparisonTickers = ['CALM', 'VITL', 'POST', 'TSN'];
 
 export default function ZipCodePage() {
   const { zipCode } = useParams();
@@ -109,8 +125,8 @@ export default function ZipCodePage() {
         }}
       >
         <ErrorBoundary>
-          {stores && stores.length > 0 ? (
-            <EggPriceViews
+          {stores && stores.length > 0 && (
+            <EggPriceViewsClassic
               zipCode={zipCode}
               stores={stores}
               lastUpdated={lastUpdated}
@@ -121,39 +137,28 @@ export default function ZipCodePage() {
               avgOrgNat={avgOrgNat}
               avgOrgNatDate={avgOrgNatDate}
             />
-          ) : (
-            <div style={{ padding: '2rem', textAlign: 'center' }}>
-              <h2>It looks like we don&apos;t have data for {zipCode} yet.</h2>
-              <p>
-                Want us to consider adding it?{' '}
-                <Link href="https://forms.gle/1guuqo2DSEJr4ifq8" className="request-link" target="_blank" rel="noopener noreferrer">
-                  Submit a request here.
-                </Link>
-              </p>
-            </div>
           )}
         </ErrorBoundary>
+        {/* National FRED Data */}
+        <div style={{ marginTop: '32px', padding: '0 24px' }}>
+          <HistoricalEggPriceCard />
+        </div>
+        {/* Bird Flu Data */}
+        <div style={{ marginTop: '32px', padding: '0 24px', color: '#fff' }}>
+          <BirdFluEvents limit={10} />
+        </div>
+        {/* Stock Comparison Components */}
+        <div style={{ marginTop: '32px', padding: '0 24px' }}>
+          <ComparisonTicker tickers={comparisonTickers} />
+        </div>
+        <div style={{ marginTop: '16px', padding: '0 24px' }}>
+          <ComparisonListView tickers={comparisonTickers} />
+        </div>
+        {/* Back Button */}
         <div style={{ textAlign: 'center', marginTop: '24px' }}>
           <BackButton />
         </div>
       </div>
-      {/* Request link styling */}
-      <style jsx global>{`
-        a.request-link,
-        a.request-link:visited {
-          color: #ffc107 !important;
-          text-decoration: none;
-        }
-        a.request-link:hover,
-        a.request-link:active {
-          text-decoration: underline;
-        }
-        @media (max-width: 768px) {
-          .background-3d {
-            display: none;
-          }
-        }
-      `}</style>
     </main>
   );
 }
