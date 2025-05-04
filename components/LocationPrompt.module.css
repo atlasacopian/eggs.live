@@ -15,7 +15,7 @@
   letter-spacing: 2px; 
   font-size: 9px; /* Default desktop size */
   color: #000000;
-  padding: 0 0.75rem; /* horizontal padding only */
+  padding: 0 0.5rem; /* consistent spacing */
   border-radius: 4px; 
   transition: color 0.2s ease-out, background-color 0.2s ease-out;
   display: inline-flex; /* Use flex for alignment */
@@ -25,8 +25,8 @@
   /* For desktop, width will naturally adjust to content */
   /* Set a default transparent border so hover/focus styles do not change overall size */
   border: 1px solid transparent;
-  width: 24ch; /* fixed constant width so highlight never shrinks */
-  height: 36px; /* fixed height prevents taller ZIP input */
+  width: auto;
+  height: 36px; /* keep constant height */
 }
 
 /* Unified hover and focus styling on .option, including focus-within when input is active */
