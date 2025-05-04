@@ -40,10 +40,10 @@
   border-color: var(--accent-color);
 }
 
+/* Ensure ZIP input is clearly visible */
 .zipInput {
-  background: transparent;
-  border: none;
-  color: var(--accent-color);
+  color: #000000 !important;
+  background: rgba(255,255,255,0.9) !important;
   font-family: 'Roboto Mono', monospace;
   font-size: 9px; /* Match option font size */
   letter-spacing: 2px;
@@ -147,37 +147,11 @@
 
 /* Add media query for mobile adjustments */
 @media (max-width: 768px) {
-  /* Reset option width */
-  .option {
-    width: auto !important;
-  }
-
-  /* Use grid to lock bracket, input, arrow, bracket positions */
-  .zipForm {
-    display: grid !important;
-    grid-template-columns: auto 1fr auto auto !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 0.5rem !important;
-    width: auto !important;
-  }
-
-  /* Position brackets at grid edges */
-  .zipForm > .bracket:first-of-type { grid-column: 1 !important; }
-  .zipForm > .bracket:last-of-type { grid-column: 4 !important; }
-
-  /* Expand input in second grid cell */
+  /* On mobile, ensure zip input text is orange and visible */
   .zipInput {
-    grid-column: 2 !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-    text-align: center !important;
-    letter-spacing: 2px !important;
-    font-size: 8px !important;
+    background: transparent !important;
+    color: var(--accent-color) !important;
   }
-
-  /* Place enter arrow in third grid cell */
-  .enterHint { grid-column: 3 !important; }
 }
 
 /* Revert to original desktop button sizes */

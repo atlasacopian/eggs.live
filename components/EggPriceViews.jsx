@@ -345,7 +345,7 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
                   <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#fff', lineHeight: '1' }}>
                     {s.regular != null
                       ? formatPrice(s.regular)
-                      : (s.organic != null ? "No Data Available" : "Out of Stock")}
+                      : (s.organic != null ? "N/A" : "Out of Stock")}
                   </div>  
                   {s.regularChange != null && s.regularChange !== 0 ? (
                     <motion.span
@@ -364,7 +364,7 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
                   <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#fff', lineHeight: '1' }}>
                     {s.organic != null
                       ? formatPrice(s.organic)
-                      : (s.regular != null ? "No Data Available" : "Out of Stock")}
+                      : (s.regular != null ? "N/A" : "Out of Stock")}
                   </div>  
                   {s.organicChange != null && s.organicChange !== 0 ? (
                     <motion.span

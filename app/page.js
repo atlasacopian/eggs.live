@@ -74,17 +74,6 @@ export default function Home() {
         onUseLocation={handleUseLocation} 
         onEnterZip={handleEnterZip} 
       />
-      <style jsx>{`
-        @media (max-width: 768px) {
-          .header-container {
-            margin-top: 5vh !important; /* Reduced margin further for mobile */
-          }
-          /* Target LocationPrompt container via its main wrapper div */
-          :global(.location-prompt-container > div) { 
-            bottom: 10vh !important; /* Raise prompt slightly on mobile */
-          }
-        }
-      `}</style>
     </main>
   )
 } 

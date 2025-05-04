@@ -52,13 +52,13 @@ export async function run({ latestOnly = false } = {}) {
   //       drop the old pagination loop.
   const url = `https://marsapi.ams.usda.gov/services/v1.2/reports/${slugId}/${section}?page=1`
   console.log('📥 USDA fetch …')
-  const res = await fetch(url, { headers: { Authorization: `Basic ${creds}` } })
-  if (!res.ok) {
-    console.error('USDA request failed', res.status)
+    const res = await fetch(url, { headers: { Authorization: `Basic ${creds}` } })
+    if (!res.ok) {
+      console.error('USDA request failed', res.status)
     return
-  }
-  const json = await res.json()
-  const rows = json.results || []
+    }
+    const json = await res.json()
+    const rows = json.results || []
   console.log(`   ↳ received ${rows.length.toLocaleString()} rows`)
 
   // Fetch the latest date from Supabase ONLY if running in latestOnly mode
@@ -71,21 +71,21 @@ export async function run({ latestOnly = false } = {}) {
     return new Date(y, m - 1, d)
   }
 
-  for (const r of rows) {
+    for (const r of rows) {
     // Skip if older/equal to last stored date when in latestOnly mode
     if (latestOnly && lastRefDate && parseUsdaDate(r.report_date) <= lastRefDate) continue
 
     if (!r.package_size) continue
-    if (!isDozen(r.package_size)) continue
-    const price = parseFloat(r.price_avg)
-    if (!price || Number.isNaN(price)) continue
+      if (!isDozen(r.package_size)) continue
+      const price = parseFloat(r.price_avg)
+      if (!price || Number.isNaN(price)) continue
 
-    const kind = (r.environment || '').toLowerCase().includes('organic') ? 'organic' : 'regular'
+      const kind = (r.environment || '').toLowerCase().includes('organic') ? 'organic' : 'regular'
     let entry = agg.get(r.report_date)
-    if (!entry) entry = { regular: [], organic: [] }
-    entry[kind].push(price)
+      if (!entry) entry = { regular: [], organic: [] }
+      entry[kind].push(price)
     agg.set(r.report_date, entry)
-  }
+    }
 
   console.log(`Aggregated map size before flush: ${agg.size}`);
   await flush(agg); // Flush potentially empty map if nothing new found

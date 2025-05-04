@@ -15,11 +15,11 @@ export async function GET(req) {
 
   const sb = supabaseServer();
 
-  // Directly query the egg_prices table using the identifier
+  // Directly query la_egg_prices only
   const { data, error } = await sb
     .from('la_egg_prices')
     .select('date, avg_regular_dozen_price, avg_organic_dozen_price')
-    .eq('store_identifier', storeIdentifier) // Use the passed identifier directly
+    .eq('store_identifier', storeIdentifier)
     .order('date', { ascending: true });
 
   if (error) {
@@ -27,9 +27,8 @@ export async function GET(req) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // Format data for the chart
   const historyData = data.map(item => ({
-    date: item.date, // Keep as YYYY-MM-DD string
+    date: item.date,
     regular: item.avg_regular_dozen_price,
     organic: item.avg_organic_dozen_price,
   }));

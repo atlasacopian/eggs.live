@@ -2,6 +2,7 @@ import { config } from 'dotenv'
 config({ path: '.env.local' })
 import fetch from 'node-fetch'
 import { createClient } from '@supabase/supabase-js'
+import pLimit from 'p-limit'
 
 // ---- env vars ----
 const {
@@ -95,7 +96,7 @@ async function fetchStoreIds() {
   return ids
 }
 
-function isTwelveCountProduct(product) {
+export function isTwelveCountProduct(product) {
   const desc = (product.description ?? '').toLowerCase()
   const size = (product.items?.[0]?.size ?? '').toLowerCase()
 
@@ -113,7 +114,27 @@ function isTwelveCountProduct(product) {
   return check(desc) || check(size)
 }
 
-function isOrganic(product) {
+export function isShellEggProduct(product) {
+  const desc = (product.description ?? '').toLowerCase();
+  // Must contain "egg", "eggs" or "shell"
+  if (!desc.includes('egg') && !desc.includes('shell')) return false;
+
+  // Exclude common non-egg items containing "egg"
+  const exclusionKeywords = [
+    'sandwich', 'sandwiches', 'croissant', 'bites', 'bite', 'yogurt', 'cookie', 'cheese', 'sausage',
+    'patty', 'patties', 'wrap', 'wraps', 'burrito', 'scramble', 'omelet', 'drink', 'nog', 'substitute',
+    'milk', 'dog', 'cat', 'jerky', 'food', 'smoothie', 'meal', 'kit', 'dough', 'bake', 'candy',
+    'chocolate', 'liquid', 'mix', 'easter', 'holiday', 'plastic', 'decoration', 'fill eggs'
+  ];
+  if (exclusionKeywords.some(keyword => desc.includes(keyword))) {
+    return false;
+  }
+
+  // Could add more checks here if needed (e.g., based on category)
+  return true; // Assume it's shell eggs if it passes exclusions
+}
+
+export function isOrganic(product) {
   const desc = (product.description ?? '').toLowerCase()
   const size = (product.items?.[0]?.size ?? '').toLowerCase()
   const text = desc + ' ' + size
@@ -122,27 +143,18 @@ function isOrganic(product) {
   return keywords.some(k => text.includes(k))
 }
 
-async function fetchEggProducts(locationId) {
+export async function fetchEggProducts(locationId) {
   const products = []
   const limit = 50 // API max
-  const terms = [
-    'eggs',
-    'egg',
-    'dozen eggs',
-    '12 ct eggs',
-    '12 count eggs',
-    '1 dozen',
-    'large eggs'
-  ]
+  const terms = ['eggs','egg','dozen eggs','12 ct eggs','12 count eggs','1 dozen','large eggs']
   for (const term of terms) {
-    for (let start = 1; start <= 201; start += limit) { // up to 5 pages (250 items) per term
+    for (let start = 1; start <= 250; start += limit) {
       const url = new URL('https://api.kroger.com/v1/products')
       url.searchParams.set('filter.term', term)
       url.searchParams.set('filter.locationId', locationId)
       url.searchParams.set('filter.limit', limit)
       url.searchParams.set('filter.start', start)
-      // keep department filter off to capture all egg SKUs
-
+      url.searchParams.set('filter.fulfillment', 'inStore')
       let res = await fetchWithRetry(url)
       if (!res.ok) {
         const errBody = await res.text().catch(() => '')
@@ -151,11 +163,11 @@ async function fetchEggProducts(locationId) {
       }
       const { data = [] } = await res.json()
       products.push(...data)
-      await sleep(1500) // slower pace ~0.7 req/s
-      if (data.length < limit) break // last page for this term
+      if (data.length < limit) break // last page
+      await sleep(1500) // pacing to avoid rate limit
     }
   }
-  // Deduplicate by productId/UPC
+  // Deduplicate products
   const seen = new Set()
   const unique = []
   for (const p of products) {
@@ -164,46 +176,90 @@ async function fetchEggProducts(locationId) {
     seen.add(id)
     unique.push(p)
   }
-  return unique // no cap, we already dedup
+  // Debug hash of product IDs
+  const identifiers = unique.map(p => p.productId || p.upc).sort().join(',')
+  const hashCode = identifiers.split('').reduce((a,b) => (((a << 5) - a) + b.charCodeAt(0))|0, 0)
+  console.log(`🔍 Store ${locationId} products hash: ${hashCode} (${unique.length} products)`)
+  return unique
 }
 
-async function summarizeEggPrices(locationId) {
+export async function summarizeEggPrices(locationId) {
   const data = await fetchEggProducts(locationId)
   console.log(`⏺ store ${locationId}: raw products = ${data.length}`)
 
   const regPrices = []
   const orgPrices = []
+  const regDetails = []
+  const orgDetails = []
   let foundDozen = false
 
   for (const p of data) {
-    if (!isTwelveCountProduct(p)) continue // skip non-dozen sizes
+    if (!isShellEggProduct(p)) continue;   // FIRST: Check if it's likely shell eggs
+    if (!isTwelveCountProduct(p)) continue; // SECOND: Check if it's a dozen count
     foundDozen = true
     let price = null
-    for (const it of p.items ?? []) {
+    // Only consider items stocked in-store
+    const instore = (p.items ?? []).filter(it => it.fulfillment?.includes('inStore'))
+    for (const it of instore) {
       const pr = it.price ?? {}
-      const raw =
-        pr.promo ??
-        pr.regular ??
-        pr.original ??
-        pr.final ??
-        pr.current ??
-        pr.retail ??
-        null
-      const num = Number(raw)
-      if (!isNaN(num) && num > 0.01) price = num // ignore zero / bogus
-      if (price) break
+      let potentialPrice = null;
+
+      // Prioritize promo price if it's valid (> 0.01)
+      const promoPrice = Number(pr.promo);
+      if (!isNaN(promoPrice) && promoPrice > 0.01) {
+          potentialPrice = promoPrice;
+      } else {
+          // Otherwise, try the regular price
+          const regularPrice = Number(pr.regular);
+          if (!isNaN(regularPrice) && regularPrice > 0.01) {
+              potentialPrice = regularPrice;
+          } else {
+              // Fallback to other fields if necessary
+              const fallbackRaw = pr.original ?? pr.final ?? pr.current ?? pr.retail ?? null;
+              const fallbackPrice = Number(fallbackRaw);
+              if (!isNaN(fallbackPrice) && fallbackPrice > 0.01) {
+                  potentialPrice = fallbackPrice;
+              }
+          }
+      }
+
+      if (potentialPrice !== null && potentialPrice < 1) {
+          potentialPrice = null; // filter unrealistically low
+      }
+
+      if (potentialPrice !== null) {
+          price = potentialPrice;
+          break;
+      }
     }
     const isOrg = isOrganic(p)
     if (price == null) {
+      // Log details if organic price extraction failed (No longer needed with fixed logic, but keep for now)
+      if (isOrg) {
+          // console.log(`  DEBUG Organic product price not found: ${p.description}`); // Keep commented out for now
+          // console.log(`    Items:`, JSON.stringify(p.items, null, 2));           // Keep commented out for now
+          orgPrices.push(null)
+          orgDetails.push({ price: null, desc: p.description })
+      } else {
+          regPrices.push(null)
+          regDetails.push({ price: null, desc: p.description })
+      }
       // record presence but price unavailable (out of stock)
-      if (isOrg) orgPrices.push(null)
-      else regPrices.push(null)
+      // if (isOrg) orgPrices.push(null) // Now handled above
+      // else regPrices.push(null)      // Now handled above
       continue
     }
-    if (isOrg) orgPrices.push(price)
-    else regPrices.push(price)
+    if (price != null && price < 1) price = null;
+    if (isOrg) {
+        orgPrices.push(price)
+        orgDetails.push({ price, desc: p.description })
+    } else {
+        regPrices.push(price)
+        regDetails.push({ price, desc: p.description })
+    }
   }
   console.log(`⏺ store ${locationId}: regular dozen = ${regPrices.length}, organic dozen = ${orgPrices.length}`)
+  // console.log(`  DEBUG orgPrices array:`, orgPrices); // Ensure this is removed or commented out
 
   if (orgPrices.length === 0) {
     // log sample dozen products that may be organic but not detected
@@ -231,6 +287,10 @@ async function summarizeEggPrices(locationId) {
   const now = new Date();
   const capturedDate = now.toISOString().split('T')[0]; // Extract YYYY-MM-DD
 
+  // after the loop before calc
+  console.log('⇢ Included regular products:', regDetails.map(d=>`${d.price} - ${d.desc}`))
+  console.log('⇢ Included organic products:', orgDetails.map(d=>`${d.price} - ${d.desc}`))
+
   return {
     location_id: locationId,
     captured_at: now.toISOString(),
@@ -245,9 +305,23 @@ async function summarizeEggPrices(locationId) {
   }
 }
 
+// Parse CLI arguments to optionally limit run to specific store IDs
+const args = process.argv.slice(2);
+let onlyStores = [];
+if (args.includes('--only')) {
+  const idx = args.indexOf('--only');
+  if (idx !== -1 && args[idx + 1]) {
+    onlyStores = args[idx + 1].split(',');
+    console.log(`🔍 Running only for stores: ${onlyStores.join(', ')}`);
+  }
+}
+
 async function main() {
   console.time('egg-price-import')
-  const storeIds = await fetchStoreIds()
+  let storeIds = await fetchStoreIds()
+  if (onlyStores.length) {
+    storeIds = storeIds.filter(id => onlyStores.includes(id))
+  }
   console.log(`📦 processing ${storeIds.length} stores`)
 
   // --- TEMPORARY LIMIT FOR TESTING (REMOVED) ---
@@ -264,19 +338,21 @@ async function main() {
       console.warn('skip store', loc, err.message)
     }
     if (row) {
-      // Change from insert to upsert
-      const { error } = await sb.from('kroger_egg_prices').upsert(row, {
-        onConflict: 'location_id, captured_date', // Specify conflict columns based on unique constraint
-        // ignoreDuplicates: false, // Default is false, ensures update on conflict
+      // Perform upsert with proper onConflict array and capture data & error
+      console.log(`Attempting to upsert store ${loc} with data: ${JSON.stringify(row)}`);
+      const { data, error } = await sb.from('kroger_egg_prices_new').upsert(row, {
+        onConflict: ['location_id', 'captured_date'], // unique key columns
+        ignoreDuplicates: false,
       });
-
+      console.log('Upsert response data:', data);
       if (error) {
-        // Handle potential constraint violation errors if needed, though upsert should manage duplicates
-        console.error(`❌ Upsert failed for store ${loc}:`, error)
-        // Consider if you want to exit(1) or just log and continue
-        // process.exit(1);
+        console.error('❌ Upsert failed for store', loc);
+        console.error('Error message:', error.message);
+        console.error('Error details:', error.details || 'n/a');
+        console.error('Error hint:', error.hint || 'n/a');
+        console.error('Full error object:', error);
       } else {
-        console.log(`✔︎ saved/updated store ${loc} for date ${row.captured_date} status=${row.status}`)
+        console.log(`✔︎ saved/updated store ${loc} for date ${row.captured_date} status=${row.status}`);
       }
     } else {
       console.log(`⚪️ skipped store ${loc} (no priced dozens found)`);
