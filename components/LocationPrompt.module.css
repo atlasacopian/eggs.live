@@ -193,13 +193,6 @@
   width: 18ch; /* constant width so highlight doesn't shrink */
 }
 
-/* invisible placeholder to keep button width constant when input replaces text */
-.zipForm::before {
-  content: " ENTER ZIP CODE "; /* same text with surrounding spaces */
-  visibility: hidden;
-  white-space: pre;
-}
-
 .option .bracket:first-child {
   margin-right: 0.35ch;
 }
