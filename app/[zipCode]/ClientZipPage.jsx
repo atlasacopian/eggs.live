@@ -40,7 +40,7 @@ export default function ClientZipPage({ zipCode }) {
     <main style={{ background: '#000', color: '#fff', minHeight: '100vh', padding: 24 }}>
       <div style={{ position: 'absolute', top: 16, left: 16, right: 16, zIndex: 10 }}>
         <TickerStrip
-          text={`ZIP ${zipCode} – Egg Prices`}
+          text="NATIONAL AVG: REG DOZEN $6.23 <span style='color: #00FF00;'>↑</span> | ORG DOZEN $6.98 <span style='color: #FF0000;'>↓</span>  🥚  123 STORES | 45 ZIP CODES 🥚"
           fontSize="10px"
           overrideBackgroundColor="#000"
         />
