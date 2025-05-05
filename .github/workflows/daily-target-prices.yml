@@ -30,6 +30,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: List scripts directory
+        run: ls -l scripts
+
       - name: Run fetch script
         run: node scripts/fetch-target-egg-prices-redsky.js
 
