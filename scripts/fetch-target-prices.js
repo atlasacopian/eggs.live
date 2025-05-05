@@ -21,7 +21,7 @@ const EGG_SEARCH_PATH = '/s?searchTerm=egg';
 
 // --- Constants ---
 const KNOWN_EGG_TCINS = [
-  '14662561', // Good & Gather Cage-Free Large Brown Eggs - 12ct
+  '83719457', // Good & Gather 18ct Large White (from previous inspection)
   // Add more TCINs for relevant egg products here (e.g., dozen, organic)
 ];
 
@@ -66,16 +66,30 @@ async function scrapePricesForStore(browser, store) {
     console.log(`   -> Egg search page loaded.`);
 
     // --- Wait specifically for a known TCIN container to appear ---
-    const targetTcinSelector = `a[href*="/A-${KNOWN_EGG_TCINS[0]}"]`;
+    const targetTcinSelector = `[childorstandalonetcin="${KNOWN_EGG_TCINS[0]}"]`; // Wait for the first known TCIN
     console.log(`   -> Waiting for selector: ${targetTcinSelector}`);
     try {
-      await page.waitForSelector(targetTcinSelector, { timeout: 15000 }); // Increased timeout slightly
+      await page.waitForSelector(targetTcinSelector, { timeout: 15000 });
       console.log(`   -> Target TCIN container found on page.`);
     } catch (waitError) {
       console.error(`   -> ❌ Timed out waiting for TCIN container: ${targetTcinSelector}`);
-      // Optionally dump page HTML here for debugging if selector fails
-      // const html = await page.content();
-      // console.log("Page HTML on selector timeout:", html.substring(0, 1000));
+
+      // --- Debugging for GitHub Actions ---
+      try {
+        const screenshotPath = `error_screenshot_store_${store.store_id}.png`;
+        const htmlPath = `error_page_store_${store.store_id}.html`;
+        console.log(`   -> Capturing screenshot to ${screenshotPath}`);
+        await page.screenshot({ path: screenshotPath, fullPage: true });
+        console.log(`   -> Dumping HTML to ${htmlPath}`);
+        const html = await page.content();
+        // In Actions, we can't directly access files easily, so log a snippet
+        console.log(`   -> Page HTML snippet on timeout:\n${html.substring(0, 2000)}...`); 
+        // Note: For full HTML/screenshot, consider uploading as build artifact in workflow
+      } catch (debugError) {
+        console.error(`   -> ❌ Failed to capture debug info: ${debugError.message}`);
+      }
+      // -------------------------------------
+
       throw waitError; // Re-throw the error to skip price evaluation
     }
     // -----------------------------------------------------------
@@ -89,18 +103,11 @@ async function scrapePricesForStore(browser, store) {
       const results = [];
       knownTcins.forEach(tcin => {
         console.log(`[Browser] Searching for TCIN: ${tcin}`);
-        const linkElement = document.querySelector(`a[href*="/A-${tcin}"]`);
-
-        if (!linkElement) {
-          console.log(`[Browser] Link for TCIN ${tcin} not found.`);
-          return;
-        }
-
-        const productContainer = linkElement.closest('div[data-test="@web/ProductCard/body"]');
+        const productContainer = document.querySelector(`[childorstandalonetcin="${tcin}"]`);
 
         if (productContainer) {
           console.log(`[Browser] Found container for TCIN ${tcin}.`);
-          const nameElement = linkElement;
+          const nameElement = productContainer.querySelector('a[data-test="product-title"]');
           const priceElement = productContainer.querySelector('span[data-test="@web/Price/PriceStandard"] span');
 
           const productName = nameElement ? nameElement.textContent.trim() : '[Name Not Found]';
