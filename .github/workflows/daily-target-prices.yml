@@ -34,7 +34,7 @@ jobs:
         run: ls -l scripts
 
       - name: Run fetch script
-        run: node scripts/fetch-target-egg-prices-redsky.js
+        run: node scripts/fetch-target-prices.js
 
       - name: Done
         run: echo "✅ Target egg price stats collected and saved to Supabase." 
