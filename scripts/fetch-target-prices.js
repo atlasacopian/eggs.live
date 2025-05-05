@@ -69,27 +69,13 @@ async function scrapePricesForStore(browser, store) {
     const targetTcinSelector = `[childorstandalonetcin="${KNOWN_EGG_TCINS[0]}"]`; // Wait for the first known TCIN
     console.log(`   -> Waiting for selector: ${targetTcinSelector}`);
     try {
-      await page.waitForSelector(targetTcinSelector, { timeout: 15000 });
+      await page.waitForSelector(targetTcinSelector, { timeout: 15000 }); // Increased timeout slightly
       console.log(`   -> Target TCIN container found on page.`);
     } catch (waitError) {
       console.error(`   -> ❌ Timed out waiting for TCIN container: ${targetTcinSelector}`);
-
-      // --- Debugging for GitHub Actions ---
-      try {
-        const screenshotPath = `error_screenshot_store_${store.store_id}.png`;
-        const htmlPath = `error_page_store_${store.store_id}.html`;
-        console.log(`   -> Capturing screenshot to ${screenshotPath}`);
-        await page.screenshot({ path: screenshotPath, fullPage: true });
-        console.log(`   -> Dumping HTML to ${htmlPath}`);
-        const html = await page.content();
-        // In Actions, we can't directly access files easily, so log a snippet
-        console.log(`   -> Page HTML snippet on timeout:\n${html.substring(0, 2000)}...`); 
-        // Note: For full HTML/screenshot, consider uploading as build artifact in workflow
-      } catch (debugError) {
-        console.error(`   -> ❌ Failed to capture debug info: ${debugError.message}`);
-      }
-      // -------------------------------------
-
+      // Optionally dump page HTML here for debugging if selector fails
+      // const html = await page.content();
+      // console.log("Page HTML on selector timeout:", html.substring(0, 1000));
       throw waitError; // Re-throw the error to skip price evaluation
     }
     // -----------------------------------------------------------
@@ -200,14 +186,8 @@ async function main() {
     process.exit(0);
   }
 
-  // Launch headless browser, disabling sandbox for CI environments
-  const browser = await puppeteer.launch({
-    headless: "new", // Use new headless mode
-    args: [
-      '--no-sandbox', // Required for GitHub Actions/Docker
-      '--disable-setuid-sandbox' // Often needed with --no-sandbox
-    ]
-  });
+  // Run headful for visual debugging
+  const browser = await puppeteer.launch({ headless: false });
 
   const allPriceData = [];
 
