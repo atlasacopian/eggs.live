@@ -186,8 +186,14 @@ async function main() {
     process.exit(0);
   }
 
-  // Run headful for visual debugging
-  const browser = await puppeteer.launch({ headless: false });
+  // Launch headless browser, disabling sandbox for CI environments
+  const browser = await puppeteer.launch({
+    headless: "new", // Use new headless mode
+    args: [
+      '--no-sandbox', // Required for GitHub Actions/Docker
+      '--disable-setuid-sandbox' // Often needed with --no-sandbox
+    ]
+  });
 
   const allPriceData = [];
 
