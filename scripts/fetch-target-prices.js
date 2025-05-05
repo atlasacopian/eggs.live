@@ -21,7 +21,7 @@ const EGG_SEARCH_PATH = '/s?searchTerm=egg';
 
 // --- Constants ---
 const KNOWN_EGG_TCINS = [
-  '83719457', // Good & Gather 18ct Large White (from previous inspection)
+  '14662561', // Good & Gather Cage-Free Large Brown Eggs - 12ct
   // Add more TCINs for relevant egg products here (e.g., dozen, organic)
 ];
 
@@ -66,7 +66,7 @@ async function scrapePricesForStore(browser, store) {
     console.log(`   -> Egg search page loaded.`);
 
     // --- Wait specifically for a known TCIN container to appear ---
-    const targetTcinSelector = `[childorstandalonetcin="${KNOWN_EGG_TCINS[0]}"]`; // Wait for the first known TCIN
+    const targetTcinSelector = `a[href*="/A-${KNOWN_EGG_TCINS[0]}"]`;
     console.log(`   -> Waiting for selector: ${targetTcinSelector}`);
     try {
       await page.waitForSelector(targetTcinSelector, { timeout: 15000 }); // Increased timeout slightly
@@ -89,11 +89,18 @@ async function scrapePricesForStore(browser, store) {
       const results = [];
       knownTcins.forEach(tcin => {
         console.log(`[Browser] Searching for TCIN: ${tcin}`);
-        const productContainer = document.querySelector(`[childorstandalonetcin="${tcin}"]`);
+        const linkElement = document.querySelector(`a[href*="/A-${tcin}"]`);
+
+        if (!linkElement) {
+          console.log(`[Browser] Link for TCIN ${tcin} not found.`);
+          return;
+        }
+
+        const productContainer = linkElement.closest('div[data-test="@web/ProductCard/body"]');
 
         if (productContainer) {
           console.log(`[Browser] Found container for TCIN ${tcin}.`);
-          const nameElement = productContainer.querySelector('a[data-test="product-title"]');
+          const nameElement = linkElement;
           const priceElement = productContainer.querySelector('span[data-test="@web/Price/PriceStandard"] span');
 
           const productName = nameElement ? nameElement.textContent.trim() : '[Name Not Found]';
