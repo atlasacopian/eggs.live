@@ -65,36 +65,52 @@ async function scrapePricesForStore(browser, store) {
     await page.goto(searchUrl, { waitUntil: 'networkidle0', timeout: 60000 });
     console.log(`   -> Egg search page loaded.`);
 
-    // --- Wait specifically for a known TCIN container to appear ---
-    const targetTcinSelector = `[childorstandalonetcin="${KNOWN_EGG_TCINS[0]}"]`; // Wait for the first known TCIN
-    console.log(`   -> Waiting for selector: ${targetTcinSelector}`);
+    // --- Wait for product titles to load (using data-test attributes) ---
+    console.log(`   -> Waiting for product titles selector...`);
     try {
-      await page.waitForSelector(targetTcinSelector, { timeout: 15000 }); // Increased timeout slightly
-      console.log(`   -> Target TCIN container found on page.`);
+      await page.waitForSelector('a[data-test="product-title"]', { timeout: 15000 });
+      console.log(`   -> Product titles loaded.`);
     } catch (waitError) {
-      console.error(`   -> ❌ Timed out waiting for TCIN container: ${targetTcinSelector}`);
-      // Optionally dump page HTML here for debugging if selector fails
-      // const html = await page.content();
-      // console.log("Page HTML on selector timeout:", html.substring(0, 1000));
-      throw waitError; // Re-throw the error to skip price evaluation
+      console.error(`   -> ❌ Timed out waiting for product titles; dumping HTML snippet for debugging.`);
+      const html = await page.content();
+      console.log(html.slice(0, 5000));
+      throw waitError;
     }
     // -----------------------------------------------------------
 
     await sleep(1000); // Small sleep after element found
 
-    // --- Scrape Prices for Known TCINs with Debugging ---
-    console.log(`   -> Scraping prices for TCINs: ${KNOWN_EGG_TCINS.join(', ')}`);
+    // Debug: sample the first few product-card containers to inspect markup
+    console.log(`   -> Sampling product-card markup for debugging...`);
+    const sampleCards = await page.evaluate(() =>
+      Array.from(document.querySelectorAll('div[data-test="product-card"]'))
+        .slice(0, 3)
+        .map(c => c.innerHTML.slice(0, 500))
+    );
+    console.log(`   -> Sample product cards (innerHTML slices):`, sampleCards);
 
+    // --- Scrape Prices for Known TCINs using href-based matching ---
+    console.log(`   -> Scraping prices for TCINs: ${KNOWN_EGG_TCINS.join(', ')}`);
     const priceResults = await page.evaluate((knownTcins) => {
       const results = [];
       knownTcins.forEach(tcin => {
-        console.log(`[Browser] Searching for TCIN: ${tcin}`);
-        const productContainer = document.querySelector(`[childorstandalonetcin="${tcin}"]`);
-
+        console.log(`[Browser] Searching for TCIN via product links: ${tcin}`);
+        // Find the product link by href containing the TCIN
+        const productLink = Array.from(document.querySelectorAll('a[data-test="product-title"]'))
+          .find(el => el.href.includes(`/${tcin}`));
+        const productContainer = productLink
+          ? productLink.closest('div[data-test="product-card"]') || productLink.parentElement
+          : null;
         if (productContainer) {
           console.log(`[Browser] Found container for TCIN ${tcin}.`);
-          const nameElement = productContainer.querySelector('a[data-test="product-title"]');
-          const priceElement = productContainer.querySelector('span[data-test="@web/Price/PriceStandard"] span');
+          // Attempt to find name and price elements with fallback logic
+          let nameElement = productContainer.querySelector('a[data-test="product-title"]') || productLink;
+          let priceElement = productContainer.querySelector('span[data-test="@web/Price/PriceStandard"] span');
+          if (!priceElement) {
+            // Fallback: find any span whose text starts with a dollar sign
+            priceElement = Array.from(productContainer.querySelectorAll('span'))
+              .find(el => /^\$\d/.test(el.textContent.trim()));
+          }
 
           const productName = nameElement ? nameElement.textContent.trim() : '[Name Not Found]';
           const currentPrice = priceElement ? priceElement.textContent.trim() : '[Price Not Found]';
