@@ -2,39 +2,27 @@ name: Target US Egg Prices (daily)
 
 on:
   schedule:
-    # Runs every day at 00:05 UTC
     - cron: '5 0 * * *'
   workflow_dispatch: {}
 
 jobs:
   fetch-target-prices:
     runs-on: ubuntu-latest
-
     env:
-      # Read-only Supabase service credentials – make sure these secrets are added in the repo settings
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-      # Target RedSky API key (if required). Remove if your script reads from env or not required
       REDSKY_KEY: ${{ secrets.REDSKY_KEY }}
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: List scripts directory
-        run: ls -l scripts
+          cache: npm
+      - run: npm ci
 
       - name: Run fetch script
-        run: node scripts/fetch-target-prices-redsky.js
+        # ← make sure this is calling the intercept script:
+        run: node scripts/fetch-target-egg-prices-intercept.js
 
       - name: Done
-        run: echo "✅ Target egg price stats collected and saved to Supabase." 
+        run: echo "✅ Target egg price stats collected and saved to Supabase."
