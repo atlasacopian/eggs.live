@@ -21,7 +21,6 @@ jobs:
       - run: npm ci
 
       - name: Run fetch script
-        # ← make sure this is calling the intercept script:
         run: node scripts/fetch-target-egg-prices-intercept.js
 
       - name: Done
