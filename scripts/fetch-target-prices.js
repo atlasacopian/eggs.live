@@ -66,12 +66,13 @@ async function scrapePricesForStore(browser, store) {
     console.log(`   -> Egg search page loaded.`);
 
     // --- Wait for product titles to load (using data-test attributes) ---
-    console.log(`   -> Waiting for product titles selector...`);
+    console.log(`   -> Waiting for product cards to load...`);
     try {
-      await page.waitForSelector('a[data-test="product-title"]', { timeout: 15000 });
-      console.log(`   -> Product titles loaded.`);
+      // Wait for product-card containers instead of just titles
+      await page.waitForSelector('div[data-test="product-card"]', { timeout: 30000 });
+      console.log(`   -> Product cards loaded.`);
     } catch (waitError) {
-      console.error(`   -> ❌ Timed out waiting for product titles; dumping HTML snippet for debugging.`);
+      console.error(`   -> ❌ Timed out waiting for product cards; dumping HTML snippet for debugging.`);
       const html = await page.content();
       console.log(html.slice(0, 5000));
       throw waitError;
@@ -213,8 +214,9 @@ async function main() {
 
   const allPriceData = [];
 
-  const storesToProcess = stores.slice(0, 5);
-  console.log(`🚨 DEBUG: Processing only first ${storesToProcess.length} stores.`);
+  // Process all stores
+  const storesToProcess = stores;
+  console.log(`🚀 Processing ${storesToProcess.length} stores.`);
 
   for (const store of storesToProcess) {
     const prices = await scrapePricesForStore(browser, store);
