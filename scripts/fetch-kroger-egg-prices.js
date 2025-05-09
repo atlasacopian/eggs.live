@@ -200,8 +200,32 @@ async function fetchStoreEggs (location_id_raw) {
 
 (async () => {
   loggedFullProductForNullPrice = false; // Reset flag at the start of main
-  const { data: stores, error } = await sb.from('kroger_stores').select('location_id');
-  if (error) throw error;
+  // loggedFirstProductDescription = false; // Reset this flag too - REMOVED
+  
+  console.log('Fetching Kroger store locations from Supabase...');
+  const { data: stores, error, count } = await sb
+    .from('kroger_stores')
+    .select('location_id', { count: 'exact' }) // Request a count of total matching rows
+    .limit(3000); // Explicitly set a limit higher than the expected number of stores
+
+  if (error) {
+    console.error('Error fetching Kroger stores from Supabase:', error);
+    throw error;
+  }
+  if (!stores) {
+    console.error('No stores returned from Supabase query, but no explicit error.');
+    process.exit(1);
+  }
+
+  console.log(`Retrieved ${stores.length} store locations from Supabase. Total potential count from query: ${count}`);
+  if (count && stores.length < count) {
+    console.warn(`WARNING: Supabase query returned ${stores.length} stores, but the table potentially has ${count} stores. The .limit() might need adjustment or pagination implemented if this number is lower than expected total and less than the .limit(3000) value.`);
+  }
+  if (stores.length === 0) {
+    console.log('No stores found to process. Exiting.');
+    process.exit(0);
+  }
+
   console.log(`Processing ${stores.length} Kroger stores…`);
 
   const limit = pLimit(1); // 1 concurrent request (≈ 1-2 req/sec after token func)
