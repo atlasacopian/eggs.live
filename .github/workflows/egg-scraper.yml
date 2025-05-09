@@ -1,4 +1,4 @@
-name: Daily Egg Price Scraper
+name: Target Egg Prices
 
 on:
   schedule:
