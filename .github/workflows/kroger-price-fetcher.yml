@@ -1,4 +1,4 @@
-name: Fetch Kroger Egg Prices
+name: Kroger Egg Prices
 
 on:
   schedule:
