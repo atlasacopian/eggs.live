@@ -92,7 +92,7 @@ async function fetchStoreEggs (location_id_raw) {
   base.searchParams.set('filter.limit', '50');
 
   let start = 1;
-  const buckets = { regular: [], organic: [] };
+  const buckets = { regular: [], organic: [], _allMatched: [] };
 
   while (true) {
     // Clone base URL for current page fetch to ensure filter.start is managed cleanly
@@ -186,6 +186,7 @@ async function fetchStoreEggs (location_id_raw) {
       console.log(`fetchStoreEggs: MATCHED (Store: ${location_id}, Type: ${type}, PriceInfo: ${priceStatusString}, Size: ${itemSize}): ${displayDesc.toLowerCase() || p.productId.toLowerCase() || '[no desc/id]'}`);
 
       if (price) buckets[type].push(price); // Only add to buckets if price is a valid number
+      buckets._allMatched.push(p);
     }
 
     if (products.length < 50) break; // Last page if fewer than limit items returned
@@ -206,6 +207,7 @@ async function fetchStoreEggs (location_id_raw) {
   const { data: stores, error, count } = await sb
     .from('kroger_stores')
     .select('location_id', { count: 'exact' }) // Request a count of total matching rows
+    .order('location_id', { ascending: true }) // Added order by for deterministic processing
     .limit(3000); // Explicitly set a limit higher than the expected number of stores
 
   if (error) {
@@ -218,6 +220,26 @@ async function fetchStoreEggs (location_id_raw) {
   }
 
   console.log(`Retrieved ${stores.length} store locations from Supabase. Total potential count from query: ${count}`);
+  if (stores.length > 0) {
+    console.log('First 5 store IDs to process:', stores.slice(0, 5).map(s => s.location_id));
+    console.log('Last 5 store IDs to process:', stores.slice(-5).map(s => s.location_id));
+  }
+  const laStoreIdsToCheck = ['70400770', '70300032', '70300022', '70400375']; // From your RPC test
+  let allLaStoresInList = true;
+  laStoreIdsToCheck.forEach(id => {
+      const normalizedIdToCheck = normalizeLocationId(id); // Normalize the ID we are looking for
+      if (stores.some(s => normalizeLocationId(s.location_id) === normalizedIdToCheck)) {
+          console.log(`LA Store ID ${id} (normalized: ${normalizedIdToCheck}) IS IN THE LIST to be processed.`);
+      } else {
+          console.error(`LA Store ID ${id} (normalized: ${normalizedIdToCheck}) IS NOT IN THE LIST to be processed.`);
+          allLaStoresInList = false;
+      }
+  });
+  if (allLaStoresInList) {
+    console.log('All specified LA stores are present in the initial list.');
+  } else {
+    console.error('One or more specified LA stores are MISSING from the initial list.');
+  }
   if (count && stores.length < count) {
     console.warn(`WARNING: Supabase query returned ${stores.length} stores, but the table potentially has ${count} stores. The .limit() might need adjustment or pagination implemented if this number is lower than expected total and less than the .limit(3000) value.`);
   }
@@ -236,24 +258,47 @@ async function fetchStoreEggs (location_id_raw) {
   const BATCH_SIZE = 20; // Upsert to Supabase in batches of this many stores
 
   await Promise.all(stores.map(async (s, index) => limit(async () => {
+    const normalizedCurrentStoreId = normalizeLocationId(s.location_id);
+    if (laStoreIdsToCheck.map(id => normalizeLocationId(id)).includes(normalizedCurrentStoreId)) {
+        console.log(`DEBUG: Attempting to process LA store: ${s.location_id} (Normalized: ${normalizedCurrentStoreId})`);
+    }
     try {
       const buckets = await fetchStoreEggs(s.location_id);
       const normalizedId = (String(s.location_id)).trim().padStart(8,'0').slice(-8);
-      // NEW SUMMARY PAYLOAD — match table columns
       const regArr = buckets.regular;
       const orgArr = buckets.organic;
 
-      // determine status similar to advanced script
+      // New: Track all matched 12-count egg products (regardless of price)
+      let allMatchedProducts = [];
+      // We'll need to refactor fetchStoreEggs to return all matched products, not just prices
+      // For now, let's assume we can get this info (see below for fetchStoreEggs update)
+      if (buckets._allMatched) {
+        allMatchedProducts = buckets._allMatched;
+      }
+
       let status;
       const hasReg = regArr.length > 0;
       const hasOrg = orgArr.length > 0;
-      if (!hasReg && !hasOrg) status = 'NO_DATA_FOUND';
-      else status = 'OK';
+      if (!hasReg && !hasOrg) {
+        // If we have info on all matched products, check if all are out of stock
+        if (allMatchedProducts.length > 0 && allMatchedProducts.every(p => {
+          const stockLevel = p.items?.[0]?.inventory?.stockLevel?.toUpperCase();
+          return stockLevel === 'OUT_OF_STOCK' || stockLevel === 'NONE';
+        })) {
+          status = 'OUT_OF_STOCK';
+        } else if (allMatchedProducts.length === 0) {
+          status = 'NO_DATA_FOUND';
+        } else {
+          status = 'NO_PRICED_DOZENS'; // fallback, should not hit
+        }
+      } else {
+        status = 'OK';
+      }
 
       const summary = {
-          location_id: normalizedId,
-          captured_date,
-          captured_at,
+        location_id: normalizedId,
+        captured_date,
+        captured_at,
         status,
         regular_min: hasReg ? Math.min(...regArr) : null,
         regular_avg: hasReg ? Number((regArr.reduce((a,b)=>a+b,0)/regArr.length).toFixed(2)) : null,
@@ -261,8 +306,13 @@ async function fetchStoreEggs (location_id_raw) {
         organic_min: hasOrg ? Math.min(...orgArr) : null,
         organic_avg: hasOrg ? Number((orgArr.reduce((a,b)=>a+b,0)/orgArr.length).toFixed(2)) : null,
         organic_max: hasOrg ? Math.max(...orgArr) : null,
-        };
+      };
       rows.push(summary);
+      // ADDED LOGS START
+      if (laStoreIdsToCheck.map(id => normalizeLocationId(id)).includes(normalizedId)) {
+        console.log(`DEBUG: Successfully processed LA store ${s.location_id} (Normalized: ${normalizedId}), Status: ${status}, Summary for upsert:`, JSON.stringify(summary));
+      }
+      // ADDED LOGS END
       // verbose per-store summary
       console.log(` Store ${s.location_id}:`,
         'reg', buckets.regular.length ? `${Math.min(...buckets.regular)}-${Math.max(...buckets.regular)}` : '–',
@@ -285,6 +335,10 @@ async function fetchStoreEggs (location_id_raw) {
         }
       }
     } catch (err) {
+      const normalizedErrorStoreId = normalizeLocationId(s.location_id);
+      if (laStoreIdsToCheck.map(id => normalizeLocationId(id)).includes(normalizedErrorStoreId)) {
+        console.error(`DEBUG: FAILED to process LA store ${s.location_id} (Normalized: ${normalizedErrorStoreId}):`, err);
+      }
       console.warn('Store fail', s.location_id, err.message);
     }
   })));
