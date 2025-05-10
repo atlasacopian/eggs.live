@@ -1,4 +1,4 @@
-import { supabaseServer } from '@/lib/supabase'
+import { supabaseServer } from '../../../lib/supabase'
 
 // Helper function to get latest prices from an array of price records
 function getLatestPrices(priceRecords, idField = 'store_id') {

@@ -1,4 +1,4 @@
-import { supabaseServer } from '@/lib/supabase';
+import { supabaseServer } from '../../../lib/supabase';
 import { NextResponse } from 'next/server';
 
 // This is a NEW, simpler route specifically for chart history
