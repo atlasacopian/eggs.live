@@ -9,20 +9,28 @@ function getLatestPrices(priceRecords, idField = 'store_id') {
     for (const priceRec of priceRecords) {
         const storeId = priceRec[idField];
         if (!priceMap[storeId]) {
-            priceMap[storeId] = { regular_price: null, organic_price: null, updated_at: null };
+            // Initialize with status if available in the first record encountered
+            priceMap[storeId] = { regular_price: null, organic_price: null, updated_at: null, status: priceRec.status || null };
         }
         const priceDate = new Date(priceRec.captured_at);
 
         // Assign price if not already found (since we sorted by date desc)
         if (priceRec.product_type === 'regular' && priceMap[storeId].regular_price === null) {
-            priceMap[storeId].regular_price = priceRec.avg_price; // Assuming avg_price holds the value for both tables
+            priceMap[storeId].regular_price = priceRec.avg_price;
         } else if (priceRec.product_type === 'organic' && priceMap[storeId].organic_price === null) {
             priceMap[storeId].organic_price = priceRec.avg_price;
         }
 
-        // Track the latest date seen for this store
+        // Track the latest date and potentially update status if this record is newer
+        // and has a status (preferring status from the most recent record if multiple product_types exist for the same store)
         if (!priceMap[storeId].updated_at || priceDate > priceMap[storeId].updated_at) {
              priceMap[storeId].updated_at = priceDate;
+             if (priceRec.status) { // Update status if this record is more recent and has a status
+                priceMap[storeId].status = priceRec.status;
+             }
+        } else if (priceDate.getTime() === priceMap[storeId].updated_at.getTime() && priceRec.status && !priceMap[storeId].status) {
+            // If same timestamp but current status is null, take this one
+            priceMap[storeId].status = priceRec.status;
         }
     }
      // Convert date object back to ISO string
@@ -83,7 +91,7 @@ export async function GET(req) {
         // Query kroger_egg_prices_new for these stores
         let { data: krogerPrices, error: krogerPricesError } = await sb
             .from('kroger_egg_prices_new') // *** ADJUST if your Kroger price table name is different ***
-            .select('location_id, product_type, avg_price, captured_at') // *** ADJUST columns if needed ***
+            .select('location_id, product_type, avg_price, captured_at, status') // *** ADDED status HERE ***
             .in('location_id', krogerStoreIds); // *** ADJUST ID column if different ***
 
         if (krogerPricesError) {
@@ -106,7 +114,8 @@ export async function GET(req) {
                      distance: store.distance,
                      updated_at: prices.updated_at,
                      brand: 'Kroger/Affiliate', // Or derive from name if possible
-                     store_identifier: `K${store.store_id}`
+                     store_identifier: `K${store.store_id}`,
+                     status: prices.status // *** ADDED status HERE ***
                  };
             });
             allStores.push(...krogerStoresData);
