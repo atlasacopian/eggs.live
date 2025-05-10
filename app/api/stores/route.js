@@ -75,7 +75,6 @@ export async function GET(req) {
   let allStores = [];
 
   // --- Fetch and Process Kroger Data ---
-  // /* --- Keep Kroger Commented Out ---
   if (latitude && longitude) {
     console.log(`Calling RPC nearby_kroger_stores with: lat=${latitude}, lon=${longitude}`);
     let { data: nearbyKrogerStores, error: krogerStoresError } = await sb.rpc('nearby_kroger_stores', {
@@ -124,7 +123,6 @@ export async function GET(req) {
     } else {
         console.warn('Skipping Kroger fetch due to missing coordinates.');
     }
-  // */ // --- End Kroger Comment Out ---
 
   // --- Fetch and Process Target Data ---
   // /* --- Temporarily Comment Out Target ---
