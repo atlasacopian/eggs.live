@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
   // IMPORTANT: We expect the *store identifier* passed directly
-  const storeIdentifier = searchParams.get('storeIdentifier'); 
+  let storeIdentifier = searchParams.get('storeIdentifier'); 
 
   if (!storeIdentifier) {
     return NextResponse.json({ error: 'Missing storeIdentifier parameter' }, { status: 400 });
@@ -16,13 +16,15 @@ export async function GET(req) {
   const sb = supabaseServer();
 
   let historyData = [];
-  // If the identifier is all digits, treat as Target store_id
-  if (/^\d+$/.test(storeIdentifier)) {
+  // If the identifier is all digits or starts with 'T' followed by digits, treat as Target store_id
+  let targetId = storeIdentifier;
+  if (/^T\d+$/.test(targetId)) targetId = targetId.slice(1);
+  if (/^\d+$/.test(targetId)) {
     // Query Target stats
     const { data, error } = await sb
       .from('target_egg_price_stats')
       .select('captured_date, avg_price, product_type')
-      .eq('store_id', storeIdentifier)
+      .eq('store_id', targetId)
       .order('captured_date', { ascending: true });
     if (error) {
       console.error('[simple-store-history] Supabase error (target):', error);
