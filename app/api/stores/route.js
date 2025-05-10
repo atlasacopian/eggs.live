@@ -101,20 +101,20 @@ export async function GET(req) {
 
             // Harmonize Kroger data
             const krogerStoresData = nearbyKrogerStores.map(store => {
-                 const prices = priceMap[store.store_id] || {};
+                 const prices = priceMap[store.store_id]; // Get price/status info, will be undefined if no match
                  return {
                      name: `${store.name || store.store_id}`, // Assuming name comes from RPC
                      address: store.address,
                      city: store.city,
                      state: store.state,
                      zip: store.zip,
-                     regular_price: prices.regular_price,
-                     organic_price: prices.organic_price,
+                     regular_price: prices?.regular_price ?? null,
+                     organic_price: prices?.organic_price ?? null,
                      distance: store.distance,
-                     updated_at: prices.updated_at,
+                     updated_at: prices?.updated_at ?? null,
                      brand: 'Kroger/Affiliate', // Or derive from name if possible
                      store_identifier: `K${store.store_id}`,
-                     status: prices.status // *** ADDED status HERE ***
+                     status: prices?.status ?? 'NO_DATA_FOUND' // Default to NO_DATA_FOUND if no price record
                  };
             });
             allStores.push(...krogerStoresData);
