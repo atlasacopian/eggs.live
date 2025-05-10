@@ -102,11 +102,12 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
     regularChange: typeof s.regular_change === 'number' ? s.regular_change : null,
     organic: typeof s.organic_price === 'number' ? s.organic_price : null,
     organicChange: typeof s.organic_change === 'number' ? s.organic_change : null,
-    store_identifier: s.store_identifier
+    store_identifier: s.store_identifier,
+    status: s.status
   }));
 
-  // Filter stores that have any price data; if none, fall back to showing all stores
-  const availableStores = dataset.filter(s => s.regular != null || s.organic != null);
+  // Show all stores, not just those with prices
+  const availableStores = dataset;
 
   /* ---------- Sorting ---------- */
   const toggleSort = key => {
@@ -345,7 +346,7 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
                   <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#fff', lineHeight: '1' }}>
                     {s.regular != null
                       ? formatPrice(s.regular)
-                      : (s.organic != null ? "N/A" : "Out of Stock")}
+                      : (s.organic != null ? "N/A" : (s.status === 'OUT_OF_STOCK' ? "Out of Stock" : (s.status === 'NO_DATA_FOUND' ? "No Data Found" : "No Price")))}
                   </div>  
                   {s.regularChange != null && s.regularChange !== 0 ? (
                     <motion.span
@@ -364,7 +365,7 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
                   <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#fff', lineHeight: '1' }}>
                     {s.organic != null
                       ? formatPrice(s.organic)
-                      : (s.regular != null ? "N/A" : "Out of Stock")}
+                      : (s.regular != null ? "N/A" : (s.status === 'OUT_OF_STOCK' ? "Out of Stock" : (s.status === 'NO_DATA_FOUND' ? "No Data Found" : "No Price")))}
                   </div>  
                   {s.organicChange != null && s.organicChange !== 0 ? (
                     <motion.span
