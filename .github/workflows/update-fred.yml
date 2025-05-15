@@ -10,18 +10,16 @@ jobs:
   update: # This is the FRED job
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '22' # Using Node.js v22
+          node-version: '22'
 
-      - name: Install dependencies
+      - name: Install deps
         run: npm ci
 
-      - name: Run FRED updater script
+      - name: Run updater script
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
