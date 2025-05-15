@@ -37,7 +37,7 @@ export async function run() {
     captured_at: new Date().toISOString(),
     raw_json: null,
   }
-  const { error } = await sb.from('national_egg_prices').upsert(row, {
+  const { error } = await sb.from('FRED').upsert(row, {
     onConflict: 'source,metric,product_type,ref_date,price,price_min,price_max,obs_count',
   })
   if (error) throw error
