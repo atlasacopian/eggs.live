@@ -132,13 +132,9 @@ async function fetchStoreEggs (location_id_raw) {
       // 2. Check for 12-count packaging (ct, pk, doz, dozen - not generic units like oz).
       const isDozenPackaging = RE_TWELVE.test(combinedName) || RE_TWELVE.test(itemSize);
 
-      // 3. If no explicit "egg" keyword, but main description is blank AND it's dozen packaging,
-      //    assume it's an egg product (since we searched the API for "eggs").
-      if (!isEggKeywordPresent && combinedName.trim() === '' && isDozenPackaging) {
-        isEggKeywordPresent = true; // Infer it's an egg product based on context
-      }
+      // 3. Removed previously lenient fallback: we now require the presence of an explicit egg keyword.
 
-      // Final decision: must have an egg keyword (explicit or inferred) AND be dozen packaging.
+      // Final decision: must have an egg keyword AND be dozen packaging.
       if (!isEggKeywordPresent || !isDozenPackaging) {
         // console.log(`fetchStoreEggs: SKIPPED (Store: ${location_id}, Size: ${itemSize || 'N/A'}, HasEggKeyword: ${isEggKeywordPresent}, IsDozenPkg: ${isDozenPackaging}): ${mainDesc.trim() || '[No main description]'}`); // Verbose: Removed for cleaner output
         continue;
@@ -194,32 +190,61 @@ async function fetchStoreEggs (location_id_raw) {
     // Kroger API limit: The 'filter.start' parameter must be between 1 and 250.
     // If the next start value would exceed 250, break the loop.
     if (start > 250) break;
-    await new Promise(r => setTimeout(r, 700)); // Stay <2 req/sec
+    await new Promise(r => setTimeout(r, 700)); // Reverted from 1500ms back to 700ms
   }
   return buckets;
 }
 
 (async () => {
   loggedFullProductForNullPrice = false; // Reset flag at the start of main
-  // loggedFirstProductDescription = false; // Reset this flag too - REMOVED
   
-  console.log('Fetching Kroger store locations from Supabase...');
-  const { data: stores, error, count } = await sb
-    .from('kroger_stores')
-    .select('location_id', { count: 'exact' }) // Request a count of total matching rows
-    .order('location_id', { ascending: true }) // Added order by for deterministic processing
-    .limit(3000); // Explicitly set a limit higher than the expected number of stores
+  console.log('Fetching Kroger store locations from Supabase with pagination...');
+  let allStoreIdsFromDB = [];
+  let from = 0;
+  const pageSize = 1000; // Fetch in chunks of this size
+  let totalCount = null; // Initialize totalCount
+  let pageNumber = 0;
 
-  if (error) {
-    console.error('Error fetching Kroger stores from Supabase:', error);
-    throw error;
-  }
-  if (!stores) {
-    console.error('No stores returned from Supabase query, but no explicit error.');
-    process.exit(1);
+  while (true) {
+    pageNumber++;
+    console.log(`Fetching page ${pageNumber} of stores (from: ${from}, to: ${from + pageSize - 1})...`);
+    const { data: storePage, error, count } = await sb
+      .from('kroger_stores')
+      .select('location_id', { count: 'exact' }) 
+      .order('location_id', { ascending: true })
+      .range(from, from + pageSize - 1);
+
+    if (error) {
+      console.error(`Error fetching page ${pageNumber} of Kroger stores:`, error);
+      throw error; // Critical error, stop the script
+    }
+
+    if (count !== null && totalCount === null) { // Set totalCount from the first successful query
+      totalCount = count;
+      console.log(`Total potential stores in kroger_stores table: ${totalCount}`);
+    }
+
+    if (!storePage || storePage.length === 0) {
+      console.log('No more stores found on this page. Concluding store fetch.');
+      break; // No more stores to fetch
+    }
+
+    allStoreIdsFromDB.push(...storePage);
+    console.log(`Fetched ${storePage.length} stores on page ${pageNumber}. Total fetched so far: ${allStoreIdsFromDB.length}`);
+
+    if (storePage.length < pageSize) {
+      console.log('Last page of stores fetched.');
+      break; // Last page fetched
+    }
+
+    from += pageSize;
+    await new Promise(r => setTimeout(r, 200)); // Small delay between page fetches if needed
   }
 
-  console.log(`Retrieved ${stores.length} store locations from Supabase. Total potential count from query: ${count}`);
+  const stores = allStoreIdsFromDB; // Use the fully populated list
+
+  // console.log(`Retrieved ${stores.length} store locations from Supabase. Total potential count from query: ${count}`); - Old log, count might be from last page
+  console.log(`Retrieved ${stores.length} store locations from Supabase (after pagination). Total expected: ${totalCount ?? 'N/A'}`);
   if (stores.length > 0) {
     console.log('First 5 store IDs to process:', stores.slice(0, 5).map(s => s.location_id));
     console.log('Last 5 store IDs to process:', stores.slice(-5).map(s => s.location_id));
@@ -335,12 +360,16 @@ async function fetchStoreEggs (location_id_raw) {
         }
       }
     } catch (err) {
+      // ADDED LOGS START
       const normalizedErrorStoreId = normalizeLocationId(s.location_id);
       if (laStoreIdsToCheck.map(id => normalizeLocationId(id)).includes(normalizedErrorStoreId)) {
         console.error(`DEBUG: FAILED to process LA store ${s.location_id} (Normalized: ${normalizedErrorStoreId}):`, err);
       }
+      // ADDED LOGS END
       console.warn('Store fail', s.location_id, err.message);
     }
+    // Add a delay after processing each store (or its failure) to reduce overall request rate
+    await new Promise(r => setTimeout(r, 1000)); // Reverted from 2000ms back to 1 second
   })));
 
   console.log('✅ All stores processed.');
