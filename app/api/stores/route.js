@@ -76,53 +76,48 @@ export async function GET(req) {
 
   // --- Fetch and Process Kroger Data ---
   if (latitude && longitude) {
-    console.log(`Calling RPC nearby_kroger_stores with: lat=${latitude}, lon=${longitude}`);
-    let { data: nearbyKrogerStores, error: krogerStoresError } = await sb.rpc('nearby_kroger_stores', {
-        lat_in: latitude, lon_in: longitude, radius_miles: radiusMiles
-    });
+    console.log(`API_TEMP_DEBUG: Attempting Kroger RPC for lat=${latitude}, lon=${longitude}`);
+    try {
+      let { data: nearbyKrogerStores, error: krogerStoresError } = await sb.rpc('nearby_kroger_stores', {
+          lat_in: parseFloat(latitude),
+          lon_in: parseFloat(longitude),
+          radius_miles: parseFloat(radiusMiles)
+      });
 
-    if (krogerStoresError) {
-        console.error('Supabase RPC error (nearby_kroger_stores)', krogerStoresError);
-    } else if (nearbyKrogerStores && nearbyKrogerStores.length > 0) {
-        console.log(`Found ${nearbyKrogerStores.length} nearby Kroger stores.`);
-        const krogerStoreIds = nearbyKrogerStores.map(s => s.store_id); // Assumes RPC returns 'store_id'
+      console.log('API_DEBUG_KROGER_RPC:', JSON.stringify(nearbyKrogerStores, null, 2)); // Log RPC output
+      console.log('API_DEBUG_KROGER_RPC_ERROR:', JSON.stringify(krogerStoresError, null, 2)); // Log RPC error
 
-        // Query kroger_egg_prices_new for these stores
-        let { data: krogerPrices, error: krogerPricesError } = await sb
-            .from('kroger_egg_prices_new') // *** ADJUST if your Kroger price table name is different ***
-            .select('location_id, product_type, avg_price, captured_at, status') // *** ADDED status HERE ***
-            .in('location_id', krogerStoreIds); // *** ADJUST ID column if different ***
-
-        if (krogerPricesError) {
-            console.error('Error fetching Kroger prices:', krogerPricesError);
-        } else if (krogerPrices) {
-            console.log(`Fetched ${krogerPrices.length} price records for Kroger stores.`);
-            const priceMap = getLatestPrices(krogerPrices, 'location_id'); // Pass ID field name
-
-            // Harmonize Kroger data
-            const krogerStoresData = nearbyKrogerStores.map(store => {
-                 const prices = priceMap[store.store_id]; // Get price/status info, will be undefined if no match
-                 return {
-                     name: `${store.name || store.store_id}`, // Assuming name comes from RPC
-                     address: store.address,
-                     city: store.city,
-                     state: store.state,
-                     zip: store.zip,
-                     regular_price: prices?.regular_price ?? null,
-                     organic_price: prices?.organic_price ?? null,
-                     distance: store.distance,
-                     updated_at: prices?.updated_at ?? null,
-                     brand: 'Kroger/Affiliate', // Or derive from name if possible
-                     store_identifier: `K${store.store_id}`,
-                     status: prices?.status ?? 'NO_DATA_FOUND' // Default to NO_DATA_FOUND if no price record
-                 };
-            });
-            allStores.push(...krogerStoresData);
-            console.log(`Added ${krogerStoresData.length} Kroger stores to results.`);
-        }
-    } else {
-        console.warn('Skipping Kroger fetch due to missing coordinates.');
+      if (krogerStoresError) {
+          console.error('API_TEMP_DEBUG: nearby_kroger_stores RPC ERROR:', JSON.stringify(krogerStoresError, null, 2));
+      } else {
+          console.log(`API_TEMP_DEBUG: nearby_kroger_stores RPC SUCCESS. Count: ${nearbyKrogerStores?.length}`);
+          if (nearbyKrogerStores && nearbyKrogerStores.length > 0) {
+              console.log('API_TEMP_DEBUG: First store from RPC:', JSON.stringify(nearbyKrogerStores[0], null, 2));
+              // Directly try to add these to allStores with minimal processing for now
+              const mappedKrogerStores = nearbyKrogerStores.map(store => ({
+                  name: `Kroger: ${store.name || store.store_id}`,
+                  address: store.address,
+                  city: store.city,
+                  state: store.state,
+                  zip: store.zip,
+                  regular_price: null, // Forcing null for now
+                  organic_price: null, // Forcing null for now
+                  distance: store.distance_miles, // Assuming RPC returns distance_miles
+                  updated_at: new Date().toISOString(), // Placeholder
+                  brand: 'Kroger/Affiliate',
+                  store_identifier: `K${store.store_id}`,
+                  status: 'NO_DATA_FOUND' // Forcing this for now
+              }));
+              allStores.push(...mappedKrogerStores);
+              console.log(`API_TEMP_DEBUG: Pushed ${mappedKrogerStores.length} Kroger stores to allStores`);
+          }
+      }
+    } catch (e) {
+      console.error('API_TEMP_DEBUG: CRITICAL ERROR during Kroger RPC call or processing:', e);
     }
+  } else {
+      console.warn('API_TEMP_DEBUG: Skipping Kroger fetch due to missing coordinates.');
+  }
 
   // --- Fetch and Process Target Data ---
   // /* --- Temporarily Comment Out Target ---

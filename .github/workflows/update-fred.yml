@@ -14,7 +14,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: '22'
 
       - name: Install deps
         run: npm ci
@@ -25,23 +25,3 @@ jobs:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
         run: node scripts/update-fred-egg-price.js
-
-  update-usda:
-    needs: update
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Install deps
-        run: npm ci
-
-      - name: Run USDA weekly updater
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-          USDA_API_KEY: ${{ secrets.USDA_API_KEY }}
-        run: node scripts/update-usda-weekly.js 
