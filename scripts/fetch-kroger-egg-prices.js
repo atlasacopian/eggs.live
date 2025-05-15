@@ -265,8 +265,8 @@ async function fetchStoreEggs (location_id_raw) {
   } else {
     console.error('One or more specified LA stores are MISSING from the initial list.');
   }
-  if (count && stores.length < count) {
-    console.warn(`WARNING: Supabase query returned ${stores.length} stores, but the table potentially has ${count} stores. The .limit() might need adjustment or pagination implemented if this number is lower than expected total and less than the .limit(3000) value.`);
+  if (totalCount && stores.length < totalCount) {
+    console.warn(`WARNING: Supabase query retrieved ${stores.length} stores, but the table potentially has ${totalCount} stores according to the initial count. This might indicate an issue if not all pages were fetched, or if the .limit() was still effectively lower than expected despite pagination logic.`);
   }
   if (stores.length === 0) {
     console.log('No stores found to process. Exiting.');
