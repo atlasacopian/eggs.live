@@ -95,7 +95,7 @@ export async function GET(req) {
               console.log('API_TEMP_DEBUG: First store from RPC:', JSON.stringify(nearbyKrogerStores[0], null, 2));
               // Directly try to add these to allStores with minimal processing for now
               const mappedKrogerStores = nearbyKrogerStores.map(store => ({
-                  name: `Kroger: ${store.name || store.store_id}`,
+                  name: (store.name || store.store_id).replace(/^Kroger - /, ''),
                   address: store.address,
                   city: store.city,
                   state: store.state,
@@ -253,6 +253,4 @@ export async function GET(req) {
     avgOrgNat,
     avgOrgNatDate
   });
-}
-
 }
