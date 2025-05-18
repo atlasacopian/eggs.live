@@ -31,7 +31,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
   const COLORS = ['#00c800', '#fff', '#1e90ff'];
 
   const gridCols = view === 'local' ? 'repeat(6, 1fr)' : 'repeat(5, 1fr)';
-  const rowHeight = view === 'local' ? 'auto' : '220px';
+  const rowHeight = 'auto';
 
   return (
     <div style={{ background: '#000', color: '#fff', width: '100%', height: '100vh', overflow: 'hidden', fontFamily: 'Menlo, monospace' }}>

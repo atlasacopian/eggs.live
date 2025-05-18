@@ -41,7 +41,7 @@ export default function TerminalHeader({ view, zipCode, onSetView }) {
   };
 
   const viewButtonStyle = {
-    background: '#1a1a1a', // Dark gray background for buttons
+    background: '#111111', // Darker gray background for non-active buttons
     color: '#ffffff',     // White text for non-active
     border: '1px solid #333333', 
     padding: '4px 8px',
@@ -51,6 +51,8 @@ export default function TerminalHeader({ view, zipCode, onSetView }) {
     textTransform: 'uppercase',
     marginLeft: '4px', // Space between buttons
     marginRight: '4px',
+    minWidth: '90px', // Added minWidth
+    textAlign: 'center', // Added textAlign
   };
 
   const activeViewButtonStyle = {
@@ -58,7 +60,6 @@ export default function TerminalHeader({ view, zipCode, onSetView }) {
     color: '#00ff00', // Green text for active
     border: '1px solid #00ff00',
     background: '#2a2a2a', // Slightly lighter dark gray for active button background
-    fontWeight: 'bold',
   };
 
   const dateTimeStyle = {
