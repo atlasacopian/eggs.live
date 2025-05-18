@@ -4,6 +4,7 @@ import TerminalTile from './TerminalTile.jsx';
 import TerminalHeader from './TerminalHeader.jsx';
 import StoreList from './StoreList.jsx';
 import EggPriceChart from './EggPriceChart.jsx';
+import UsdaPriceChart from './UsdaPriceChart.jsx';
 
 export default function BloombergTerminal({ zipCode, localStores = [], nationalStats = {} }) {
   const [view, setView] = useState('local'); // local | national
@@ -221,6 +222,11 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
                 <span style={{margin: '5px 10px', fontSize: '1.1rem'}}>Max: <span style={{color: '#ff0000'}}>${(nationalStats.maxPrice || 4.20).toFixed(2)}</span> (NW)</span>
                 <p style={{fontSize: '0.7em', color: '#888', marginTop: '5px'}}>Source: AMS_2757</p>
               </div>
+            </TerminalTile>
+
+            {/* New Tile for USDA National Prices Chart */}
+            <TerminalTile title="USDA National Egg Prices (Weekly)" span={5}>
+              <UsdaPriceChart />
             </TerminalTile>
 
             {/* National View - Row 2 */}
