@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-export default function TerminalHeader({ view, zipCode, onSetView }) {
+export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
 
   useEffect(() => {
@@ -15,71 +15,75 @@ export default function TerminalHeader({ view, zipCode, onSetView }) {
   };
 
   const headerStyle = {
-    background: '#000000', // Changed to black
-    color: '#ffffff',     // Changed to white
-    padding: '8px 12px',
+    background: '#000000',
+    color: '#ffffff',
+    padding: isMobile ? '8px' : '8px 12px',
     display: 'flex',
-    justifyContent: 'space-between', // This will space out the three main groups
+    flexDirection: isMobile ? 'column' : 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     fontFamily: 'Menlo, monospace',
-    fontSize: '0.9rem',
-    borderBottom: '1px solid #222222', // Darker border for black background
-    height: '34px',
+    fontSize: isMobile ? '0.8rem' : '0.9rem',
+    borderBottom: '1px solid #222222',
+    height: isMobile ? 'auto' : '34px',
     boxSizing: 'border-box',
   };
 
   const infoGroupStyle = {
-    // Takes up space on the left
-    flex: '1 0 auto', // Allows it to shrink but not grow beyond content initially
-    textAlign: 'left',
+    flex: isMobile ? 'none' : '1 0 auto',
+    textAlign: isMobile ? 'center' : 'left',
+    marginBottom: isMobile ? '5px' : '0',
+    width: isMobile ? '100%' : 'auto',
   };
 
   const buttonGroupStyle = {
     display: 'flex',
-    justifyContent: 'center', // Center buttons within their own group if needed
-    flex: '0 1 auto', // Allows shrinking, minimal auto growth, for centering
+    justifyContent: 'center',
+    flex: isMobile ? 'none' : '0 1 auto',
+    marginBottom: isMobile ? '5px' : '0',
+    width: isMobile ? '100%' : 'auto',
   };
 
   const viewButtonStyle = {
-    background: '#111111', // Darker gray background for non-active buttons
-    color: '#ffffff',     // White text for non-active
-    borderWidth: '1px',        // Explicit borderWidth
-    borderStyle: 'solid',      // Explicit borderStyle
-    borderColor: '#333333',   // Non-active borderColor
+    background: '#111111',
+    color: '#ffffff',
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderColor: '#333333',
     padding: '4px 8px',
     cursor: 'pointer',
     fontFamily: 'Menlo, monospace',
-    fontSize: '0.8rem',
+    fontSize: isMobile ? '0.7rem' : '0.8rem',
     textTransform: 'uppercase',
-    marginLeft: '4px', // Space between buttons
+    marginLeft: '4px',
     marginRight: '4px',
-    minWidth: '90px', 
-    textAlign: 'center', 
-    boxSizing: 'border-box', // Added boxSizing
+    minWidth: isMobile ? '80px' : '90px',
+    textAlign: 'center',
+    boxSizing: 'border-box',
   };
 
   const activeViewButtonStyle = {
     ...viewButtonStyle,
-    color: '#00ff00', // Green text for active
-    borderColor: '#00ff00', // Active borderColor
-    background: '#2a2a2a', // Slightly lighter dark gray for active button background
+    color: '#00ff00',
+    borderColor: '#00ff00',
+    background: '#2a2a2a',
   };
 
   const dateTimeStyle = {
-    fontSize: '0.85rem',
-    flex: '1 0 auto', // Allows it to shrink but not grow beyond content initially
-    textAlign: 'right',
+    fontSize: isMobile ? '0.75rem' : '0.85rem',
+    flex: isMobile ? 'none' : '1 0 auto',
+    textAlign: isMobile ? 'center' : 'right',
+    width: isMobile ? '100%' : 'auto',
   };
 
   return (
     <div style={headerStyle}>
-      {/* Left Group: View/ZIP */}
       <div style={infoGroupStyle}>
         <span>Current View: {view}</span>
-        <span style={{ marginLeft: '20px' }}>ZIP Code: {zipCode || 'N/A'}</span>
+        {!isMobile && <span style={{ marginLeft: '20px' }}>ZIP Code: {zipCode || 'N/A'}</span>}
+        {isMobile && <div style={{fontSize: '0.7rem'}}>ZIP Code: {zipCode || 'N/A'}</div>}
       </div>
 
-      {/* Center Group: Buttons */}
       <div style={buttonGroupStyle}>
         <button 
           onClick={() => onSetView('local')} 
@@ -95,7 +99,6 @@ export default function TerminalHeader({ view, zipCode, onSetView }) {
         </button>
       </div>
 
-      {/* Right Group: Date/Time */}
       <div style={dateTimeStyle}>
         {formatDateTime(currentDateTime)}
       </div>
