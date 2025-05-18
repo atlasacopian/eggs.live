@@ -40,9 +40,10 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
   const buttonGroupStyle = {
     display: 'flex',
     justifyContent: 'center',
-    flex: isMobile ? 'none' : '0 1 auto',
+    alignItems: 'center',
+    flex: isMobile ? 'none' : '0 0 200px',
     marginBottom: isMobile ? '5px' : '0',
-    width: isMobile ? '100%' : 'auto',
+    width: isMobile ? '100%' : '200px',
   };
 
   const viewButtonStyle = {
@@ -77,6 +78,7 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
     flex: isMobile ? 'none' : '1 0 auto',
     textAlign: isMobile ? 'center' : 'right',
     width: isMobile ? '100%' : 'auto',
+    minWidth: isMobile ? 'none' : '180px',
   };
 
   return (
