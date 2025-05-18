@@ -19,7 +19,7 @@ export default function TerminalHeader({ view, zipCode, onSetView }) {
     color: '#ffffff',     // Changed to white
     padding: '8px 12px',
     display: 'flex',
-    justifyContent: 'space-between',
+    justifyContent: 'space-between', // This will space out the three main groups
     alignItems: 'center',
     fontFamily: 'Menlo, monospace',
     fontSize: '0.9rem',
@@ -28,9 +28,16 @@ export default function TerminalHeader({ view, zipCode, onSetView }) {
     boxSizing: 'border-box',
   };
 
+  const infoGroupStyle = {
+    // Takes up space on the left
+    flex: '1 0 auto', // Allows it to shrink but not grow beyond content initially
+    textAlign: 'left',
+  };
+
   const buttonGroupStyle = {
     display: 'flex',
-    alignItems: 'center', // Align buttons with date/time text
+    justifyContent: 'center', // Center buttons within their own group if needed
+    flex: '0 1 auto', // Allows shrinking, minimal auto growth, for centering
   };
 
   const viewButtonStyle = {
@@ -42,7 +49,8 @@ export default function TerminalHeader({ view, zipCode, onSetView }) {
     fontFamily: 'Menlo, monospace',
     fontSize: '0.8rem',
     textTransform: 'uppercase',
-    marginLeft: '8px',
+    marginLeft: '4px', // Space between buttons
+    marginRight: '4px',
   };
 
   const activeViewButtonStyle = {
@@ -55,17 +63,20 @@ export default function TerminalHeader({ view, zipCode, onSetView }) {
 
   const dateTimeStyle = {
     fontSize: '0.85rem',
-    marginRight: '15px', // Space before the buttons
+    flex: '1 0 auto', // Allows it to shrink but not grow beyond content initially
+    textAlign: 'right',
   };
 
   return (
     <div style={headerStyle}>
-      <div>
+      {/* Left Group: View/ZIP */}
+      <div style={infoGroupStyle}>
         <span>Current View: {view}</span>
         <span style={{ marginLeft: '20px' }}>ZIP Code: {zipCode || 'N/A'}</span>
       </div>
+
+      {/* Center Group: Buttons */}
       <div style={buttonGroupStyle}>
-        <span style={dateTimeStyle}>{formatDateTime(currentDateTime)}</span>
         <button 
           onClick={() => onSetView('local')} 
           style={view === 'local' ? activeViewButtonStyle : viewButtonStyle}
@@ -78,6 +89,11 @@ export default function TerminalHeader({ view, zipCode, onSetView }) {
         >
           National
         </button>
+      </div>
+
+      {/* Right Group: Date/Time */}
+      <div style={dateTimeStyle}>
+        {formatDateTime(currentDateTime)}
       </div>
     </div>
   );
