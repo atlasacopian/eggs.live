@@ -43,19 +43,26 @@ function shouldSkip(row) {
   return false
 }
 
-// Add helper to fetch latest ref_date from Supabase
-async function getLatestRefDate () {
+// Add helper to fetch latest report_end_date from Supabase
+async function getLatestStoredEndDate () {
   const { data, error } = await sb
     .from('usda_weekly_egg_prices')
-    .select('ref_date')
-    .order('ref_date', { ascending: false })
+    .select('report_end_date')
+    .order('report_end_date', { ascending: false })
     .limit(1)
   if (error) {
-    console.error('Failed to fetch latest ref_date', error)
+    console.error('Failed to fetch latest report_end_date', error)
     return null
   }
-  if (!data || !data.length) return null
-  return new Date(data[0].ref_date)
+  if (!data || !data.length || !data[0].report_end_date) return null
+  return new Date(data[0].report_end_date)
+}
+
+// Helper to parse MM/DD/YYYY to YYYY-MM-DD
+function formatToIsoDate(dateStr) {
+  if (!dateStr) return null;
+  const [m, d, y] = dateStr.split('/');
+  return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
 }
 
 // ---------- core fetch + aggregate ----------
@@ -78,54 +85,61 @@ export async function run({ latestOnly = false } = {}) {
     const rows = json.results || []
   console.log(`   ↳ received ${rows.length.toLocaleString()} rows`)
 
-  // 1️⃣ Find the latest week string (MM/DD/YYYY) in this payload
-  let latestStr = ''
-  let latestCode = 0 // yyyymmdd as number for easy compare
+  // 1️⃣ Find the latest report period (report_begin_date, report_end_date) in this payload
+  let latestPeriod = { begin: '', end: '', code: 0 };
+
   for (const r of rows) {
-    const [m, d, y] = r.report_date.split(' ')[0].split('/')
-    const code = parseInt(`${y}${m.padStart(2,'0')}${d.padStart(2,'0')}`, 10)
-    if (code > latestCode) {
-      latestCode = code
-      latestStr = `${m}/${d}/${y}`
+    if (!r.report_begin_date || !r.report_end_date) continue;
+
+    const [end_m, end_d, end_y] = r.report_end_date.split(' ')[0].split('/');
+    const end_code = parseInt(`${end_y}${end_m.padStart(2,'0')}${end_d.padStart(2,'0')}`, 10);
+
+    if (end_code > latestPeriod.code) {
+      latestPeriod.code = end_code;
+      latestPeriod.begin = r.report_begin_date.split(' ')[0];
+      latestPeriod.end = r.report_end_date.split(' ')[0];
     }
   }
 
-  if (!latestStr) {
-    console.error('No rows found – abort')
-    return
+  if (!latestPeriod.begin || !latestPeriod.end) {
+    console.error('No valid report period found in API data – abort');
+    return;
   }
+  
+  console.log(`Latest report period from API: ${latestPeriod.begin} - ${latestPeriod.end}`);
 
   // 2️⃣ Prepare collectors for that week only
   const nat = { regular: [], organic: [] }   // National rows for average
   const all = { regular: [], organic: [] }   // All regions for min/max
 
-  // Fetch the latest date from Supabase ONLY if running in latestOnly mode
-  const lastRefDate = latestOnly ? await getLatestRefDate() : null
+  // Fetch the latest stored end date from Supabase ONLY if running in latestOnly mode
+  const lastStoredEndDate = latestOnly ? await getLatestStoredEndDate() : null;
 
-  function parseUsdaDate(str = '') {
-    // format: MM/DD/YYYY HH:MM:SS (sometimes only date)
-    const [datePart] = str.split(' ')
-    const [m, d, y] = datePart.split('/').map(Number)
-    return new Date(y, m - 1, d)
+  // Helper to parse MM/DD/YYYY from API to a Date object for comparison
+  function parseApiDate(apiDateStr) {
+    const [m, d, y] = apiDateStr.split('/').map(Number);
+    return new Date(y, m - 1, d);
   }
 
   // If in latestOnly mode, check if the API data is actually newer than Supabase
-  if (latestOnly && lastRefDate) {
-    const currentApiLatestDate = parseUsdaDate(latestStr) // latestStr is MM/DD/YYYY
-    // Set hours to 0 to compare dates only, avoiding timezone issues if lastRefDate is midnight UTC
-    currentApiLatestDate.setHours(0, 0, 0, 0)
-    lastRefDate.setHours(0, 0, 0, 0)
+  if (latestOnly && lastStoredEndDate) {
+    const currentApiLatestEndDate = parseApiDate(latestPeriod.end);
+    
+    // Set hours to 0 to compare dates only
+    currentApiLatestEndDate.setHours(0, 0, 0, 0);
+    lastStoredEndDate.setHours(0, 0, 0, 0);
 
-    if (currentApiLatestDate <= lastRefDate) {
-      console.log(`✅ USDA data already up to date. Supabase latest: ${lastRefDate.toISOString().split('T')[0]}, API payload latest: ${currentApiLatestDate.toISOString().split('T')[0]}. No update needed.`)
-      return
+    if (currentApiLatestEndDate <= lastStoredEndDate) {
+      console.log(`✅ USDA data already up to date. Supabase latest end_date: ${lastStoredEndDate.toISOString().split('T')[0]}, API payload latest end_date: ${currentApiLatestEndDate.toISOString().split('T')[0]}. No update needed.`);
+      return;
     }
-    console.log(`ℹ️ New USDA data found. Supabase latest: ${lastRefDate.toISOString().split('T')[0]}, API payload latest: ${currentApiLatestDate.toISOString().split('T')[0]}. Proceeding with update.`)
+    console.log(`ℹ️ New USDA data found. Supabase latest end_date: ${lastStoredEndDate.toISOString().split('T')[0]}, API payload latest end_date: ${currentApiLatestEndDate.toISOString().split('T')[0]}. Proceeding with update.`);
   }
 
     for (const r of rows) {
-    if (shouldSkip(r)) continue
-    if (!r.report_date.startsWith(latestStr)) continue // skip non-CW rows
+    if (shouldSkip(r)) continue;
+    // Filter for rows matching the latest report period
+    if (r.report_begin_date !== latestPeriod.begin || r.report_end_date !== latestPeriod.end) continue;
 
     if (!isDozen(r.package_size)) continue
       const price = parseFloat(r.price_avg)
@@ -144,16 +158,20 @@ export async function run({ latestOnly = false } = {}) {
 
   // Build a pseudo-map with a single entry for flush()
   const outMap = new Map()
-  if (latestStr) {
-    // convert latestStr (MM/DD/YYYY) to ISO yyyy-mm-dd for ref_date
-    const [mS,dS,yS] = latestStr.split('/')
-    const iso = `${yS}-${mS.padStart(2,'0')}-${dS.padStart(2,'0')}`
-    outMap.set(iso, {
+  // Use the identified latest period for the map key (as a string for the Map)
+  const mapKey = `${latestPeriod.begin}_${latestPeriod.end}`; 
+
+  if (latestPeriod.begin && latestPeriod.end) {
+    // Store aggregated data under this key
+    outMap.set(mapKey, { 
       regular: nat.regular.length ? nat.regular : [],
       organic: nat.organic.length ? nat.organic : [],
       _allRegular: all.regular,
       _allOrganic: all.organic,
-    })
+      // Store the actual date strings for insertion
+      report_start_date_iso: formatToIsoDate(latestPeriod.begin),
+      report_end_date_iso: formatToIsoDate(latestPeriod.end),
+    });
   }
 
   console.log(`Aggregated map size before flush: ${outMap.size}`)
@@ -165,7 +183,7 @@ export async function run({ latestOnly = false } = {}) {
 async function flush(map) {
   const now = new Date().toISOString()
   const out = []
-  for (const [date, entry] of map.entries()) {
+  for (const [periodKey, entry] of map.entries()) {
     for (const kind of ['regular', 'organic']) {
       const arrNat = entry[kind]
       const arrAll = kind === 'regular' ? entry._allRegular : entry._allOrganic
@@ -175,7 +193,8 @@ async function flush(map) {
       const min = parseFloat(Math.min(...arrAll).toFixed(2))
       const max = parseFloat(Math.max(...arrAll).toFixed(2))
       out.push({
-        ref_date: date,
+        report_start_date: entry.report_start_date_iso,
+        report_end_date: entry.report_end_date_iso,
         product_type: kind,
         price: parseFloat(avg.toFixed(2)),
         price_min: min,
@@ -189,7 +208,7 @@ async function flush(map) {
   for (let i = 0; i < out.length; i += 1000) {
     const chunk = out.slice(i, i + 1000)
     const { error } = await sb.from('usda_weekly_egg_prices').upsert(chunk, {
-      onConflict: 'ref_date,product_type',
+      onConflict: 'report_start_date,report_end_date,product_type',
     })
     if (error) {
       console.error(error)
@@ -203,7 +222,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const latestMode = process.argv.includes('--latest')
   // Run with the determined mode
   run({ latestOnly: latestMode }).catch((err) => {
-    console.error(err)
-    process.exit(1)
-  })
+    console.error(err);
+    process.exit(1);
+  });
 } 
