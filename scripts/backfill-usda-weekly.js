@@ -85,99 +85,151 @@ export async function run({ latestOnly = false } = {}) {
     const rows = json.results || []
   console.log(`   ↳ received ${rows.length.toLocaleString()} rows`)
 
-  // 1️⃣ Find the latest report period (report_begin_date, report_end_date) in this payload
-  let latestPeriod = { begin: '', end: '', code: 0 };
-
-  for (const r of rows) {
-    if (!r.report_begin_date || !r.report_end_date) continue;
-
-    const [end_m, end_d, end_y] = r.report_end_date.split(' ')[0].split('/');
-    const end_code = parseInt(`${end_y}${end_m.padStart(2,'0')}${end_d.padStart(2,'0')}`, 10);
-
-    if (end_code > latestPeriod.code) {
-      latestPeriod.code = end_code;
-      latestPeriod.begin = r.report_begin_date.split(' ')[0];
-      latestPeriod.end = r.report_end_date.split(' ')[0];
-    }
-  }
-
-  if (!latestPeriod.begin || !latestPeriod.end) {
-    console.error('No valid report period found in API data – abort');
+  if (!rows.length) {
+    console.error('No rows received from API - abort');
     return;
   }
-  
-  console.log(`Latest report period from API: ${latestPeriod.begin} - ${latestPeriod.end}`);
-
-  // 2️⃣ Prepare collectors for that week only
-  const nat = { regular: [], organic: [] }   // National rows for average
-  const all = { regular: [], organic: [] }   // All regions for min/max
-
-  // Fetch the latest stored end date from Supabase ONLY if running in latestOnly mode
-  const lastStoredEndDate = latestOnly ? await getLatestStoredEndDate() : null;
 
   // Helper to parse MM/DD/YYYY from API to a Date object for comparison
   function parseApiDate(apiDateStr) {
-    const [m, d, y] = apiDateStr.split('/').map(Number);
+    if (!apiDateStr) return null;
+    const parts = apiDateStr.split('/');
+    if (parts.length !== 3) return null;
+    const [m, d, y] = parts.map(Number);
+    if (isNaN(m) || isNaN(d) || isNaN(y)) return null;
     return new Date(y, m - 1, d);
   }
 
-  // If in latestOnly mode, check if the API data is actually newer than Supabase
-  if (latestOnly && lastStoredEndDate) {
-    const currentApiLatestEndDate = parseApiDate(latestPeriod.end);
-    
-    // Set hours to 0 to compare dates only
-    currentApiLatestEndDate.setHours(0, 0, 0, 0);
-    lastStoredEndDate.setHours(0, 0, 0, 0);
+  const outMap = new Map(); // Maps periodKey to { regular: [], organic: [], _allRegular: [], _allOrganic: [], report_start_date_iso: '', report_end_date_iso: '' }
 
-    if (currentApiLatestEndDate <= lastStoredEndDate) {
-      console.log(`✅ USDA data already up to date. Supabase latest end_date: ${lastStoredEndDate.toISOString().split('T')[0]}, API payload latest end_date: ${currentApiLatestEndDate.toISOString().split('T')[0]}. No update needed.`);
-      return;
-    }
-    console.log(`ℹ️ New USDA data found. Supabase latest end_date: ${lastStoredEndDate.toISOString().split('T')[0]}, API payload latest end_date: ${currentApiLatestEndDate.toISOString().split('T')[0]}. Proceeding with update.`);
-  }
-
+  if (latestOnly) {
+    console.log('⚙️ Running in "latestOnly" mode.');
+    // 1️⃣ Find the single latest report period in this payload
+    let latestPeriod = { begin: '', end: '', code: 0 }; // code is YYYYMMDD for end date
     for (const r of rows) {
-    if (shouldSkip(r)) continue;
-    // Filter for rows matching the latest report period
-    if (r.report_begin_date !== latestPeriod.begin || r.report_end_date !== latestPeriod.end) continue;
-
-    if (!isDozen(r.package_size)) continue
-      const price = parseFloat(r.price_avg)
-      if (!price || Number.isNaN(price)) continue
-
-      const kind = (r.environment || '').toLowerCase().includes('organic') ? 'organic' : 'regular'
-
-      // Push into global collector
-      all[kind].push(price)
-
-      // Only push into national collector if region === National
-      if ((r.region || '').toLowerCase() === 'national') {
-        nat[kind].push(price)
+      if (!r.report_begin_date || !r.report_end_date) continue;
+      const [end_m, end_d, end_y] = r.report_end_date.split(' ')[0].split('/');
+      const end_code = parseInt(`${end_y}${end_m.padStart(2,'0')}${end_d.padStart(2,'0')}`, 10);
+      if (end_code > latestPeriod.code) {
+        latestPeriod.code = end_code;
+        latestPeriod.begin = r.report_begin_date.split(' ')[0];
+        latestPeriod.end = r.report_end_date.split(' ')[0];
       }
     }
 
-  // Build a pseudo-map with a single entry for flush()
-  const outMap = new Map()
-  // Use the identified latest period for the map key (as a string for the Map)
-  const mapKey = `${latestPeriod.begin}_${latestPeriod.end}`; 
+    if (!latestPeriod.begin || !latestPeriod.end) {
+      console.error('No valid report period found in API data for latestOnly mode – abort');
+      return;
+    }
+    console.log(`Latest report period from API: ${latestPeriod.begin} - ${latestPeriod.end}`);
 
-  if (latestPeriod.begin && latestPeriod.end) {
-    // Store aggregated data under this key
-    outMap.set(mapKey, { 
+    const lastStoredEndDate = await getLatestStoredEndDate();
+    if (lastStoredEndDate) {
+      const currentApiLatestEndDate = parseApiDate(latestPeriod.end);
+      if (currentApiLatestEndDate) {
+          currentApiLatestEndDate.setHours(0, 0, 0, 0);
+          lastStoredEndDate.setHours(0, 0, 0, 0);
+          if (currentApiLatestEndDate <= lastStoredEndDate) {
+            console.log(`✅ USDA data already up to date. Supabase latest end_date: ${lastStoredEndDate.toISOString().split('T')[0]}, API payload latest end_date: ${currentApiLatestEndDate.toISOString().split('T')[0]}. No update needed.`);
+            return;
+          }
+          console.log(`ℹ️ New USDA data found. Supabase latest end_date: ${lastStoredEndDate.toISOString().split('T')[0]}, API payload latest end_date: ${currentApiLatestEndDate.toISOString().split('T')[0]}. Proceeding with update for latest period.`);
+      }
+    }
+    
+    // Process only this single latest period
+    const nat = { regular: [], organic: [] };
+    const all = { regular: [], organic: [] };
+    for (const r of rows) {
+      if (r.report_begin_date === latestPeriod.begin && r.report_end_date === latestPeriod.end) {
+        if (shouldSkip(r)) continue;
+        if (!isDozen(r.package_size)) continue;
+        const price = parseFloat(r.price_avg);
+        if (!price || Number.isNaN(price)) continue;
+        const kind = (r.environment || '').toLowerCase().includes('organic') ? 'organic' : 'regular';
+        all[kind].push(price);
+        if ((r.region || '').toLowerCase() === 'national') {
+          nat[kind].push(price);
+        }
+      }
+    }
+    const mapKey = `${latestPeriod.begin}_${latestPeriod.end}`;
+    outMap.set(mapKey, {
       regular: nat.regular.length ? nat.regular : [],
       organic: nat.organic.length ? nat.organic : [],
       _allRegular: all.regular,
       _allOrganic: all.organic,
-      // Store the actual date strings for insertion
       report_start_date_iso: formatToIsoDate(latestPeriod.begin),
       report_end_date_iso: formatToIsoDate(latestPeriod.end),
     });
+
+  } else { // ----- This is the BACKFILL / LATEST_ONLY=FALSE path -----
+    console.log('⚙️ Running in full backfill mode (latestOnly=false). Processing all unique report periods from API data.');
+    const uniquePeriods = new Map(); // Key: "MM/DD/YYYY_MM/DD/YYYY", Value: {begin: "MM/DD/YYYY", end: "MM/DD/YYYY"}
+    
+    for (const r of rows) {
+      if (r.report_begin_date && r.report_end_date) {
+        const beginDate = r.report_begin_date.split(' ')[0];
+        const endDate = r.report_end_date.split(' ')[0];
+        const periodKey = `${beginDate}_${endDate}`;
+        if (!uniquePeriods.has(periodKey)) {
+          uniquePeriods.set(periodKey, { begin: beginDate, end: endDate });
+        }
+      }
+    }
+    console.log(`Found ${uniquePeriods.size} unique report periods in API data.`);
+
+    let processedCount = 0;
+    for (const [periodKey, period] of uniquePeriods) {
+      processedCount++;
+      if (processedCount % 100 === 0 || processedCount === uniquePeriods.size) {
+         console.log(`Processing period ${processedCount}/${uniquePeriods.size}: ${period.begin} - ${period.end}`);
+      }
+
+      const nat = { regular: [], organic: [] };
+      const all = { regular: [], organic: [] };
+
+      for (const r of rows) {
+        // Filter for rows matching the current unique period
+        if (r.report_begin_date && r.report_end_date && 
+            r.report_begin_date.split(' ')[0] === period.begin && 
+            r.report_end_date.split(' ')[0] === period.end) {
+          
+          if (shouldSkip(r)) continue;
+          if (!isDozen(r.package_size)) continue;
+          const price = parseFloat(r.price_avg);
+          if (!price || Number.isNaN(price)) continue;
+
+          const kind = (r.environment || '').toLowerCase().includes('organic') ? 'organic' : 'regular';
+          all[kind].push(price);
+          if ((r.region || '').toLowerCase() === 'national') {
+            nat[kind].push(price);
+          }
+        }
+      }
+      
+      // Only add to outMap if there's data for this period to avoid empty entries
+      if (nat.regular.length || nat.organic.length || all.regular.length || all.organic.length) {
+        outMap.set(periodKey, {
+          regular: nat.regular.length ? nat.regular : [],
+          organic: nat.organic.length ? nat.organic : [],
+          _allRegular: all.regular,
+          _allOrganic: all.organic,
+          report_start_date_iso: formatToIsoDate(period.begin),
+          report_end_date_iso: formatToIsoDate(period.end),
+        });
+      }
+    }
+  } // End of if (latestOnly) / else (backfill) block
+
+  console.log(`Aggregated map size before flush: ${outMap.size}`);
+  if (outMap.size > 0) {
+    await flush(outMap);
+  } else {
+    console.log('No data to flush.');
   }
 
-  console.log(`Aggregated map size before flush: ${outMap.size}`)
-  await flush(outMap)
-
-  console.log(`🎉 USDA weekly sync ${latestOnly ? '(latest only)' : '(full)'} complete`);
+  console.log(`🎉 USDA weekly sync ${latestOnly ? '(latest only mode)' : '(full backfill mode)'} complete`);
 }
 
 async function flush(map) {
