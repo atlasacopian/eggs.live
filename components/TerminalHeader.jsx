@@ -20,20 +20,27 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
     padding: isMobile ? '8px' : '8px 12px',
     display: 'flex',
     flexDirection: isMobile ? 'column' : 'row',
-    justifyContent: 'space-between',
+    justifyContent: isMobile ? 'space-between' : 'center',
     alignItems: 'center',
     fontFamily: 'Menlo, monospace',
     fontSize: isMobile ? '0.8rem' : '0.9rem',
     borderBottom: '1px solid #222222',
     height: isMobile ? 'auto' : '34px',
     boxSizing: 'border-box',
+    position: 'relative',
   };
 
-  const infoGroupStyle = {
-    flex: isMobile ? 'none' : '0 0 300px',
-    width: isMobile ? '100%' : '300px',
-    textAlign: isMobile ? 'center' : 'left',
-    marginBottom: isMobile ? '5px' : '0',
+  const infoGroupStyle = isMobile ? {
+    width: '100%',
+    textAlign: 'center',
+    marginBottom: '5px',
+  } : {
+    position: 'absolute',
+    left: '12px',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    width: '300px',
+    textAlign: 'left',
   };
 
   const buttonGroupStyle = {
@@ -72,17 +79,30 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
     opacity: 1,
   };
 
-  const dateTimeStyle = {
-    fontSize: isMobile ? '0.75rem' : '0.85rem',
-    flex: isMobile ? 'none' : '1 1 auto',
-    textAlign: isMobile ? 'center' : 'right',
-    minWidth: isMobile ? 'none' : '180px',
+  const dateTimeStyle = isMobile ? {
+    fontSize: '0.75rem',
+    textAlign: 'center',
+    width: '100%',
+  } : {
+    fontSize: '0.85rem',
+    position: 'absolute',
+    right: '12px',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    textAlign: 'right',
+    minWidth: '180px',
+  };
+
+  const currentViewTextStyle = {
+    display: isMobile ? 'block' : 'inline-block', // Block on mobile for stacking, inline-block on desktop for width
+    width: isMobile ? 'auto' : '160px', // Fixed width on desktop
+    textAlign: isMobile ? 'center' : 'left', // Center on mobile if stacked
   };
 
   return (
     <div style={headerStyle}>
       <div style={infoGroupStyle}>
-        <span>Current View: {view}</span>
+        <span style={currentViewTextStyle}>Current View: {view}</span>
         {!isMobile && <span style={{ marginLeft: '20px' }}>ZIP Code: {zipCode || 'N/A'}</span>}
         {isMobile && <div style={{fontSize: '0.7rem'}}>ZIP Code: {zipCode || 'N/A'}</div>}
       </div>
