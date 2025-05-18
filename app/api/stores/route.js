@@ -19,7 +19,7 @@ function getLatestPrices(priceRecords, idField = 'store_id') {
             priceMap[storeId].regular_price = priceRec.avg_price;
         } else if (priceRec.product_type === 'organic' && priceMap[storeId].organic_price === null) {
             priceMap[storeId].organic_price = priceRec.avg_price;
-        }
+      }
 
         // Track the latest date and potentially update status if this record is newer
         // and has a status (preferring status from the most recent record if multiple product_types exist for the same store)
@@ -27,7 +27,7 @@ function getLatestPrices(priceRecords, idField = 'store_id') {
              priceMap[storeId].updated_at = priceDate;
              if (priceRec.status) { // Update status if this record is more recent and has a status
                 priceMap[storeId].status = priceRec.status;
-             }
+    }
         } else if (priceDate.getTime() === priceMap[storeId].updated_at.getTime() && priceRec.status && !priceMap[storeId].status) {
             // If same timestamp but current status is null, take this one
             priceMap[storeId].status = priceRec.status;
@@ -37,7 +37,7 @@ function getLatestPrices(priceRecords, idField = 'store_id') {
     Object.values(priceMap).forEach(p => {
       if (p.updated_at instanceof Date) {
         p.updated_at = p.updated_at.toISOString();
-      }
+        }
     });
     return priceMap;
 }
@@ -71,7 +71,24 @@ export async function GET(req) {
     } catch (e) { console.warn('Zip geocode failed', e) }
   }
 
-  const sb = supabaseServer();
+  let sb;
+  try {
+    sb = supabaseServer();
+  } catch (e) {
+    console.warn('Supabase env vars missing – falling back to production API');
+    try {
+      const prodUrl = `https://eggs.live/api/stores?zip=${zip ?? ''}&lat=${lat ?? ''}&lon=${lon ?? ''}`;
+      const prodRes = await fetch(prodUrl, { next: { revalidate: 60 } });
+      if (prodRes.ok) {
+        const prodJson = await prodRes.json();
+        return Response.json(prodJson);
+      }
+      console.warn('Prod fallback failed, status', prodRes.status);
+    } catch (err) {
+      console.error('Prod fallback error', err);
+    }
+    return Response.json({ stores: [], lastUpdated: null, avgRegNat: null, avgRegNatDate: null, avgOrgNat: null, avgOrgNatDate: null });
+  }
   let allStores = [];
 
   // --- Fetch and Process Kroger Data ---
@@ -79,8 +96,8 @@ export async function GET(req) {
     console.log(`API_TEMP_DEBUG: Attempting Kroger RPC for lat=${latitude}, lon=${longitude}`);
     try {
       let { data: nearbyKrogerStores, error: krogerStoresError } = await sb.rpc('nearby_kroger_stores', {
-          lat_in: parseFloat(latitude),
-          lon_in: parseFloat(longitude),
+        lat_in: parseFloat(latitude),
+        lon_in: parseFloat(longitude),
           radius_miles: parseFloat(radiusMiles)
       });
 
@@ -125,7 +142,7 @@ export async function GET(req) {
     console.log(`✅ Calling RPC nearby_target_stores with: lat=${latitude}, lon=${longitude}, radius=${radiusMiles}`);
     let { data: nearbyTargetStores, error: targetStoresError } = await sb.rpc('nearby_target_stores', {
         lat_in: latitude, lon_in: longitude, radius_miles: radiusMiles
-    });
+        });
 
     if (targetStoresError) {
         console.error('❌ Supabase RPC error (nearby_target_stores)', targetStoresError);
@@ -158,9 +175,9 @@ export async function GET(req) {
                       zip: store.zip,
                       regular_price: prices.regular_price,
                       organic_price: prices.organic_price,
-                      distance: store.distance,
+                    distance: store.distance,
                       updated_at: prices.updated_at,
-                      brand: 'Target',
+                    brand: 'Target',
                       store_identifier: `T${store.store_id}`
                   };
              });

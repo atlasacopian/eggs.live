@@ -2,12 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import TickerStrip from '../../components/TickerStrip.jsx';
 import { getStoresNearZip } from '../../lib/api';
 
 // Dynamically load the classic price list view
-const EggPriceViewsClassic = dynamic(
-  () => import('../../components/EggPriceViews.jsx'),
+const BloombergTerminal = dynamic(
+  () => import('../../components/BloombergTerminal.jsx'),
   { ssr: false }
 );
 
@@ -27,22 +26,10 @@ export default function ClientZipPage({ zipCode }) {
   }, [zipCode]);
 
   return (
-    <main style={{ background: '#000', color: '#fff', minHeight: '100vh', padding: 24 }}>
-      <div style={{ position: 'absolute', top: 16, left: 16, right: 16, zIndex: 10 }}>
-        <TickerStrip
-          text="NATIONAL AVG: REG DOZEN $6.23 <span style='color: #00FF00;'>↑</span> | ORG DOZEN $6.98 <span style='color: #FF0000;'>↓</span>  🥚  123 STORES | 45 ZIP CODES 🥚"
-          fontSize="10px"
-        />
-      </div>
+    <main style={{ background: '#000', color: '#fff', minHeight: '100vh' }}>
       {/* Local store price list: render only once stores have loaded to avoid no-data placeholder during fetch */}
       {!loadingStores && (
-        <div style={{ marginTop: 80, maxWidth: 960, marginInline: 'auto' }}>
-          <EggPriceViewsClassic
-            zipCode={zipCode}
-            stores={stores}
-            lastUpdated={lastUpdated}
-          />
-        </div>
+        <BloombergTerminal zipCode={zipCode} localStores={stores} />
       )}
     </main>
   );
