@@ -30,11 +30,10 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
   };
 
   const infoGroupStyle = {
-    flex: isMobile ? 'none' : '1 0 auto',
+    flex: isMobile ? 'none' : '0 0 300px',
+    width: isMobile ? '100%' : '300px',
     textAlign: isMobile ? 'center' : 'left',
     marginBottom: isMobile ? '5px' : '0',
-    width: isMobile ? '100%' : 'auto',
-    minWidth: isMobile ? 'none' : '280px',
   };
 
   const buttonGroupStyle = {
@@ -75,9 +74,8 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
 
   const dateTimeStyle = {
     fontSize: isMobile ? '0.75rem' : '0.85rem',
-    flex: isMobile ? 'none' : '1 0 auto',
+    flex: isMobile ? 'none' : '1 1 auto',
     textAlign: isMobile ? 'center' : 'right',
-    width: isMobile ? '100%' : 'auto',
     minWidth: isMobile ? 'none' : '180px',
   };
 
