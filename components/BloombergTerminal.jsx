@@ -43,7 +43,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
         style={{
           display: 'grid',
           gridTemplateColumns: gridCols,
-          gridAutoRows: rowHeight,
+          gridAutoRows: view === 'local' ? 'auto' : 'minmax(200px, auto)',
           gap: 6,
           padding: 6,
           height: 'calc(100vh - 34px)',

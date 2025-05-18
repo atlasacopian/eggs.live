@@ -43,7 +43,9 @@ export default function TerminalHeader({ view, zipCode, onSetView }) {
   const viewButtonStyle = {
     background: '#111111', // Darker gray background for non-active buttons
     color: '#ffffff',     // White text for non-active
-    border: '1px solid #333333', 
+    borderWidth: '1px',        // Explicit borderWidth
+    borderStyle: 'solid',      // Explicit borderStyle
+    borderColor: '#333333',   // Non-active borderColor
     padding: '4px 8px',
     cursor: 'pointer',
     fontFamily: 'Menlo, monospace',
@@ -51,14 +53,15 @@ export default function TerminalHeader({ view, zipCode, onSetView }) {
     textTransform: 'uppercase',
     marginLeft: '4px', // Space between buttons
     marginRight: '4px',
-    minWidth: '90px', // Added minWidth
-    textAlign: 'center', // Added textAlign
+    minWidth: '90px', 
+    textAlign: 'center', 
+    boxSizing: 'border-box', // Added boxSizing
   };
 
   const activeViewButtonStyle = {
     ...viewButtonStyle,
     color: '#00ff00', // Green text for active
-    border: '1px solid #00ff00',
+    borderColor: '#00ff00', // Active borderColor
     background: '#2a2a2a', // Slightly lighter dark gray for active button background
   };
 
