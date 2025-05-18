@@ -47,7 +47,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
 
   const getGridCols = () => {
     if (isMobile) return 'repeat(1, 1fr)';
-    return view === 'local' ? 'repeat(6, 1fr)' : 'repeat(5, 1fr)';
+    return view === 'local' ? 'repeat(5, 1fr)' : 'repeat(5, 1fr)';
   };
 
   const getSpan = (desktopSpan) => {
@@ -86,6 +86,18 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
                 onHover={setHoveredStore}
                 hoveredStoreId={hoveredStore?.store_identifier}
               />
+            </TerminalTile>
+            <TerminalTile title="Price Change" span={getSpan(6)} style={{minHeight: isMobile ? '50px' : 'auto'}}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 10px', color: '#fff' }}>
+                <div>
+                  <span>Lowest Regular: ${Math.min(...localStores.map(s => s.regular_price || Infinity)).toFixed(2)}</span>
+                  <span style={{ color: '#00ff00', marginLeft: '8px' }}>▲ 2.5%</span> {/* Example percentage change */}
+                </div>
+                <div>
+                  <span>Lowest Organic: ${Math.min(...localStores.map(s => s.organic_price || Infinity)).toFixed(2)}</span>
+                  <span style={{ color: '#ff0000', marginLeft: '8px' }}>▼ 1.2%</span> {/* Example percentage change */}
+                </div>
+              </div>
             </TerminalTile>
             <TerminalTile title="Store History" span={getSpan(4)} style={{minHeight: isMobile ? '300px' : 'auto'}}>
               {selectedStore ? (
