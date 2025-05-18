@@ -103,9 +103,9 @@ export default function UsdaPriceChart() {
             formatter={(value) => typeof value === 'number' ? `$${value.toFixed(2)}` : value}
         />
         <Legend wrapperStyle={{ color: '#fff' }} />
-        <Line type="monotone" dataKey="Regular" stroke="#00ff00" dot={false} strokeWidth={2} name="Regular (Natl Avg)" />
+        <Line type="monotone" dataKey="Regular" stroke="#007bff" dot={false} strokeWidth={2} name="Regular (Natl Avg)" />
         {chartData.some(d => d.Organic !== undefined) && ( // Only render Organic line if data exists
-            <Line type="monotone" dataKey="Organic" stroke="#ffc107" dot={false} strokeWidth={2} name="Organic (Natl Avg)" />
+            <Line type="monotone" dataKey="Organic" stroke="#fd7e14" dot={false} strokeWidth={2} name="Organic (Natl Avg)" />
         )}
       </LineChart>
     </ResponsiveContainer>
