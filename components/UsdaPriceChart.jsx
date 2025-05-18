@@ -52,14 +52,16 @@ export default function UsdaPriceChart() {
 
         if (organicError) throw organicError;
         
-        // console.log('Regular USDA Data:', regularData);
-        // console.log('Organic USDA Data:', organicData);
+        console.log('Fetched Regular USDA Data:', regularData);
+        console.log('Fetched Organic USDA Data:', organicData);
 
         if ((!regularData || regularData.length === 0) && (!organicData || organicData.length === 0)) {
           // console.log('No USDA data found for chart.');
         }
         
-        setChartData(formatDataForChart(regularData || [], organicData || []));
+        const formattedData = formatDataForChart(regularData || [], organicData || []);
+        console.log('Formatted Chart Data:', formattedData);
+        setChartData(formattedData);
 
       } catch (err) {
         console.error('Error fetching USDA price data:', err);
@@ -85,8 +87,8 @@ export default function UsdaPriceChart() {
   }
 
   return (
-    <ResponsiveContainer width="100%" height="100%">
-      <LineChart data={chartData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+    // <ResponsiveContainer width="100%" height="100%">
+      <LineChart width={700} height={300} data={chartData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#333" />
         <XAxis 
           dataKey="date" 
@@ -103,11 +105,11 @@ export default function UsdaPriceChart() {
             formatter={(value) => typeof value === 'number' ? `$${value.toFixed(2)}` : value}
         />
         <Legend wrapperStyle={{ color: '#fff' }} />
-        <Line type="monotone" dataKey="Regular" stroke="#007bff" dot={false} strokeWidth={2} name="Regular (Natl Avg)" />
+        <Line type="monotone" dataKey="Regular" stroke="#007bff" dot={false} strokeWidth={2} name="Regular (Natl Avg)" connectNulls={true} />
         {chartData.some(d => d.Organic !== undefined) && ( // Only render Organic line if data exists
-            <Line type="monotone" dataKey="Organic" stroke="#fd7e14" dot={false} strokeWidth={2} name="Organic (Natl Avg)" />
+            <Line type="monotone" dataKey="Organic" stroke="#fd7e14" dot={false} strokeWidth={2} name="Organic (Natl Avg)" connectNulls={true} />
         )}
       </LineChart>
-    </ResponsiveContainer>
+    // </ResponsiveContainer>
   );
 } 

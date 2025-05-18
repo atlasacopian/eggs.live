@@ -229,7 +229,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
         {view === 'national' && (
           <>
             {/* National View - Row 1 (5 columns total) */}
-            <TerminalTile title="National Price Average" span={getSpan(2)} style={{minHeight: isMobile ? '100px' : 'auto'}}>
+            <TerminalTile title="National Price Average" span={getSpan(3)} style={{minHeight: isMobile ? '100px' : 'auto'}}>
               <div style={{ fontSize: isMobile ? '1.8rem' : '2.2rem', color: '#00ff00', textAlign: 'center', paddingTop: isMobile ? '10px' : '15px' }}>
                 $ {(nationalStats.avgPrice || 2.85).toFixed(2)}
               </div>
@@ -246,12 +246,12 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
             </TerminalTile>
 
             {/* New Tile for USDA National Prices Chart */}
-            <TerminalTile title="USDA National Egg Prices (Weekly)" span={getSpan(5)} style={{minHeight: isMobile ? '250px' : '300px'}}>
+            <TerminalTile title="USDA National Egg Prices (Weekly)" span={getSpan(6)} style={{minHeight: isMobile ? '250px' : '300px'}}>
               <UsdaPriceChart />
             </TerminalTile>
 
             {/* National View - Row 2 */}
-            <TerminalTile title="National Supply Index" span={getSpan(2)} style={{minHeight: isMobile ? '200px' : 'auto'}}>
+            <TerminalTile title="National Supply Index" span={getSpan(3)} style={{minHeight: isMobile ? '200px' : 'auto'}}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={[{name: 'Supply/Demand', supply: 78, demand: 65}]} layout="vertical" margin={{ top: 20, right: 20, bottom: 0, left: isMobile ? 5 : 20 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#222" />
@@ -285,7 +285,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
                      <li>Fuel Price (Diesel Avg): <span style={{color: Math.random() > 0.5 ? '#0f0' : '#f00'}}>$4.05/gal</span></li>
                 </ul>
             </TerminalTile>
-             <TerminalTile title="USDA Market Highlights" span={getSpan(2)} style={{minHeight: isMobile ? '150px' : 'auto'}}>
+             <TerminalTile title="USDA Market Highlights" span={getSpan(3)} style={{minHeight: isMobile ? '150px' : 'auto'}}>
                  <div style={{padding: '8px', fontSize: isMobile ? '0.7em' : '0.75em', color: '#ccc', overflowY: 'auto', maxHeight: isMobile ? '120px' :'130px'}}>
                     <p><strong>MIDWEST:</strong> Prices for Grade A large eggs are mostly steady. Demand is moderate for retail.</p>
                     <p><strong>NORTHEAST:</strong> Offerings are light. Demand is fairly good. Prices firm.</p>
@@ -304,7 +304,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
                 </LineChart>
               </ResponsiveContainer>
             </TerminalTile>
-            <TerminalTile title="National Egg Ticker" span={getSpan(2)} style={{minHeight: isMobile ? '80px' : 'auto'}}>
+            <TerminalTile title="National Egg Ticker" span={getSpan(3)} style={{minHeight: isMobile ? '80px' : 'auto'}}>
               <marquee style={{ whiteSpace: 'nowrap', paddingTop: '10px', fontSize: isMobile ? '0.75rem' : '0.9em' }}>
                 {['US_EGG_FUTR', 'CAGED_NATL', 'CAGEFREE_NATL', 'ORG_NATL', 'FEED_COST_IDX'].map(sym => (
                   <span key={sym} style={{ marginRight: 24, color: Math.random() > 0.5 ? '#0f0' : '#f00' }}>
@@ -321,7 +321,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
                      <p>US Production: ~6.5 MMT (Est.)</p>
                  </div>
             </TerminalTile>
-            <TerminalTile title="Export Volume (Dozens)" span={getSpan(1)} style={{minHeight: isMobile ? '100px' : 'auto'}}>
+            <TerminalTile title="Export Volume (Dozens)" span={getSpan(2)} style={{minHeight: isMobile ? '100px' : 'auto'}}>
                 <div style={{textAlign: 'center', paddingTop: '20px'}}>
                     <p style={{fontSize: isMobile ? '1.1em' : '1.3em', color: '#90EE90'}}>+{(Math.random()*500+100).toFixed(0)}K</p>
                     <p style={{fontSize: isMobile ? '0.6em' : '0.7em', color: '#aaa'}}>vs. Prev. Month</p>

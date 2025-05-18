@@ -93,17 +93,10 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
     minWidth: '180px',
   };
 
-  const currentViewTextStyle = {
-    display: isMobile ? 'block' : 'inline-block', // Block on mobile for stacking, inline-block on desktop for width
-    width: isMobile ? 'auto' : '160px', // Fixed width on desktop
-    textAlign: isMobile ? 'center' : 'left', // Center on mobile if stacked
-  };
-
   return (
     <div style={headerStyle}>
       <div style={infoGroupStyle}>
-        <span style={currentViewTextStyle}>Current View: {view}</span>
-        {!isMobile && <span style={{ marginLeft: '20px' }}>ZIP Code: {zipCode || 'N/A'}</span>}
+        {!isMobile && <span>ZIP Code: {zipCode || 'N/A'}</span>}
         {isMobile && <div style={{fontSize: '0.7rem'}}>ZIP Code: {zipCode || 'N/A'}</div>}
       </div>
 
