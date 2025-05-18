@@ -34,6 +34,7 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
     textAlign: isMobile ? 'center' : 'left',
     marginBottom: isMobile ? '5px' : '0',
     width: isMobile ? '100%' : 'auto',
+    minWidth: isMobile ? 'none' : '280px',
   };
 
   const buttonGroupStyle = {

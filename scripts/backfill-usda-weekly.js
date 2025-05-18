@@ -234,40 +234,64 @@ export async function run({ latestOnly = false } = {}) {
 
 async function flush(map) {
   const now = new Date().toISOString()
-  const out = []
+  const upsertData = [] // Changed name to upsertData for clarity
   for (const [periodKey, entry] of map.entries()) {
     for (const kind of ['regular', 'organic']) {
-      const arrNat = entry[kind]
-      const arrAll = kind === 'regular' ? entry._allRegular : entry._allOrganic
-      const arr = arrNat
-      if (!arr.length) continue
-      const avg = arr.reduce((s, p) => s + p, 0) / arr.length
-      const min = parseFloat(Math.min(...arrAll).toFixed(2))
-      const max = parseFloat(Math.max(...arrAll).toFixed(2))
-      out.push({
+      const arrNat = entry[kind]; // National prices for the current kind
+      const arrAll = kind === 'regular' ? entry._allRegular : entry._allOrganic; // All regional prices for the current kind
+      
+      // arrNat is used for the main 'price' (national average)
+      if (!arrNat || arrNat.length === 0) continue; // Skip if no national data for this kind
+
+      const avgPrice = parseFloat((arrNat.reduce((s, p) => s + p, 0) / arrNat.length).toFixed(2));
+      
+      // arrAll is used for price_min and price_max across all regions
+      // If arrAll is empty (e.g. organic only reported nationally), use avgPrice for min/max
+      const minPrice = (arrAll && arrAll.length > 0) ? parseFloat(Math.min(...arrAll).toFixed(2)) : avgPrice;
+      const maxPrice = (arrAll && arrAll.length > 0) ? parseFloat(Math.max(...arrAll).toFixed(2)) : avgPrice;
+
+      let dbProductType;
+      if (kind === 'regular') {
+        dbProductType = 'grd a lrg';
+      } else if (kind === 'organic') {
+        dbProductType = 'organic';
+      } else {
+        continue; // Should not happen with the current loop
+      }
+
+      upsertData.push({
         report_start_date: entry.report_start_date_iso,
         report_end_date: entry.report_end_date_iso,
-        product_type: kind,
-        price: parseFloat(avg.toFixed(2)),
-        price_min: min,
-        price_max: max,
-        obs_count: arr.length,
-        captured_at: now,
-      })
+        product_type: dbProductType,
+        price: avgPrice,
+        price_min: minPrice,
+        price_max: maxPrice,
+        updated_at: now,
+      });
     }
   }
-  if (!out.length) return
-  for (let i = 0; i < out.length; i += 1000) {
-    const chunk = out.slice(i, i + 1000)
-    const { error } = await sb.from('usda_weekly_egg_prices').upsert(chunk, {
-      onConflict: 'report_start_date,report_end_date,product_type',
-    })
-    if (error) {
-      console.error(error)
-      process.exit(1)
+
+  if (upsertData.length > 0) {
+    console.log(`   फ्लशिंग ${upsertData.length} записи в Supabase...`);
+    const CHUNK_SIZE = 500; // Supabase recommends chunks of a few hundred for large upserts
+    for (let i = 0; i < upsertData.length; i += CHUNK_SIZE) {
+      const chunk = upsertData.slice(i, i + CHUNK_SIZE);
+      const { error } = await sb.from('usda_weekly_egg_prices').upsert(chunk, {
+        onConflict: 'report_start_date,report_end_date,product_type',
+      });
+      if (error) {
+        console.error('Supabase upsert error:', error);
+        // Decide if you want to stop or continue on error
+      } else {
+        console.log(`    ↳ chunk ${i / CHUNK_SIZE + 1} upserted successfully (${chunk.length} records).`);
+      }
+      if (upsertData.length > CHUNK_SIZE && i + CHUNK_SIZE < upsertData.length) {
+        await sleep(500); // Brief pause between large chunks
+      }
     }
+  } else {
+    console.log('No data to flush to Supabase.');
   }
-  console.log(`   ↳ flushed ${out.length} rows (map size ${map.size})`)
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
