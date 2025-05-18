@@ -46,27 +46,29 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
 
   const viewButtonStyle = {
     background: '#111111',
-    color: '#ffffff',
+    color: '#cccccc',
     borderWidth: '1px',
     borderStyle: 'solid',
     borderColor: '#333333',
     padding: '4px 8px',
     cursor: 'pointer',
     fontFamily: 'Menlo, monospace',
-    fontSize: isMobile ? '0.7rem' : '0.8rem',
+    fontSize: '0.8rem',
     textTransform: 'uppercase',
     marginLeft: '4px',
     marginRight: '4px',
-    minWidth: isMobile ? '80px' : '90px',
+    minWidth: '90px',
     textAlign: 'center',
     boxSizing: 'border-box',
+    opacity: 0.8,
   };
 
   const activeViewButtonStyle = {
     ...viewButtonStyle,
+    background: '#000000',
     color: '#00ff00',
     borderColor: '#00ff00',
-    background: '#2a2a2a',
+    opacity: 1,
   };
 
   const dateTimeStyle = {

@@ -40,7 +40,6 @@ export default function UsdaPriceChart() {
           .from('usda_weekly_egg_prices')
           .select('report_start_date, price')
           .eq('product_type', 'grd a lrg') // Target specific product type for regular
-          .eq('region', 'NATIONAL') // Ensure it's national data
           .order('report_start_date', { ascending: true });
 
         if (regularError) throw regularError;
@@ -49,7 +48,6 @@ export default function UsdaPriceChart() {
           .from('usda_weekly_egg_prices')
           .select('report_start_date, price')
           .eq('product_type', 'organic') // Target 'organic'
-          .eq('region', 'NATIONAL')
           .order('report_start_date', { ascending: true });
 
         if (organicError) throw organicError;
