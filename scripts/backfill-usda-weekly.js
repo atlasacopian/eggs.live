@@ -14,6 +14,11 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
   process.exit(1)
 }
 
+if (!USDA_API_KEY) {
+  console.error('❌ USDA_API_KEY env var missing – please set it in your shell, .env.local, or GitHub Action secrets')
+  process.exit(1)
+}
+
 const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
@@ -22,6 +27,20 @@ function isDozen(pkg) {
   if (!pkg) return true
   const p = pkg.toString().toLowerCase()
   return p.includes('12') || p.includes('dozen')
+}
+
+// Exclude rows we don't want (liquid eggs, 18-count)
+function shouldSkip(row) {
+  const pkg = (row.package_size || '').toLowerCase()
+  const typ = (row.type || '').toLowerCase()
+
+  // 1. Skip anything that references liquid eggs
+  if (pkg.includes('liquid') || typ.includes('liquid')) return true
+
+  // 2. Skip 18-count packages (e.g. "18 pack")
+  if (pkg.match(/\b18\b/) || typ.match(/\b18\b/)) return true
+
+  return false
 }
 
 // Add helper to fetch latest ref_date from Supabase
@@ -43,9 +62,7 @@ async function getLatestRefDate () {
 export async function run({ latestOnly = false } = {}) {
   const slugId = 'AMS_2757'
   const section = 'Report%20Details'
-  const creds = Buffer.from(`${USDA_API_KEY}:`).toString('base64')
-
-  const agg = new Map() // map<date, { regular: price[], organic: price[] }>
+  const creds = Buffer.from(`${USDA_API_KEY.trim()}:`).toString('base64')
 
   // NOTE: the MARS API ignores page & pageSize for this endpoint and always
   //       returns the full dataset (~67k rows). We therefore fetch ONCE and
@@ -61,6 +78,27 @@ export async function run({ latestOnly = false } = {}) {
     const rows = json.results || []
   console.log(`   ↳ received ${rows.length.toLocaleString()} rows`)
 
+  // 1️⃣ Find the latest week string (MM/DD/YYYY) in this payload
+  let latestStr = ''
+  let latestCode = 0 // yyyymmdd as number for easy compare
+  for (const r of rows) {
+    const [m, d, y] = r.report_date.split(' ')[0].split('/')
+    const code = parseInt(`${y}${m.padStart(2,'0')}${d.padStart(2,'0')}`, 10)
+    if (code > latestCode) {
+      latestCode = code
+      latestStr = `${m}/${d}/${y}`
+    }
+  }
+
+  if (!latestStr) {
+    console.error('No rows found – abort')
+    return
+  }
+
+  // 2️⃣ Prepare collectors for that week only
+  const nat = { regular: [], organic: [] }   // National rows for average
+  const all = { regular: [], organic: [] }   // All regions for min/max
+
   // Fetch the latest date from Supabase ONLY if running in latestOnly mode
   const lastRefDate = latestOnly ? await getLatestRefDate() : null
 
@@ -71,24 +109,56 @@ export async function run({ latestOnly = false } = {}) {
     return new Date(y, m - 1, d)
   }
 
-    for (const r of rows) {
-    // Skip if older/equal to last stored date when in latestOnly mode
-    if (latestOnly && lastRefDate && parseUsdaDate(r.report_date) <= lastRefDate) continue
+  // If in latestOnly mode, check if the API data is actually newer than Supabase
+  if (latestOnly && lastRefDate) {
+    const currentApiLatestDate = parseUsdaDate(latestStr) // latestStr is MM/DD/YYYY
+    // Set hours to 0 to compare dates only, avoiding timezone issues if lastRefDate is midnight UTC
+    currentApiLatestDate.setHours(0, 0, 0, 0)
+    lastRefDate.setHours(0, 0, 0, 0)
 
-    if (!r.package_size) continue
-      if (!isDozen(r.package_size)) continue
+    if (currentApiLatestDate <= lastRefDate) {
+      console.log(`✅ USDA data already up to date. Supabase latest: ${lastRefDate.toISOString().split('T')[0]}, API payload latest: ${currentApiLatestDate.toISOString().split('T')[0]}. No update needed.`)
+      return
+    }
+    console.log(`ℹ️ New USDA data found. Supabase latest: ${lastRefDate.toISOString().split('T')[0]}, API payload latest: ${currentApiLatestDate.toISOString().split('T')[0]}. Proceeding with update.`)
+  }
+
+    for (const r of rows) {
+    if (shouldSkip(r)) continue
+    if (!r.report_date.startsWith(latestStr)) continue // skip non-CW rows
+
+    if (!isDozen(r.package_size)) continue
       const price = parseFloat(r.price_avg)
       if (!price || Number.isNaN(price)) continue
 
       const kind = (r.environment || '').toLowerCase().includes('organic') ? 'organic' : 'regular'
-    let entry = agg.get(r.report_date)
-      if (!entry) entry = { regular: [], organic: [] }
-      entry[kind].push(price)
-    agg.set(r.report_date, entry)
+
+      // Push into global collector
+      all[kind].push(price)
+
+      // Only push into national collector if region === National
+      if ((r.region || '').toLowerCase() === 'national') {
+        nat[kind].push(price)
+      }
     }
 
-  console.log(`Aggregated map size before flush: ${agg.size}`);
-  await flush(agg); // Flush potentially empty map if nothing new found
+  // Build a pseudo-map with a single entry for flush()
+  const outMap = new Map()
+  if (latestStr) {
+    // convert latestStr (MM/DD/YYYY) to ISO yyyy-mm-dd for ref_date
+    const [mS,dS,yS] = latestStr.split('/')
+    const iso = `${yS}-${mS.padStart(2,'0')}-${dS.padStart(2,'0')}`
+    outMap.set(iso, {
+      regular: nat.regular.length ? nat.regular : [],
+      organic: nat.organic.length ? nat.organic : [],
+      _allRegular: all.regular,
+      _allOrganic: all.organic,
+    })
+  }
+
+  console.log(`Aggregated map size before flush: ${outMap.size}`)
+  await flush(outMap)
+
   console.log(`🎉 USDA weekly sync ${latestOnly ? '(latest only)' : '(full)'} complete`);
 }
 
@@ -97,11 +167,13 @@ async function flush(map) {
   const out = []
   for (const [date, entry] of map.entries()) {
     for (const kind of ['regular', 'organic']) {
-      const arr = entry[kind]
+      const arrNat = entry[kind]
+      const arrAll = kind === 'regular' ? entry._allRegular : entry._allOrganic
+      const arr = arrNat
       if (!arr.length) continue
       const avg = arr.reduce((s, p) => s + p, 0) / arr.length
-      const min = parseFloat(Math.min(...arr).toFixed(2))
-      const max = parseFloat(Math.max(...arr).toFixed(2))
+      const min = parseFloat(Math.min(...arrAll).toFixed(2))
+      const max = parseFloat(Math.max(...arrAll).toFixed(2))
       out.push({
         ref_date: date,
         product_type: kind,
