@@ -3,9 +3,9 @@ import React from 'react';
 export default function TerminalTile({ title, span, children, style, bodyStyle }) {
   const tileStyle = {
     gridColumn: span ? `span ${span}` : 'auto',
-    background: '#0d0d0d', // Very dark gray, almost black
-    border: '1px solid #333',     // Dark gray border
-    color: '#e0e0e0',          // Light gray text
+    background: '#000000', // Changed to black
+    border: '1px solid #222222',     // Darker border for black background
+    color: '#ffffff',          // Changed to white
     fontFamily: 'Menlo, monospace',
     display: 'flex',
     flexDirection: 'column',
@@ -14,11 +14,11 @@ export default function TerminalTile({ title, span, children, style, bodyStyle }
   };
 
   const headerStyle = {
-    background: '#1a1a1a', // Slightly lighter gray for header
+    background: '#000000', // Changed to black
     padding: '6px 8px',
     fontSize: '0.85rem',
-    color: '#00ff00',     // Green title text
-    borderBottom: '1px solid #333',
+    color: '#ffffff',     // Changed to white
+    borderBottom: '1px solid #222222', // Darker border for black background
     textTransform: 'uppercase',
     letterSpacing: '0.05em',
     whiteSpace: 'nowrap',
@@ -30,6 +30,8 @@ export default function TerminalTile({ title, span, children, style, bodyStyle }
     padding: '8px',
     flexGrow: 1,
     overflow: 'auto', // Allow scrolling for content if it overflows
+    background: '#000000', // Ensure body background is also black
+    color: '#ffffff',     // Ensure body text is also white
     ...bodyStyle, // Allow overriding with passed styles
   };
 
