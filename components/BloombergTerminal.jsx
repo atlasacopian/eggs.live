@@ -75,8 +75,8 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
             {/* Local Stores & Store History Row */}
             <TerminalTile
               title="Local Stores"
-              span={getSpan(2)}
-              style={{ overflow: 'auto', minHeight: isMobile ? '200px' : 'auto' }} // Example minHeight for mobile
+              span={getSpan(6)}
+              style={{ overflow: 'auto', minHeight: isMobile ? '200px' : `${Math.min(localStores.length * 50, 300)}px` }}
               bodyStyle={{ overflowY: 'auto' }}
             >
               <StoreList
