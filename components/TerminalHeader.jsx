@@ -43,6 +43,13 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
     textAlign: 'left',
   };
 
+  const eggsLiveStyle = {
+    fontSize: isMobile ? '0.8rem' : '1rem',
+    fontWeight: 'bold',
+    color: '#00ff00',
+    marginRight: '12px',
+  };
+
   const buttonGroupStyle = {
     display: 'flex',
     justifyContent: 'center',
@@ -96,6 +103,7 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
   return (
     <div style={headerStyle}>
       <div style={infoGroupStyle}>
+        <span style={eggsLiveStyle}>EGGS.LIVE</span>
         {!isMobile && <span>ZIP Code: {zipCode || 'N/A'}</span>}
         {isMobile && <div style={{fontSize: '0.7rem'}}>ZIP Code: {zipCode || 'N/A'}</div>}
       </div>
