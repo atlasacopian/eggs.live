@@ -47,7 +47,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
 
   const getGridCols = () => {
     if (isMobile) return 'repeat(1, 1fr)';
-    return view === 'local' ? 'repeat(5, 1fr)' : 'repeat(5, 1fr)';
+    return view === 'local' ? 'repeat(6, 1fr)' : 'repeat(5, 1fr)';
   };
 
   const getSpan = (desktopSpan) => {
