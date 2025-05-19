@@ -79,6 +79,26 @@ function normalizeLocationId(id) {
 
 let loggedFullProductForNullPrice = false; // Flag to ensure we only log one full product object
 
+// --- helper: fetch with retry & exponential backoff (for 429 rate-limits & 5xx) ---
+async function fetchWithRetry(url, options = {}, maxAttempts = 5) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const res = await fetch(url, options);
+    if (res.ok) return res; // success
+
+    // If we get 429 (rate limit) or 5xx, wait and retry
+    if (res.status === 429 || (res.status >= 500 && res.status < 600)) {
+      const waitMs = 5000 * attempt; // 5s, 10s, 15s, ...
+      console.warn(`fetchWithRetry: attempt ${attempt} failed (${res.status}). Retrying after ${waitMs} ms`);
+      await new Promise(r => setTimeout(r, waitMs));
+      continue;
+    }
+
+    // For other errors, break immediately so caller can handle
+    return res;
+  }
+  throw new Error(`fetchWithRetry: failed after ${maxAttempts} attempts for ${url}`);
+}
+
 async function fetchStoreEggs (location_id_raw) {
   const location_id = normalizeLocationId(location_id_raw);
   const token = await getToken();
@@ -103,7 +123,12 @@ async function fetchStoreEggs (location_id_raw) {
 
     console.log(`fetchStoreEggs: Attempting to fetch URL: ${currentUrl.toString()}`); // Log the exact URL
 
-    const res = await fetch(currentUrl, { headers: { authorization: `Bearer ${token}` } });
+    const res = await fetchWithRetry(currentUrl.toString(), {
+      headers: {
+        authorization: `Bearer ${token}`,
+        accept: 'application/json'
+      }
+    });
     if (!res.ok) {
       const errorBodyText = await res.text().catch(() => `Failed to read error body for status ${res.status}`);
       throw new Error(`API call to ${currentUrl.toString()} failed for location ${location_id}. Status: ${res.status}. Response: ${errorBodyText.slice(0, 500)}`);
