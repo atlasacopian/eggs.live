@@ -80,14 +80,14 @@ function normalizeLocationId(id) {
 let loggedFullProductForNullPrice = false; // Flag to ensure we only log one full product object
 
 // --- helper: fetch with retry & exponential backoff (for 429 rate-limits & 5xx) ---
-async function fetchWithRetry(url, options = {}, maxAttempts = 5) {
+async function fetchWithRetry(url, options = {}, maxAttempts = 3) {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     const res = await fetch(url, options);
     if (res.ok) return res; // success
 
     // If we get 429 (rate limit) or 5xx, wait and retry
     if (res.status === 429 || (res.status >= 500 && res.status < 600)) {
-      const waitMs = 5000 * attempt; // 5s, 10s, 15s, ...
+      const waitMs = 2000 * attempt; // 2s, 4s, 6s
       console.warn(`fetchWithRetry: attempt ${attempt} failed (${res.status}). Retrying after ${waitMs} ms`);
       await new Promise(r => setTimeout(r, waitMs));
       continue;
@@ -96,7 +96,7 @@ async function fetchWithRetry(url, options = {}, maxAttempts = 5) {
     // For other errors, break immediately so caller can handle
     return res;
   }
-  throw new Error(`fetchWithRetry: failed after ${maxAttempts} attempts for ${url}`);
+  return await fetch(url, options); // final attempt (returns whatever response we get)
 }
 
 async function fetchStoreEggs (location_id_raw) {
