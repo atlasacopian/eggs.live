@@ -8,12 +8,12 @@ import * as THREE from 'three'
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
 // Preload the updated egg GLB so it's ready when the scene mounts
-useGLTF.preload('/new egg.glb')
+useGLTF.preload('/egg.glb')
 
 // Update ModelPrimitive for immediate load
 const ModelPrimitive = forwardRef((props, ref) => {
   // Load GLB model using useGLTF and clone directly for fast initial rendering
-  const gltf = useGLTF('/new egg.glb')
+  const gltf = useGLTF('/egg.glb')
   // Load original bump and gloss textures from White_Egg
   const [bumpMap, glossMap] = useTexture([
     '/White_Egg/Egg_bump.png',
