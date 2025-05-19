@@ -24,6 +24,24 @@ export async function run() {
     console.log('No new FRED value yet')
     process.exit(0)
   }
+
+  // ------------------------------------------------------------
+  // Deduplication: Bail early if we already have this ref_date
+  // ------------------------------------------------------------
+  const { data: existing, error: selectError } = await sb
+    .from('FRED')
+    .select('id')
+    .eq('ref_date', obs.date)
+    .eq('metric', 'retail_price')
+    .eq('product_type', 'regular')
+    .maybeSingle()
+
+  if (selectError) throw selectError
+  if (existing) {
+    console.log(`⏩ FRED row for ${obs.date} already exists (id ${existing.id}), skipping insert`)
+    process.exit(0)
+  }
+
   const row = {
     ref_date: obs.date,
     source: 'FRED',
@@ -38,7 +56,7 @@ export async function run() {
     raw_json: null,
   }
   const { error } = await sb.from('FRED').upsert(row, {
-    onConflict: 'source,metric,product_type,ref_date,price,price_min,price_max,obs_count',
+    onConflict: 'source,metric,product_type,ref_date',
   })
   if (error) throw error
   console.log(`✅ FRED row for ${row.ref_date} stored (price $${row.price})`)

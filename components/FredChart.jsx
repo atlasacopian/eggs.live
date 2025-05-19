@@ -9,7 +9,7 @@ import {
   Tooltip,
 } from 'recharts'
 
-export default function FredChart({ symbol = 'APU0000708111', start = '1980-01-01', end = '2025-12-31' }) {
+export default function FredChart({ symbol = 'APU0000703111', start = '1980-01-01', end = '2025-12-31' }) {
   const [data, setData] = useState([])
 
   useEffect(() => {
@@ -37,13 +37,9 @@ export default function FredChart({ symbol = 'APU0000708111', start = '1980-01-0
 
   return (
     <div style={{
-      position: 'absolute',
-      top: '5%',
-      left: '5%',
-      width: '90%',
-      height: '90%',
-      zIndex: 1, // In front of egg for testing
-      pointerEvents: 'auto', // Enable tooltips
+      width: '100%',
+      height: '100%',
+      pointerEvents: 'auto',
     }}>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 20, right: 20, bottom: 0, left: 0 }}>

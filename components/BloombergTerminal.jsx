@@ -5,6 +5,7 @@ import TerminalHeader from './TerminalHeader.jsx';
 import StoreList from './StoreList.jsx';
 import EggPriceChart from './EggPriceChart.jsx';
 import UsdaPriceChart from './UsdaPriceChart.jsx';
+import FredChart from './FredChart.jsx';
 
 const MOBILE_BREAKPOINT = 768;
 
@@ -47,7 +48,8 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
 
   const getGridCols = () => {
     if (isMobile) return 'repeat(1, 1fr)';
-    return view === 'local' ? 'repeat(6, 1fr)' : 'repeat(5, 1fr)';
+    // Use 6 columns for both views on desktop to keep height consistent
+    return 'repeat(6, 1fr)';
   };
 
   const getSpan = (desktopSpan) => {
@@ -63,7 +65,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
         style={{
           display: 'grid',
           gridTemplateColumns: getGridCols(),
-          gridAutoRows: view === 'local' || isMobile ? 'auto' : 'minmax(200px, auto)', // Use auto for mobile local view as well
+          gridAutoRows: 'auto',
           gap: isMobile ? 4 : 6,
           padding: isMobile ? 4 : 6,
           height: 'calc(100vh - 34px)', // Header height might change for mobile
@@ -75,8 +77,8 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
             {/* Local Stores & Store History Row */}
             <TerminalTile
               title="Local Stores"
-              span={getSpan(6)}
-              style={{ overflow: 'auto', minHeight: isMobile ? '200px' : `${Math.min(localStores.length * 50, 300)}px` }}
+              span={getSpan(2)}
+              style={{ overflow: 'auto', minHeight: isMobile ? '200px' : `${Math.min(localStores.length * 50, 600)}px` }}
               bodyStyle={{ overflowY: 'auto' }}
             >
               <StoreList
@@ -87,73 +89,46 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
                 hoveredStoreId={hoveredStore?.store_identifier}
               />
             </TerminalTile>
-            <TerminalTile title="Price Change" span={getSpan(6)} style={{minHeight: isMobile ? '50px' : 'auto'}}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 10px', color: '#fff' }}>
-                <div>
-                  <span>Lowest Regular: ${Math.min(...localStores.map(s => s.regular_price || Infinity)).toFixed(2)}</span>
-                  <span style={{ color: '#00ff00', marginLeft: '8px' }}>▲ 2.5%</span> {/* Example percentage change */}
-                </div>
-                <div>
-                  <span>Lowest Organic: ${Math.min(...localStores.map(s => s.organic_price || Infinity)).toFixed(2)}</span>
-                  <span style={{ color: '#ff0000', marginLeft: '8px' }}>▼ 1.2%</span> {/* Example percentage change */}
-                </div>
-              </div>
-            </TerminalTile>
-            <TerminalTile title="Store History" span={getSpan(4)} style={{minHeight: isMobile ? '300px' : 'auto'}}>
+            <TerminalTile title="Store History" span={getSpan(4)} style={{minHeight: isMobile ? '300px' : 'auto', padding: '10px'}}>
               {selectedStore ? (
                 <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                  <div style={{ display: 'flex', gap: 16, marginBottom: 8, flexWrap: 'wrap' }}> {/* Allow button wrap on mobile */}
-                    <button
+                  <div style={{ fontSize: '0.8rem', color: '#fff', textAlign: 'center', fontStyle: 'normal', paddingBottom: 4 }}>
+                    SHOWING HISTORY FOR: <strong style={{ color: '#ffeb3b', fontWeight: 'bold' }}>{selectedStore.name.toUpperCase()}</strong>
+                  </div>
+                  <div style={{ display: 'flex', gap: 24, marginBottom: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+                    <span
                       onClick={() => setPriceType('regular')}
                       style={{
-                        color: priceType === 'regular' ? '#ffc107' : '#fff',
-                        background: 'none',
-                        border: 'none',
-                        fontWeight: priceType === 'regular' ? 700 : 400,
-                        fontSize: isMobile ? '0.8rem' : '0.9rem',
+                        color: priceType === 'regular' ? '#ffeb3b' : '#666',
                         cursor: 'pointer',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em',
-                        padding: isMobile ? '4px' : 'auto', 
+                        fontWeight: priceType === 'regular' ? 'bold' : 'normal',
+                        textDecoration: priceType === 'regular' ? 'underline' : 'none',
                       }}
                     >
-                      Regular
-                    </button>
-                    <button
+                      REGULAR
+                    </span>
+                    <span
                       onClick={() => setPriceType('organic')}
                       style={{
-                        color: priceType === 'organic' ? '#ffc107' : '#fff',
-                        background: 'none',
-                        border: 'none',
-                        fontWeight: priceType === 'organic' ? 700 : 400,
-                        fontSize: isMobile ? '0.8rem' : '0.9rem',
+                        color: priceType === 'organic' ? '#ffeb3b' : '#666',
                         cursor: 'pointer',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em',
-                        padding: isMobile ? '4px' : 'auto',
+                        fontWeight: priceType === 'organic' ? 'bold' : 'normal',
+                        textDecoration: priceType === 'organic' ? 'underline' : 'none',
                       }}
                     >
-                      Organic
-                    </button>
+                      ORGANIC
+                    </span>
                   </div>
-                  <div style={{ flex: 1, minHeight: 0 }}>
-                    <EggPriceChart
-                      store={(() => {
-                        const s = hoveredStore || selectedStore;
-                        if (!s) return null;
-                        let id = s.store_identifier;
-                        if (id && id.startsWith('T')) {
-                          return { ...s, store_identifier: id.slice(1) };
-                        }
-                        return s;
-                      })()}
-                      priceType={priceType}
-                      highlight={!!hoveredStore}
-                    />
-                  </div>
+                  <EggPriceChart
+                    store={selectedStore}
+                    priceType={priceType}
+                    style={{ flex: 1 }}
+                  />
                 </div>
               ) : (
-                <div style={{ padding: 8, color: '#888' }}>Select a store</div>
+                <div style={{ color: '#fff', textAlign: 'center', padding: '20px' }}>
+                  No store selected
+                </div>
               )}
             </TerminalTile>
 
@@ -241,24 +216,11 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
         {view === 'national' && (
           <>
             {/* National View - Row 1 (5 columns total) */}
-            <TerminalTile title="National Price Average" span={getSpan(3)} style={{minHeight: isMobile ? '100px' : 'auto'}}>
-              <div style={{ fontSize: isMobile ? '1.8rem' : '2.2rem', color: '#00ff00', textAlign: 'center', paddingTop: isMobile ? '10px' : '15px' }}>
-                $ {(nationalStats.avgPrice || 2.85).toFixed(2)}
-              </div>
-              <div style={{ fontSize: isMobile ? '0.8rem' : '0.9rem', color: '#aaa', textAlign: 'center' }}>
-                USDA Weekly Avg
-              </div>
-            </TerminalTile>
-            <TerminalTile title="Regional Price Spread" span={getSpan(3)} style={{minHeight: isMobile ? '120px' : 'auto'}}>
-              <div style={{padding: isMobile ? '5px' : '10px', textAlign: 'center'}}>
-                <span style={{margin: '5px 10px', fontSize: isMobile ? '0.9rem' : '1.1rem'}}>Min: <span style={{color: '#00ff00'}}>${(nationalStats.minPrice || 1.79).toFixed(2)}</span> (SE)</span>
-                <span style={{margin: '5px 10px', fontSize: isMobile ? '0.9rem' : '1.1rem'}}>Max: <span style={{color: '#ff0000'}}>${(nationalStats.maxPrice || 4.20).toFixed(2)}</span> (NW)</span>
-                <p style={{fontSize: isMobile ? '0.6em' : '0.7em', color: '#888', marginTop: '5px'}}>Source: AMS_2757</p>
-              </div>
+            <TerminalTile title="Retail Egg CPI (FRED)" span={getSpan(3)} style={{minHeight: isMobile ? '250px' : '300px'}}>
+              <FredChart symbol="APU0000703111" start="1980-01-01" />
             </TerminalTile>
 
-            {/* New Tile for USDA National Prices Chart */}
-            <TerminalTile title="USDA National Egg Prices (Weekly)" span={getSpan(6)} style={{minHeight: isMobile ? '250px' : '300px'}}>
+            <TerminalTile title="USDA National Egg Prices (Weekly)" span={getSpan(3)} style={{minHeight: isMobile ? '250px' : '300px'}}>
               <UsdaPriceChart />
             </TerminalTile>
 
@@ -306,16 +268,6 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
             </TerminalTile>
 
             {/* National View - Row 4 */}
-            <TerminalTile title="National Price History (12 Wk)" span={getSpan(3)} style={{minHeight: isMobile ? '200px' : 'auto'}}>
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={randomSeries(12, 2.2, 4.0)}>
-                  <Line type="monotone" dataKey="value" stroke="#00ff00" dot={{r: isMobile ? 1: 2}} strokeWidth={2} />
-                  <XAxis dataKey="idx" hide />
-                  <YAxis domain={['dataMin - 0.2', 'dataMax + 0.2']} hide />
-                  <Tooltip/>
-                </LineChart>
-              </ResponsiveContainer>
-            </TerminalTile>
             <TerminalTile title="National Egg Ticker" span={getSpan(3)} style={{minHeight: isMobile ? '80px' : 'auto'}}>
               <marquee style={{ whiteSpace: 'nowrap', paddingTop: '10px', fontSize: isMobile ? '0.75rem' : '0.9em' }}>
                 {['US_EGG_FUTR', 'CAGED_NATL', 'CAGEFREE_NATL', 'ORG_NATL', 'FEED_COST_IDX'].map(sym => (

@@ -34,13 +34,15 @@ export async function GET(req) {
   }
 
   let historyData = [];
-  // If the identifier is all digits, treat as Target store_id
-  if (/^\d+$/.test(storeIdentifier)) {
+  // If the identifier is digits or prefixed with 'T', treat as Target store_id
+  if (/^T?\d+$/.test(storeIdentifier)) {
+    // Remove 'T' prefix if present for querying
+    const targetId = storeIdentifier.startsWith('T') ? storeIdentifier.slice(1) : storeIdentifier;
     // Query Target stats
     const { data, error } = await sb
       .from('target_egg_price_stats')
       .select('captured_date, avg_price, product_type')
-      .eq('store_id', storeIdentifier)
+      .eq('store_id', targetId)
       .order('captured_date', { ascending: true });
     if (error) {
       console.error('[simple-store-history] Supabase error (target):', error);

@@ -11,7 +11,14 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
   }, []);
 
   const formatDateTime = (date) => {
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    // Format date as MM-DD-YYYY
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    const yyyy = date.getFullYear();
+    // Get local time string with time zone abbreviation
+    const timeString = date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const tzAbbr = date.toLocaleTimeString(undefined, { timeZoneName: 'short' }).split(' ').pop();
+    return `${mm}-${dd}-${yyyy} ${timeString} ${tzAbbr}`;
   };
 
   const headerStyle = {
@@ -46,7 +53,7 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
   const eggsLiveStyle = {
     fontSize: isMobile ? '0.8rem' : '1rem',
     fontWeight: 'bold',
-    color: '#00ff00',
+    color: '#fff',
     marginRight: '12px',
   };
 
@@ -81,8 +88,8 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
   const activeViewButtonStyle = {
     ...viewButtonStyle,
     background: '#000000',
-    color: '#00ff00',
-    borderColor: '#00ff00',
+    color: '#fff',
+    borderColor: '#fff',
     opacity: 1,
   };
 
@@ -104,8 +111,6 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
     <div style={headerStyle}>
       <div style={infoGroupStyle}>
         <span style={eggsLiveStyle}>EGGS.LIVE</span>
-        {!isMobile && <span>ZIP Code: {zipCode || 'N/A'}</span>}
-        {isMobile && <div style={{fontSize: '0.7rem'}}>ZIP Code: {zipCode || 'N/A'}</div>}
       </div>
 
       <div style={buttonGroupStyle}>
@@ -124,7 +129,8 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
       </div>
 
       <div style={dateTimeStyle}>
-        {formatDateTime(currentDateTime)}
+        <span>{formatDateTime(currentDateTime)}</span>
+        <span style={{ marginLeft: 16, fontWeight: 600 }}>ZIP CODE: {zipCode || 'N/A'}</span>
       </div>
     </div>
   );

@@ -273,7 +273,15 @@ async function fetchStoreEggs (location_id_raw) {
     process.exit(0);
   }
 
-  console.log(`Processing ${stores.length} Kroger stores…`);
+  // Apply START_AT and END_AT range limits if provided via env.
+  const startAtEnv = Number(process.env.START_AT ?? '0');
+  const endAtEnv = Number(process.env.END_AT ?? stores.length);
+  const startIdx = isNaN(startAtEnv) ? 0 : Math.max(0, startAtEnv);
+  const endIdxExclusive = isNaN(endAtEnv) ? stores.length : Math.min(stores.length, endAtEnv);
+
+  const storesToProcess = stores.slice(startIdx, endIdxExclusive);
+
+  console.log(`Processing ${storesToProcess.length} Kroger stores (indexes ${startIdx} – ${endIdxExclusive - 1})`);
 
   const limit = pLimit(1); // 1 concurrent request (≈ 1-2 req/sec after token func)
   const now = new Date();
@@ -282,7 +290,8 @@ async function fetchStoreEggs (location_id_raw) {
   const rows = [];
   const BATCH_SIZE = 20; // Upsert to Supabase in batches of this many stores
 
-  await Promise.all(stores.map(async (s, index) => limit(async () => {
+  await Promise.all(storesToProcess.map(async (s, idx) => limit(async () => {
+    const index = startIdx + idx; // original index for logging
     const normalizedCurrentStoreId = normalizeLocationId(s.location_id);
     if (laStoreIdsToCheck.map(id => normalizeLocationId(id)).includes(normalizedCurrentStoreId)) {
         console.log(`DEBUG: Attempting to process LA store: ${s.location_id} (Normalized: ${normalizedCurrentStoreId})`);
@@ -342,10 +351,10 @@ async function fetchStoreEggs (location_id_raw) {
       console.log(` Store ${s.location_id}:`,
         'reg', buckets.regular.length ? `${Math.min(...buckets.regular)}-${Math.max(...buckets.regular)}` : '–',
         'org', buckets.organic.length ? `${Math.min(...buckets.organic)}-${Math.max(...buckets.organic)}` : '–');
-      console.log(`✓ ${s.location_id} (${index + 1}/${stores.length})`);
+      console.log(`✓ ${s.location_id} (${index + 1}/${storesToProcess.length})`);
 
       // If batch is full or it's the last item, upsert
-      if (rows.length >= BATCH_SIZE || index === stores.length - 1) {
+      if (rows.length >= BATCH_SIZE || index === storesToProcess.length - 1) {
         if (rows.length > 0) { // Ensure there's something to upsert
           console.log(`Upserting batch of ${rows.length} rows to Supabase...`);
           const { error: batchUpErr } = await sb

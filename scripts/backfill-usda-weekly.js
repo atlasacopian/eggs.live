@@ -276,10 +276,10 @@ async function flush(map) {
     const CHUNK_SIZE = 500; // Supabase recommends chunks of a few hundred for large upserts
     for (let i = 0; i < upsertData.length; i += CHUNK_SIZE) {
       const chunk = upsertData.slice(i, i + CHUNK_SIZE);
-      const { error } = await sb.from('usda_weekly_egg_prices').upsert(chunk, {
+    const { error } = await sb.from('usda_weekly_egg_prices').upsert(chunk, {
         onConflict: 'report_start_date,report_end_date,product_type',
       });
-      if (error) {
+    if (error) {
         console.error('Supabase upsert error:', error);
         // Decide if you want to stop or continue on error
       } else {

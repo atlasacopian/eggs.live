@@ -111,20 +111,34 @@ export async function GET(req) {
           if (nearbyKrogerStores && nearbyKrogerStores.length > 0) {
               console.log('API_TEMP_DEBUG: First store from RPC:', JSON.stringify(nearbyKrogerStores[0], null, 2));
               // Directly try to add these to allStores with minimal processing for now
-              const mappedKrogerStores = nearbyKrogerStores.map(store => ({
-                  name: (store.name || store.store_id).replace(/^Kroger - /, ''),
-                  address: store.address,
-                  city: store.city,
-                  state: store.state,
-                  zip: store.zip,
-                  regular_price: null, // Forcing null for now
-                  organic_price: null, // Forcing null for now
-                  distance: store.distance_miles, // Assuming RPC returns distance_miles
-                  updated_at: new Date().toISOString(), // Placeholder
-                  brand: 'Kroger/Affiliate',
-                  store_identifier: `K${store.store_id}`,
-                  status: 'NO_DATA_FOUND' // Forcing this for now
-              }));
+              const mappedKrogerStores = nearbyKrogerStores.map(store => {
+                  const rawName = store.name || store.store_id;
+                  let formattedName = rawName;
+                  // If name contains " - " (e.g., "Ralphs - Wiltern"), convert to "Ralphs (Wiltern)"
+                  if (rawName.includes(' - ')) {
+                    const [brand, branch] = rawName.split(' - ', 2);
+                    formattedName = `${brand} (${branch})`;
+                  } else if (/^Kroger - /.test(rawName)) {
+                    // Fallback: remove leading "Kroger - " and wrap remainder in parentheses
+                    const branch = rawName.replace(/^Kroger - /, '');
+                    formattedName = `Kroger (${branch})`;
+                  }
+
+                  return {
+                      name: formattedName,
+                      address: store.address,
+                      city: store.city,
+                      state: store.state,
+                      zip: store.zip,
+                      regular_price: null, // Forcing null for now
+                      organic_price: null, // Forcing null for now
+                      distance: store.distance_miles, // Assuming RPC returns distance_miles
+                      updated_at: new Date().toISOString(), // Placeholder
+                      brand: 'Kroger/Affiliate',
+                      store_identifier: `K${store.store_id}`,
+                      status: 'NO_DATA_FOUND' // Forcing this for now
+                  };
+              });
               allStores.push(...mappedKrogerStores);
               console.log(`API_TEMP_DEBUG: Pushed ${mappedKrogerStores.length} Kroger stores to allStores`);
           }
@@ -165,8 +179,32 @@ export async function GET(req) {
              console.log('🗺️ Generated priceMap:', JSON.stringify(priceMap)); // Log the price map
 
              // Harmonize Target data
-             const targetStoresData = nearbyTargetStores.map(store => {
+             const targetStoresData = await Promise.all(nearbyTargetStores.map(async store => {
                   const prices = priceMap[store.store_id] || {};
+                  // Fetch last 2 regular prices
+                  let { data: regularPrices, error: regErr } = await sb
+                    .from('target_egg_price_stats')
+                    .select('avg_price, captured_at')
+                    .eq('store_id', store.store_id)
+                    .eq('product_type', 'regular')
+                    .order('captured_at', { ascending: false })
+                    .limit(2);
+                  // Fetch last 2 organic prices
+                  let { data: organicPrices, error: orgErr } = await sb
+                    .from('target_egg_price_stats')
+                    .select('avg_price, captured_at')
+                    .eq('store_id', store.store_id)
+                    .eq('product_type', 'organic')
+                    .order('captured_at', { ascending: false })
+                    .limit(2);
+                  let regular_change = null;
+                  let organic_change = null;
+                  if (regularPrices && regularPrices.length === 2 && regularPrices[1].avg_price) {
+                    regular_change = ((regularPrices[0].avg_price - regularPrices[1].avg_price) / regularPrices[1].avg_price) * 100;
+                }
+                  if (organicPrices && organicPrices.length === 2 && organicPrices[1].avg_price) {
+                    organic_change = ((organicPrices[0].avg_price - organicPrices[1].avg_price) / organicPrices[1].avg_price) * 100;
+                  }
                   return {
                       name: `Target (${store.name || store.store_id})`,
                       address: store.address,
@@ -175,12 +213,14 @@ export async function GET(req) {
                       zip: store.zip,
                       regular_price: prices.regular_price,
                       organic_price: prices.organic_price,
+                      regular_change,
+                      organic_change,
                     distance: store.distance,
                       updated_at: prices.updated_at,
                     brand: 'Target',
                       store_identifier: `T${store.store_id}`
                   };
-             });
+             }));
              allStores.push(...targetStoresData);
              console.log(`➕ Added ${targetStoresData.length} Target stores to results. Current allStores count: ${allStores.length}`);
         } else {

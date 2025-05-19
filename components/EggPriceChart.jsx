@@ -115,6 +115,7 @@ export default function EggPriceChart({ store, highlight = false, preview = fals
             />
             {/* Tooltip only in full view */}
             {!preview && <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#888', strokeDasharray: '3 3' }} />}
+            {/* Show both lines in full view, only one in preview */}
             <Line
               type="linear"
               dataKey={dataKey}

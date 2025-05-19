@@ -1,7 +1,8 @@
 name: Fetch Kroger Egg Prices - Second Half
 on:
   schedule:
-    - cron: '0 12 * * *' # Runs daily at 12:00 (noon) UTC
+    # Run at 6 AM Los Angeles time (≈ 13:00 UTC during PDT, 14:00 UTC during PST)
+    - cron: '0 13 * * *'
   workflow_dispatch:
 jobs:
   fetch:
