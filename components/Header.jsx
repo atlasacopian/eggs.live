@@ -7,7 +7,7 @@ export default function Header() {
 
   return (
     <header style={baseHeaderStyle}>
-      <h1 style={baseH1Style}>eggs.live</h1>
+      <h1 style={baseH1Style}>eggs<span className="egg-dot">.</span>live</h1>
       <h3 style={baseH3Style}>TRACKING THE EGG-CONOMY</h3>
     </header>
   )

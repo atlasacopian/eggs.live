@@ -15,6 +15,7 @@
   letter-spacing: 2px; 
   font-size: 9px; /* Default desktop size */
   color: #000000;
+  background-color: transparent;
   padding: 0 0.5rem; /* consistent spacing */
   border-radius: 4px; 
   transition: color 0.2s ease-out, background-color 0.2s ease-out;
@@ -22,8 +23,7 @@
   align-items: center; /* Center text vertically */
   justify-content: center; /* Center text horizontally */
   white-space: nowrap;
-  /* For desktop, width will naturally adjust to content */
-  /* Set a default transparent border so hover/focus styles do not change overall size */
+  /* No border by default */
   border: 1px solid transparent;
   width: auto;
   height: 36px; /* keep constant height */
@@ -34,10 +34,10 @@
 .option:focus-within,
 .option:active,
 .option:focus {
-  color: var(--accent-color);
-  background-color: rgba(255, 193, 7, 0.15);
-  /* Switch border from transparent to accent colour without size jump */
-  border-color: var(--accent-color);
+  color: #ffffff;
+  background-color: #000000;
+  /* Switch border to white */
+  border-color: #ffffff;
 }
 
 /* Ensure ZIP input is clearly visible */
@@ -115,12 +115,12 @@
   color: #fff; /* white to contrast dark background */
 }
 
-/* Brackets inherit accent color when parent option is hovered or input focused */
+/* Brackets inherit carrot color when hovered; override to white */
 .option:hover .bracket,
 .option:focus-within .bracket,
 .option:active .bracket,
 .option:focus .bracket {
-  color: var(--accent-color);
+  color: #ffffff;
 }
 
 .promptWrapper {

@@ -8,12 +8,12 @@ import * as THREE from 'three'
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
 // Preload the updated egg GLB so it's ready when the scene mounts
-useGLTF.preload('/updated_egg.glb')
+useGLTF.preload('/new egg.glb')
 
 // Update ModelPrimitive for immediate load
 const ModelPrimitive = forwardRef((props, ref) => {
   // Load GLB model using useGLTF and clone directly for fast initial rendering
-  const gltf = useGLTF('/updated_egg.glb')
+  const gltf = useGLTF('/new egg.glb')
   // Load original bump and gloss textures from White_Egg
   const [bumpMap, glossMap] = useTexture([
     '/White_Egg/Egg_bump.png',
@@ -56,7 +56,7 @@ const ModelPrimitive = forwardRef((props, ref) => {
     return cloned
   }, [gltf, bumpMap, glossMap])
 
-  return <primitive ref={ref} object={model} scale={0.375} {...props} />
+  return <primitive ref={ref} object={model} scale={6} {...props} />
 })
 ModelPrimitive.displayName = 'ModelPrimitive'
 
@@ -88,17 +88,21 @@ export function Experience({ onInteractionStart }) {
 
   // Apply animation based on device type
   useFrame((state, delta) => {
-    if (centerRef.current) { 
-      if (isMobile) { 
-        // Mobile: Subtle constant rotation around the initial tilt
-        centerRef.current.rotation.y += delta * 0.1; // Slow spin
-        centerRef.current.rotation.x = 0 + Math.sin(state.clock.elapsedTime * 0.3) * 0.05;
+    if (centerRef.current) {
+      if (isMobile) {
+        // Mobile: Dynamic spin with oscillation
+        centerRef.current.rotation.y += delta * 0.2; // Faster spin
+        centerRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.5) * 0.1;
+        centerRef.current.rotation.z = Math.sin(state.clock.elapsedTime * 0.3) * 0.05;
       } else {
-        // Desktop: Follow mouse (Reverted targetX calculation)
-        const targetY = mouse.current.x * 0.5 // Rotate Y based on mouse X
-        const targetX = mouse.current.y * 0.5 // Rotate X directly based on mouse Y (original logic)
-        centerRef.current.rotation.y = THREE.MathUtils.lerp(centerRef.current.rotation.y, targetY, 0.1)
-        centerRef.current.rotation.x = THREE.MathUtils.lerp(centerRef.current.rotation.x, targetX, 0.1)
+        // Desktop: follow mouse like production site
+        const targetY = mouse.current.x * 0.6;
+        const targetX = mouse.current.y * 0.4;
+        // Smooth interpolation
+        centerRef.current.rotation.y = THREE.MathUtils.lerp(centerRef.current.rotation.y, targetY, 0.1);
+        centerRef.current.rotation.x = THREE.MathUtils.lerp(centerRef.current.rotation.x, targetX, 0.1);
+        // Clamp X rotation to avoid flipping under
+        centerRef.current.rotation.x = THREE.MathUtils.clamp(centerRef.current.rotation.x, -0.1, Math.PI / 2);
       }
     }
   })
@@ -117,7 +121,7 @@ export function Experience({ onInteractionStart }) {
       {/* Ground shadows */}
       <ContactShadows resolution={1024} position={[0, -0.01, 0]} scale={10} blur={2} far={0.5} opacity={0.5} />
       <Suspense fallback={null}>
-        <Center ref={centerRef} position={[0, 0, 0]} rotation={[0, 0, Math.PI]}>
+        <Center ref={centerRef} position={[0, 0, 0]} rotation={[Math.PI, 0, 0]}>
           <group>
             <ModelPrimitive />
           </group>
@@ -133,7 +137,7 @@ export default function EggCartonScene({ onInteractionStart }) {
     <>
       <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none' }}>
         <Canvas
-          camera={{ position: [2, 3, 6], fov: 35 }}
+          camera={{ position: [0, 0, 12], fov: 35 }}
           onCreated={({ scene, camera }) => {
             scene.background = null; // True transparency
             camera.lookAt(0, 0, 0); // aim at world origin to center the egg
