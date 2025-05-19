@@ -190,7 +190,7 @@ async function fetchStoreEggs (location_id_raw) {
     // Kroger API limit: The 'filter.start' parameter must be between 1 and 250.
     // If the next start value would exceed 250, break the loop.
     if (start > 250) break;
-    await new Promise(r => setTimeout(r, 700)); // Reverted from 1500ms back to 700ms
+    await new Promise(r => setTimeout(r, 2000)); // Increased pagination delay to 2000ms to respect rate limits
   }
   return buckets;
 }
@@ -378,7 +378,7 @@ async function fetchStoreEggs (location_id_raw) {
       console.warn('Store fail', s.location_id, err.message);
     }
     // Add a delay after processing each store (or its failure) to reduce overall request rate
-    await new Promise(r => setTimeout(r, 1000)); // Reverted from 2000ms back to 1 second
+    await new Promise(r => setTimeout(r, 2000)); // Increased store delay to 2000ms to respect rate limits
   })));
 
   console.log('✅ All stores processed.');
