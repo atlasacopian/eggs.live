@@ -406,6 +406,11 @@ async function fetchStoreEggs (location_id_raw) {
       }
       // ADDED LOGS END
       console.warn('Store fail', s.location_id, err.message);
+      // If this was a rate-limit error, apply a longer global pause before continuing
+      if (err.message.includes('Status: 429')) {
+        console.log('Global rate-limit hit; pausing for 60 seconds before continuing...');
+        await new Promise(r => setTimeout(r, 60000));
+      }
     }
     // Add a delay after processing each store (or its failure) to reduce overall request rate
     await new Promise(r => setTimeout(r, 2000)); // Increased store delay to 2000ms to respect rate limits
