@@ -85,7 +85,12 @@ async function fetchWithRetry(url, options = {}, maxAttempts = 3) {
     const res = await fetch(url, options);
     if (res.ok) return res; // success
 
-    // If we get 429 (rate limit) or 5xx, wait and retry
+    // If first response is 429, skip further retries to avoid long waits on permanently rate-limited stores
+    if (res.status === 429 && attempt === 1) {
+      return res; // caller will handle as failure and move on quickly
+    }
+
+    // For 5xx or subsequent 429s, wait and retry
     if (res.status === 429 || (res.status >= 500 && res.status < 600)) {
       const waitMs = 2000 * attempt; // 2s, 4s, 6s
       console.warn(`fetchWithRetry: attempt ${attempt} failed (${res.status}). Retrying after ${waitMs} ms`);
