@@ -22,7 +22,7 @@ jobs:
       KROGER_CLIENT_ID: ${{ secrets.KROGER_CLIENT_ID }}
       KROGER_CLIENT_SECRET: ${{ secrets.KROGER_CLIENT_SECRET }}
       # delays only; START/END will be set in a step
-      STORE_DELAY_MS: 2000  # safe because only one slice runs at a time
+      STORE_DELAY_MS: 7000  # 1 request every 7s ≈ 500 req/hr
       PAGE_DELAY_MS: 4000
     steps:
       - uses: actions/checkout@v4
