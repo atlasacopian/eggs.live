@@ -1,0 +1,46 @@
+name: Fetch Kroger Egg Prices - Sliced
+
+on:
+  workflow_dispatch:
+  schedule:
+    # kick off every night at 00:00 LA time
+    - cron: '0 7 * * *'
+
+jobs:
+  fetch-sliced:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        slice: [0,1,2,3,4,5,6,7,8,9]
+    concurrency:
+      group: kroger-slice-${{ matrix.slice }}
+      cancel-in-progress: false
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      KROGER_CLIENT_ID: ${{ secrets.KROGER_CLIENT_ID }}
+      KROGER_CLIENT_SECRET: ${{ secrets.KROGER_CLIENT_SECRET }}
+      # delays only; START/END will be set in a step
+      STORE_DELAY_MS: 4000
+      PAGE_DELAY_MS: 4000
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Set slice-range env vars & stagger
+        run: |
+          START=$(( ${{ matrix.slice }} * 300 ))
+          END=$(( START + 300 ))
+          echo "Slice ${{ matrix.slice }} => START_AT=$START END_AT=$END"
+          echo "START_AT=$START" >> $GITHUB_ENV
+          echo "END_AT=$END" >> $GITHUB_ENV
+          # stagger: 5 minutes per slice index
+          SLEEP=$(( ${{ matrix.slice }} * 300 ))
+          echo "Sleeping $SLEEP seconds before starting slice..." && sleep $SLEEP
+      - name: Fetch Kroger Egg Prices (slice ${{ matrix.slice }})
+        run: node scripts/fetch-kroger-egg-prices.js

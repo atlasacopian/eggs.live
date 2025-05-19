@@ -104,6 +104,10 @@ async function fetchWithRetry(url, options = {}, maxAttempts = 3) {
   return await fetch(url, options); // final attempt (returns whatever response we get)
 }
 
+// --- configurable delays (defaults keep previous behaviour) ---
+const STORE_DELAY_MS = Number(process.env.STORE_DELAY_MS ?? '2000');
+const PAGE_DELAY_MS  = Number(process.env.PAGE_DELAY_MS  ?? '2000');
+
 async function fetchStoreEggs (location_id_raw) {
   const location_id = normalizeLocationId(location_id_raw);
   const token = await getToken();
@@ -219,7 +223,7 @@ async function fetchStoreEggs (location_id_raw) {
     offset += 50;
     // Kroger API limit: The 'filter.offset' parameter must be less than 250.
     if (offset >= 250) break;
-    await new Promise(r => setTimeout(r, 2000)); // Increased pagination delay to 2000ms to respect rate limits
+    await new Promise(r => setTimeout(r, PAGE_DELAY_MS));
   }
   return buckets;
 }
@@ -412,7 +416,7 @@ async function fetchStoreEggs (location_id_raw) {
       }
     }
     // Add a delay after processing each store (or its failure) to reduce overall request rate
-    await new Promise(r => setTimeout(r, 2000)); // Increased store delay to 2000ms to respect rate limits
+    await new Promise(r => setTimeout(r, STORE_DELAY_MS));
   })));
 
   console.log('✅ All stores processed.');
