@@ -116,15 +116,14 @@ async function fetchStoreEggs (location_id_raw) {
   base.searchParams.set('filter.term', 'eggs');
   base.searchParams.set('filter.limit', '50');
 
-  let start = 1;
+  let offset = 0;
   const buckets = { regular: [], organic: [], _allMatched: [] };
 
   while (true) {
     // Clone base URL for current page fetch to ensure filter.start is managed cleanly
     const currentUrl = new URL(base);
-    if (start > 1) {
-      currentUrl.searchParams.set('filter.start', String(start));
-    }
+    // Always set the offset for pagination
+    currentUrl.searchParams.set('filter.offset', String(offset));
 
     console.log(`fetchStoreEggs: Attempting to fetch URL: ${currentUrl.toString()}`); // Log the exact URL
 
@@ -216,10 +215,10 @@ async function fetchStoreEggs (location_id_raw) {
     }
 
     if (products.length < 50) break; // Last page if fewer than limit items returned
-    start += 50;
-    // Kroger API limit: The 'filter.start' parameter must be between 1 and 250.
-    // If the next start value would exceed 250, break the loop.
-    if (start > 250) break;
+    // Advance offset for next page
+    offset += 50;
+    // Kroger API limit: The 'filter.offset' parameter must be less than 250.
+    if (offset >= 250) break;
     await new Promise(r => setTimeout(r, 2000)); // Increased pagination delay to 2000ms to respect rate limits
   }
   return buckets;
