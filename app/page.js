@@ -7,6 +7,7 @@ import Header from '../components/Header'
 import LocationPrompt from '../components/LocationPrompt'
 import EggCartonScene from '../components/EggCartonScene'
 import TickerStrip from '../components/TickerStrip'
+import NewsStrip from '../components/NewsStrip'
 
 export default function Home() {
   const router = useRouter()
@@ -38,49 +39,52 @@ export default function Home() {
       <Head>
         <link rel="preload" href="/egg.glb" as="fetch" type="model/gltf-binary" crossOrigin="anonymous" />
       </Head>
-      <main
-        className="main"
-        style={{
-          color: '#000',
-          position: 'relative',
-          background: '#fff',
-          minHeight: '100vh',
-          overflow: 'hidden',
-        }}
-      >
-        <div style={{ position: 'absolute', top: 16, left: 16, right: 16, zIndex: 10 }}>
-          <TickerStrip
-            text="NATIONAL AVG: REG DOZEN $6.23 <span style='color: #00FF00;'>↑</span> | ORG DOZEN $6.98 <span style='color: #FF0000;'>↓</span>  🥚  123 STORES | 45 ZIP CODES 🥚"
-            fontSize="10px"
-            overrideBackgroundColor="#fff"
-            overrideBorderColor="#000"
-          />
-        </div>
-        {/* 3D Egg scene on top */}
-        <EggCartonScene />
-        {/* Main header positioned below ticker */}
-        <div
-          style={{
-            position: 'absolute',
-            top: '160px', /* Moved down further to clear ticker completely */
-            left: 0,
-            right: 0,
-            zIndex: 50,
-            display: 'flex',
-            justifyContent: 'center',
-            padding: '0 16px',
-            boxSizing: 'border-box'
-          }}
-          className="header-container"
-        >
-          <Header />
-        </div>
-        <LocationPrompt 
-          className="location-prompt-container"
-          onUseLocation={handleUseLocation} 
-          onEnterZip={handleEnterZip} 
+    <main
+      className="main"
+      style={{
+        color: '#000',
+        position: 'relative',
+        background: '#fff',
+        minHeight: '100vh',
+        overflow: 'hidden',
+      }}
+    >
+      <div style={{ position: 'absolute', top: 16, left: 16, right: 16, zIndex: 10 }}>
+        <TickerStrip
+          text="NATIONAL AVG: REG DOZEN $6.23 <span style='color: #00FF00;'>↑</span> | ORG DOZEN $6.98 <span style='color: #FF0000;'>↓</span>  🥚  123 STORES | 45 ZIP CODES 🥚"
+          fontSize="10px"
+          overrideBackgroundColor="#fff"
+          overrideBorderColor="#000"
         />
-      </main>
+        <div style={{ marginTop: '4px' }}>
+          <NewsStrip fontSize="10px" />
+        </div>
+      </div>
+      {/* 3D Egg scene on top */}
+      <EggCartonScene />
+      {/* Main header positioned below ticker */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '160px', /* Moved down further to clear ticker completely */
+          left: 0,
+          right: 0,
+          zIndex: 50,
+          display: 'flex',
+          justifyContent: 'center',
+          padding: '0 16px',
+          boxSizing: 'border-box'
+        }}
+        className="header-container"
+      >
+        <Header />
+      </div>
+      <LocationPrompt 
+        className="location-prompt-container"
+        onUseLocation={handleUseLocation} 
+        onEnterZip={handleEnterZip} 
+      />
+    </main>
     </>
   )
 } 
