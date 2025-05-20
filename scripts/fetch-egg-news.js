@@ -19,18 +19,22 @@ const PRIORITY_SOURCES = [
   'Reuters','Associated Press','AP','Bloomberg','The Wall Street Journal','WSJ','The New York Times','CNN','BBC','NBC News','CBS News','ABC News','Fox News','Financial Times','CNBC','The Washington Post'
 ];
 
+const BAKING_REGEX = /(bake|baking|recipe|cookies?|cake|cakes|bread|brownies?|muffins?|cupcakes?)/i;
+
 (async () => {
   try {
     const res = await fetch(endpoint);
     if (!res.ok) throw new Error(`GNews ${res.status}`);
     const data = await res.json();
-    let articles = (data.articles || []).map(({ title, url, publishedAt, source }) => ({
-      id: crypto.createHash('sha256').update(url).digest('hex').slice(0, 32),
-      title,
-      url,
-      published_at: publishedAt,
-      source: source?.name || null
-    }));
+    let articles = (data.articles || [])
+      .filter(a => !BAKING_REGEX.test(a.title))
+      .map(({ title, url, publishedAt, source }) => ({
+        id: crypto.createHash('sha256').update(url).digest('hex').slice(0, 32),
+        title,
+        url,
+        published_at: publishedAt,
+        source: source?.name || null
+      }));
     // Prioritize major outlets first
     articles = articles.sort((a,b)=>{
       const ia = PRIORITY_SOURCES.findIndex(s=>a.source && a.source.toLowerCase().includes(s.toLowerCase()));

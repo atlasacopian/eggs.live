@@ -21,12 +21,15 @@ export async function GET() {
       .order('published_at', { ascending: false })
       .limit(20);
     if (error) throw error;
-    let articles = (data || []).map(r=>({
-      title: r.title,
-      url: r.url,
-      publishedAt: r.published_at,
-      source: r.source
-    }));
+    const BAKING_REGEX = /(bake|baking|recipe|cookies?|cake|cakes|bread|brownies?|muffins?|cupcakes?)/i;
+    let articles = (data || [])
+      .filter(r => !BAKING_REGEX.test(r.title))
+      .map(r=>({
+        title: r.title,
+        url: r.url,
+        publishedAt: r.published_at,
+        source: r.source
+      }));
     // prioritise major outlets
     articles = articles.sort((a,b)=>{
       const ia = PRIORITY_SOURCES.findIndex(s=>a.source && a.source.toLowerCase().includes(s.toLowerCase()));
