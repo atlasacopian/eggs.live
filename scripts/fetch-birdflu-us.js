@@ -12,11 +12,15 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
 }
 const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-const CSV_URL = 'https://www.aphis.usda.gov/animal_health/downloads/animal_disease_status/hpai-detections-commercial-backyard-flocks.csv';
+const CSV_URL = 'https://publicdashboards.dl.usda.gov/t/MRP_PUB/views/VS_Avian_HPAIConfirmedDetections2022/HPAI2022ConfirmedDetections?%3Aformat=csv';
 
 (async () => {
   try {
     const res = await fetch(CSV_URL);
+    if (res.status === 404) {
+      console.warn(`Bird flu ingestion skipped: CSV not found (404): ${CSV_URL}`);
+      process.exit(0);
+    }
     if (!res.ok) throw new Error(`CSV download ${res.status}`);
     const csvText = await res.text();
     const { data } = Papa.parse(csvText, { header: true, skipEmptyLines: true });
