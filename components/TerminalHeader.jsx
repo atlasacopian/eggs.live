@@ -1,7 +1,12 @@
+'use client'
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
+  const router = useRouter();
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
+  const [editingZip, setEditingZip] = useState(false);
+  const [tempZip, setTempZip] = useState(zipCode || '');
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -9,6 +14,8 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
     }, 1000);
     return () => clearInterval(timer); // Cleanup the interval on component unmount
   }, []);
+
+  useEffect(()=>{setTempZip(zipCode||'')},[zipCode]);
 
   const formatDateTime = (date) => {
     // Format date as MM-DD-YYYY
@@ -55,6 +62,7 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
     fontWeight: 'bold',
     color: '#fff',
     marginRight: '12px',
+    textDecoration:'none'
   };
 
   const buttonGroupStyle = {
@@ -110,7 +118,7 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
   return (
     <div style={headerStyle}>
       <div style={infoGroupStyle}>
-        <span style={eggsLiveStyle}>EGGS.LIVE</span>
+        <a href="/" style={eggsLiveStyle}>EGGS.LIVE</a>
       </div>
 
       <div style={buttonGroupStyle}>
@@ -130,7 +138,20 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
 
       <div style={dateTimeStyle}>
         <span>{formatDateTime(currentDateTime)}</span>
-        <span style={{ marginLeft: 16, fontWeight: 600 }}>ZIP CODE: {zipCode || 'N/A'}</span>
+        {editingZip ? (
+          <input
+            value={tempZip}
+            onChange={e=>setTempZip(e.target.value)}
+            onBlur={()=>setEditingZip(false)}
+            onKeyDown={e=>{if(e.key==='Enter'){setEditingZip(false); if(tempZip.match(/^\d{5}$/)){router.push(`/${tempZip}`)}}}}
+            style={{width:70,background:'#000',color:'#fff',border:'1px solid #555',fontFamily:'Menlo, monospace',fontSize:'0.8rem',marginLeft:8}}
+            autoFocus
+          />
+        ) : (
+          <span style={{ marginLeft: 16, fontWeight: 600, cursor:'pointer' }} onClick={()=>setEditingZip(true)}>
+            ZIP CODE: {zipCode || 'N/A'}
+          </span>
+        )}
       </div>
     </div>
   );
