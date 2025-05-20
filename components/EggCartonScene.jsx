@@ -7,13 +7,13 @@ import { Center, Environment, ContactShadows } from '@react-three/drei'
 import * as THREE from 'three'
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
-// Preload the new, smaller egg GLB so it's ready when the scene mounts
-useGLTF.preload('/new%20egg.glb')
+// Preload the Draco-compressed egg GLB so it's ready when the scene mounts
+useGLTF.preload('/egg_draco.glb', true)
 
 // Update ModelPrimitive for immediate load
 const ModelPrimitive = forwardRef((props, ref) => {
   // Load GLB model using useGLTF and clone directly for fast initial rendering
-  const gltf = useGLTF('/new%20egg.glb')
+  const gltf = useGLTF('/egg_draco.glb', true)
 
   const model = useMemo(() => {
     // Clone the scene so each instance has its own copy

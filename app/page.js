@@ -36,7 +36,7 @@ export default function Home() {
     <>
       {/* Preload the 3D model early to start fetching before React mounts the scene */}
       <Head>
-        <link rel="preload" href="/new%20egg.glb" as="fetch" type="model/gltf-binary" crossOrigin="anonymous" />
+        <link rel="preload" href="/egg_draco.glb" as="fetch" type="model/gltf-binary" crossOrigin="anonymous" />
       </Head>
       <main
         className="main"
