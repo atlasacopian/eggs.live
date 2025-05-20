@@ -281,62 +281,9 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
               <UsdaPriceChart />
             </TerminalTile>
 
-            {/* National View - Row 2 */}
-            <TerminalTile title="National Supply Index" span={getSpan(3)} style={{minHeight: isMobile ? '200px' : 'auto'}}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={[{name: 'Supply/Demand', supply: 78, demand: 65}]} layout="vertical" margin={{ top: 20, right: 20, bottom: 0, left: isMobile ? 5 : 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#222" />
-                  <XAxis type="number" hide />
-                  <YAxis type="category" dataKey="name" hide/>
-                  <Tooltip wrapperStyle={{zIndex:1000}} />
-                  <Bar dataKey="supply" barSize={isMobile ? 15 : 20} fill="#1e90ff" name="Supply Index" />
-                  <Bar dataKey="demand" barSize={isMobile ? 15 : 20} fill="#00c800" name="Demand Index" />
-                </BarChart>
-              </ResponsiveContainer>
-            </TerminalTile>
-            <TerminalTile title="Egg Type Distribution (Natl)" span={getSpan(3)} style={{minHeight: isMobile ? '200px' : 'auto'}}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-                  <Pie data={[{name: 'Cage-Free', value: 45}, {name: 'Conventional', value: 45}, {name: 'Organic', value: 10}]} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={isMobile ? 40 : 60} innerRadius={isMobile ? 20 : 30} labelLine={false} label={({ name, percent }) => isMobile ? `${(percent * 100).toFixed(0)}%` : `${name} ${(percent * 100).toFixed(0)}%` } >
-                    {pieData.map((entry, index) => (
-                      <Cell key={`cell-nat-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip/>
-                </PieChart>
-              </ResponsiveContainer>
-            </TerminalTile>
-            
-            {/* National View - Row 3 */}
-            <TerminalTile title="Economic Factors" span={getSpan(3)} style={{minHeight: isMobile ? '150px' : 'auto'}}>
-                <ul style={{listStyleType: 'none', padding: '5px 10px', margin: 0, fontSize: isMobile ? '0.75em' : '0.85em'}}>
-                    <li>CPI (Eggs): <span style={{color: Math.random() > 0.5 ? '#0f0' : '#f00'}}>+1.2% MoM</span></li>
-                    <li>Feed Cost Index (Soy): <span style={{color: Math.random() > 0.5 ? '#0f0' : '#f00'}}>-0.5% WoW</span></li>
-                    <li>Retailer Sentiment: <span style={{color: '#ffc107'}}>Cautiously Optimistic</span></li>
-                     <li>Fuel Price (Diesel Avg): <span style={{color: Math.random() > 0.5 ? '#0f0' : '#f00'}}>$4.05/gal</span></li>
-                </ul>
-            </TerminalTile>
-             <TerminalTile title="USDA Market Highlights" span={getSpan(3)} style={{minHeight: isMobile ? '150px' : 'auto'}}>
-                 <div style={{padding: '8px', fontSize: isMobile ? '0.7em' : '0.75em', color: '#ccc', overflowY: 'auto', maxHeight: isMobile ? '120px' :'130px'}}>
-                    <p><strong>MIDWEST:</strong> Prices for Grade A large eggs are mostly steady. Demand is moderate for retail.</p>
-                    <p><strong>NORTHEAST:</strong> Offerings are light. Demand is fairly good. Prices firm.</p>
-                    <p><strong>HPAI Update:</strong> No new commercial outbreaks reported this week.</p>
-                 </div>
-            </TerminalTile>
-
-            {/* National View - Row 4 */}
-            <TerminalTile title="National Egg Ticker" span={getSpan(3)} style={{minHeight: isMobile ? '80px' : 'auto'}}>
-              <marquee style={{ whiteSpace: 'nowrap', paddingTop: '10px', fontSize: isMobile ? '0.75rem' : '0.9em' }}>
-                {['US_EGG_FUTR', 'CAGED_NATL', 'CAGEFREE_NATL', 'ORG_NATL', 'FEED_COST_IDX'].map(sym => (
-                  <span key={sym} style={{ marginRight: 24, color: Math.random() > 0.5 ? '#0f0' : '#f00' }}>
-                    {sym} {(Math.random() * 150 + 50).toFixed(2)} {Math.random() > 0.5 ? '▲' : '▼'} {(Math.random() * 1.5).toFixed(2)}%
-                  </span>
-                ))}
-              </marquee>
-            </TerminalTile>
-            
+            {/* National View - Row 2: Market indices */}
             {/* Shell Market Index */}
-            <TerminalTile title="Shell Market Index" span={getSpan(3)} style={{minHeight: isMobile ? '120px' : 'auto'}}>
+            <TerminalTile title="Shell Market Index" span={getSpan(2)} style={{minHeight: isMobile ? '120px' : 'auto'}}>
               <div style={{ padding: 8, fontFamily: 'Menlo, monospace', fontSize: isMobile ? '0.75rem' : '0.85rem' }}>
                 {eggStocks === null ? (
                   <div style={{ color: '#666' }}>Loading...</div>
@@ -349,13 +296,8 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
                         {stk.symbol} {stk.price.toFixed(2)} {stk.change_pct >= 0 ? '▲' : '▼'} {Math.abs(stk.change_pct).toFixed(2)}%
                       </div>
                     ))}
-                    {/* Timestamp */}
                     <div style={{ color: '#666', fontSize: '0.7em', marginTop: 4 }}>
-                      Last update {(() => {
-                        const latest = eggStocks.reduce((a, b) => new Date(a.updated_at) > new Date(b.updated_at) ? a : b);
-                        const dt = new Date(latest.updated_at);
-                        return dt.toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'America/New_York', hour12: false }) + ' ET';
-                      })()}
+                      Last update {(() => {const latest=eggStocks.reduce((a,b)=> new Date(a.updated_at)>new Date(b.updated_at)?a:b);const dt=new Date(latest.updated_at);return dt.toLocaleString('en-US',{hour:'2-digit',minute:'2-digit',timeZone:'America/New_York',hour12:false})+' ET';})()}
                     </div>
                   </>
                 )}
@@ -363,7 +305,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
             </TerminalTile>
 
             {/* Retailer Stocks */}
-            <TerminalTile title="Retailer Stocks" span={getSpan(3)} style={{minHeight: isMobile ? '120px' : 'auto'}}>
+            <TerminalTile title="Retailer Stocks" span={getSpan(2)} style={{minHeight: isMobile ? '120px' : 'auto'}}>
               <div style={{ padding: 8, fontFamily: 'Menlo, monospace', fontSize: isMobile ? '0.75rem' : '0.85rem' }}>
                 {retailerStocks === null ? (<div style={{color:'#666'}}>Loading...</div>) : retailerStocks.length===0 ? (<div style={{color:'#666'}}>No data</div>) : (<>
                   {retailerStocks.map(rs=> (
@@ -378,19 +320,47 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
             </TerminalTile>
 
             {/* Bird-Flu Impact */}
-            <TerminalTile title="Bird-Flu Impact" span={getSpan(3)} style={{minHeight: isMobile ? '100px' : 'auto'}}>
+            <TerminalTile title="Bird-Flu Impact" span={getSpan(2)} style={{minHeight: isMobile ? '120px' : 'auto'}}>
               <div style={{padding: 8, fontFamily: 'Menlo, monospace', fontSize: isMobile ? '0.75rem' : '0.85rem', color: '#ccc'}}>
                 {fluStats ? (
                   <>
-                    Today: <span style={{color:'#ffeb3b'}}>{fluStats.todayOutbreaks}</span> outbreaks / <span style={{color:'#ffeb3b'}}>{fluStats.todayBirds.toLocaleString()}</span> birds<br/>
-                    7-day: <span style={{color:'#ffeb3b'}}>{fluStats.weekOutbreaks}</span> outbreaks / <span style={{color:'#ffeb3b'}}>{fluStats.weekBirds.toLocaleString()}</span> birds<br/>
-                    YTD Culled: <span style={{color:'#f00'}}>{fluStats.birdsCulledYTD.toLocaleString()}</span> birds<br/>
-                    Pending: <span style={{color:'#FFA500'}}>{fluStats.birdsPending.toLocaleString()}</span> birds
+                    Today: <span style={{color:'#ffeb3b'}}>{fluStats.todayOutbreaks}</span> / <span style={{color:'#ffeb3b'}}>{fluStats.todayBirds.toLocaleString()}</span> birds<br/>
+                    7-day: <span style={{color:'#ffeb3b'}}>{fluStats.weekOutbreaks}</span> / <span style={{color:'#ffeb3b'}}>{fluStats.weekBirds.toLocaleString()}</span><br/>
+                    YTD Culled: <span style={{color:'#f00'}}>{fluStats.birdsCulledYTD.toLocaleString()}</span><br/>
+                    Pending: <span style={{color:'#FFA500'}}>{fluStats.birdsPending.toLocaleString()}</span>
                   </>
                 ) : 'Loading...'}
               </div>
             </TerminalTile>
 
+            {/* National Supply Index */}
+            <TerminalTile title="National Supply Index" span={getSpan(3)} style={{minHeight: isMobile ? '200px' : 'auto'}}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={[{name: 'Supply/Demand', supply: 78, demand: 65}]} layout="vertical" margin={{ top: 20, right: 20, bottom: 0, left: isMobile ? 5 : 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#222" />
+                  <XAxis type="number" hide />
+                  <YAxis type="category" dataKey="name" hide/>
+                  <Tooltip wrapperStyle={{zIndex:1000}} />
+                  <Bar dataKey="supply" barSize={isMobile ? 15 : 20} fill="#1e90ff" name="Supply Index" />
+                  <Bar dataKey="demand" barSize={isMobile ? 15 : 20} fill="#00c800" name="Demand Index" />
+                </BarChart>
+              </ResponsiveContainer>
+            </TerminalTile>
+
+            {/* National View - Row 4 */}
+            <TerminalTile title="Egg Type Distribution (Natl)" span={getSpan(3)} style={{minHeight: isMobile ? '200px' : 'auto'}}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+                  <Pie data={[{name: 'Cage-Free', value: 45}, {name: 'Conventional', value: 45}, {name: 'Organic', value: 10}]} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={isMobile ? 40 : 60} innerRadius={isMobile ? 20 : 30} labelLine={false} label={({ name, percent }) => isMobile ? `${(percent * 100).toFixed(0)}%` : `${name} ${(percent * 100).toFixed(0)}%` } >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-nat-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip/>
+                </PieChart>
+              </ResponsiveContainer>
+            </TerminalTile>
+            
             {/* National View - Row 5 (More filler to make it distinct) */}
             <TerminalTile title="Global Production Snapshot" span={getSpan(2)} style={{minHeight: isMobile ? '100px' : 'auto'}}>
                  <div style={{padding: 8, textAlign: 'center', fontSize: isMobile ? '0.9em' : '1em', color: '#87CEEB', paddingTop: '15px'}}>
