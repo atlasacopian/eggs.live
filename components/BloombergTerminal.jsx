@@ -311,13 +311,23 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
                 {eggStocks === null ? (
                   <div style={{ color: '#666' }}>Loading...</div>
                 ) : eggStocks.length === 0 ? (
-                  <div style={{ color: '#666' }}>Market closed / no data</div>
+                  <div style={{ color: '#666' }}>No data</div>
                 ) : (
-                  eggStocks.map((stk) => (
-                    <div key={stk.symbol} style={{ color: stk.changePct >= 0 ? '#0f0' : '#f00' }}>
-                      {stk.symbol} {stk.price.toFixed(2)} {stk.changePct >= 0 ? '▲' : '▼'} {Math.abs(stk.changePct).toFixed(2)}%
+                  <>
+                    {eggStocks.map((stk) => (
+                      <div key={stk.symbol} style={{ color: stk.change_pct >= 0 ? '#0f0' : '#f00' }}>
+                        {stk.symbol} {stk.price.toFixed(2)} {stk.change_pct >= 0 ? '▲' : '▼'} {Math.abs(stk.change_pct).toFixed(2)}%
+                      </div>
+                    ))}
+                    {/* Timestamp */}
+                    <div style={{ color: '#666', fontSize: '0.7em', marginTop: 4 }}>
+                      Last update {(() => {
+                        const latest = eggStocks.reduce((a, b) => new Date(a.updated_at) > new Date(b.updated_at) ? a : b);
+                        const dt = new Date(latest.updated_at);
+                        return dt.toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'America/New_York', hour12: false }) + ' ET';
+                      })()}
                     </div>
-                  ))
+                  </>
                 )}
               </div>
             </TerminalTile>
