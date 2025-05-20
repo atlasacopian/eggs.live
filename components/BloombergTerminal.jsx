@@ -18,7 +18,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
   const [hoveredStore, setHoveredStore] = useState(null);
   const [priceType, setPriceType] = useState('regular');
   const [isMobile, setIsMobile] = useState(false);
-  const [eggStocks, setEggStocks] = useState([]);
+  const [eggStocks, setEggStocks] = useState(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -47,6 +47,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
         const url = `https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/tickers?tickers=${EGG_STOCK_TICKERS.join(',')}&apiKey=${apiKey}`;
         const res = await fetch(url);
         const json = await res.json();
+        console.log('Polygon snapshot response', json); // debug
         if (json && json.status === 'OK' && Array.isArray(json.tickers)) {
           const mapped = json.tickers.map((t) => {
             const price = t.lastTrade?.p || t.day?.c || 0;
@@ -56,6 +57,10 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
           });
           console.table(mapped); // Dev console output
           setEggStocks(mapped);
+        }
+        // If status OK but no tickers, set to empty array
+        if (json && Array.isArray(json.tickers) && json.tickers.length === 0) {
+          setEggStocks([]);
         }
       } catch (err) {
         console.error('Egg stock fetch error', err);
@@ -315,8 +320,10 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
             {/* Egg Stocks from Polygon */}
             <TerminalTile title="Egg Stocks (Live)" span={getSpan(3)} style={{minHeight: isMobile ? '120px' : 'auto'}}>
               <div style={{ padding: 8, fontFamily: 'Menlo, monospace', fontSize: isMobile ? '0.75rem' : '0.85rem' }}>
-                {eggStocks.length === 0 ? (
+                {eggStocks === null ? (
                   <div style={{ color: '#666' }}>Loading...</div>
+                ) : eggStocks.length === 0 ? (
+                  <div style={{ color: '#666' }}>Market closed / no data</div>
                 ) : (
                   eggStocks.map((stk) => (
                     <div key={stk.symbol} style={{ color: stk.changePct >= 0 ? '#0f0' : '#f00' }}>
