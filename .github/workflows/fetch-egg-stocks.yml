@@ -2,8 +2,8 @@ name: Fetch Egg Stock Quotes
 
 on:
   schedule:
-    # Every 30 minutes
-    - cron: '*/30 * * * *'
+    # Every 30 minutes during US market hours (14:30–21:00 UTC, roughly 09:30–16:00 ET)
+    - cron: '0,30 14-21 * * 1-5'
   workflow_dispatch:
 
 jobs:
