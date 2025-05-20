@@ -35,6 +35,9 @@ export default function EggNewsPanel({ fontSize = '0.8rem' }) {
           <a href={a.url} target="_blank" rel="noopener noreferrer" style={{ color: '#00c800', textDecoration: 'none' }}>
             {a.title.length > 120 ? a.title.slice(0, 117) + '…' : a.title}
           </a>
+          <span style={{ color: '#999', marginLeft: 6, fontSize: '0.7em' }}>
+            {a.source}
+          </span>
           <span style={{ color: '#666', marginLeft: 4, fontSize: '0.7em' }}>
             {new Date(a.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
           </span>
