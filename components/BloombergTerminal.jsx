@@ -382,9 +382,10 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
               <div style={{padding: 8, fontFamily: 'Menlo, monospace', fontSize: isMobile ? '0.75rem' : '0.85rem', color: '#ccc'}}>
                 {fluStats ? (
                   <>
-                    Today: <span style={{color: '#ffeb3b'}}>{fluStats.todayTotal.toLocaleString()}</span> birds<br/>
-                    7-day: <span style={{color: '#ffeb3b'}}>{fluStats.weekTotal.toLocaleString()}</span> birds<br/>
-                    Culled YTD: <span style={{color: '#f00'}}>{fluStats.culledTotal.toLocaleString()}</span>
+                    Today: <span style={{color:'#ffeb3b'}}>{fluStats.todayOutbreaks}</span> outbreaks / <span style={{color:'#ffeb3b'}}>{fluStats.todayBirds.toLocaleString()}</span> birds<br/>
+                    7-day: <span style={{color:'#ffeb3b'}}>{fluStats.weekOutbreaks}</span> outbreaks / <span style={{color:'#ffeb3b'}}>{fluStats.weekBirds.toLocaleString()}</span> birds<br/>
+                    YTD Culled: <span style={{color:'#f00'}}>{fluStats.birdsCulledYTD.toLocaleString()}</span> birds<br/>
+                    Pending: <span style={{color:'#FFA500'}}>{fluStats.birdsPending.toLocaleString()}</span> birds
                   </>
                 ) : 'Loading...'}
               </div>
