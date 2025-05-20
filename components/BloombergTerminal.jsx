@@ -298,6 +298,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
                     ))}
                     <div style={{ color: '#666', fontSize: '0.7em', marginTop: 4 }}>
                       Last update {(() => {const latest=eggStocks.reduce((a,b)=> new Date(a.updated_at)>new Date(b.updated_at)?a:b);const dt=new Date(latest.updated_at);return dt.toLocaleString('en-US',{hour:'2-digit',minute:'2-digit',timeZone:'America/New_York',hour12:false})+' ET';})()}
+                      <div style={{fontSize:'0.6em',marginTop:2}}>Source: Polygon.io</div>
                     </div>
                   </>
                 )}
@@ -314,6 +315,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
                     </div>))}
                   <div style={{color:'#666',fontSize:'0.7em',marginTop:4}}>
                      Last update {(() => {const latest = retailerStocks.reduce((a,b)=> new Date(a.updated_at)>new Date(b.updated_at)?a:b); const dt=new Date(latest.updated_at); return dt.toLocaleString('en-US',{hour:'2-digit',minute:'2-digit',timeZone:'America/New_York',hour12:false})+' ET';})()}
+                     <div style={{fontSize:'0.6em',color:'#666',marginTop:2}}>Source: Polygon.io</div>
                   </div>
                 </>)}
               </div>
@@ -328,6 +330,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
                     7-day: <span style={{color:'#ffeb3b'}}>{fluStats.weekOutbreaks}</span> / <span style={{color:'#ffeb3b'}}>{fluStats.weekBirds.toLocaleString()}</span><br/>
                     YTD Culled: <span style={{color:'#f00'}}>{fluStats.birdsCulledYTD.toLocaleString()}</span><br/>
                     Pending: <span style={{color:'#FFA500'}}>{fluStats.birdsPending.toLocaleString()}</span>
+                    <div style={{fontSize:'0.6em',color:'#666',marginTop:2}}>Source: USDA APHIS</div>
                   </>
                 ) : 'Loading...'}
               </div>
