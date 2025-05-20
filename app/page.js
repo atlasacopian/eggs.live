@@ -7,7 +7,6 @@ import Header from '../components/Header'
 import LocationPrompt from '../components/LocationPrompt'
 import EggCartonScene from '../components/EggCartonScene'
 import TickerStrip from '../components/TickerStrip'
-import NewsStrip from '../components/NewsStrip'
 
 export default function Home() {
   const router = useRouter()
@@ -56,9 +55,6 @@ export default function Home() {
           overrideBackgroundColor="#fff"
           overrideBorderColor="#000"
         />
-        <div style={{ marginTop: '4px' }}>
-          <NewsStrip fontSize="10px" />
-        </div>
       </div>
       {/* 3D Egg scene on top */}
       <EggCartonScene />

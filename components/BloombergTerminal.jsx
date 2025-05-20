@@ -6,6 +6,7 @@ import StoreList from './StoreList.jsx';
 import EggPriceChart from './EggPriceChart.jsx';
 import UsdaPriceChart from './UsdaPriceChart.jsx';
 import FredChart from './FredChart.jsx';
+import EggNewsPanel from './EggNewsPanel.jsx';
 
 const MOBILE_BREAKPOINT = 768;
 
@@ -321,6 +322,11 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
                 </>)}
                 <div style={{fontSize:'0.6em',color:'#666',marginTop:2}}>Source: Polygon.io</div>
               </div>
+            </TerminalTile>
+
+            {/* Egg Price News */}
+            <TerminalTile title="Egg Price News" span={getSpan(3)} style={{ minHeight: isMobile ? '160px' : 'auto' }}>
+              <EggNewsPanel fontSize={isMobile ? '0.75rem' : '0.85rem'} />
             </TerminalTile>
 
             {/* Bird-Flu Impact */}
