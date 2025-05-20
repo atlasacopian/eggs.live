@@ -17,6 +17,22 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY || !POLYGON_API_KEY) {
 
 const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
+// Helper: determine if NYSE market is open now (approx 9:30-16:00 ET)
+function marketIsOpen() {
+  const nyNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  const day = nyNow.getDay(); // 0 Sun ... 6 Sat
+  if (day === 0 || day === 6) return false; // weekend
+  const minutes = nyNow.getHours() * 60 + nyNow.getMinutes();
+  const open = 9 * 60 + 30; // 09:30
+  const close = 16 * 60 + 10; // small buffer past 16:00
+  return minutes >= open && minutes <= close;
+}
+
+if (!marketIsOpen()) {
+  console.log('Market closed – skipping Polygon fetch.');
+  process.exit(0);
+}
+
 // Tickers we care about (major companies that sell eggs)
 const TICKERS = ['CALM', 'POST', 'HRL'];
 
