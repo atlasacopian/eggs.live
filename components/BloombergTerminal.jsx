@@ -20,6 +20,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
   const [isMobile, setIsMobile] = useState(false);
   const [eggStocks, setEggStocks] = useState(null);
   const [retailerStocks, setRetailerStocks] = useState(null);
+  const [fluStats, setFluStats] = useState(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -72,6 +73,21 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
     }
     fetchRetailers();
     const id = setInterval(fetchRetailers, 60_000); return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    async function f() {
+      try {
+        const r = await fetch('/api/bird-flu-summary');
+        const j = await r.json();
+        setFluStats(j);
+      } catch (e) {
+        console.error('flu', e);
+      }
+    }
+    f();
+    const id = setInterval(f, 60_000 * 30);
+    return () => clearInterval(id);
   }, []);
 
   // Fake helper data --------------------------------------------------
@@ -358,6 +374,19 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
                      Last update {(() => {const latest = retailerStocks.reduce((a,b)=> new Date(a.updated_at)>new Date(b.updated_at)?a:b); const dt=new Date(latest.updated_at); return dt.toLocaleString('en-US',{hour:'2-digit',minute:'2-digit',timeZone:'America/New_York',hour12:false})+' ET';})()}
                   </div>
                 </>)}
+              </div>
+            </TerminalTile>
+
+            {/* Bird-Flu Impact */}
+            <TerminalTile title="Bird-Flu Impact" span={getSpan(3)} style={{minHeight: isMobile ? '100px' : 'auto'}}>
+              <div style={{padding: 8, fontFamily: 'Menlo, monospace', fontSize: isMobile ? '0.75rem' : '0.85rem', color: '#ccc'}}>
+                {fluStats ? (
+                  <>
+                    Today: <span style={{color: '#ffeb3b'}}>{fluStats.todayTotal.toLocaleString()}</span> birds<br/>
+                    7-day: <span style={{color: '#ffeb3b'}}>{fluStats.weekTotal.toLocaleString()}</span> birds<br/>
+                    Culled YTD: <span style={{color: '#f00'}}>{fluStats.culledTotal.toLocaleString()}</span>
+                  </>
+                ) : 'Loading...'}
               </div>
             </TerminalTile>
 
