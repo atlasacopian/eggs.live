@@ -37,38 +37,26 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
     }
   }, [localStores, selectedStore]);
 
-  // Fetch egg-related stock quotes from Polygon once on mount
+  // Fetch egg stock quotes from our serverless API route (data cached in Supabase)
   useEffect(() => {
-    const apiKey = process.env.NEXT_PUBLIC_POLYGON_API_KEY;
-    if (!apiKey) return;
-
     async function fetchEggStocks() {
       try {
-        const url = `https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/tickers?tickers=${EGG_STOCK_TICKERS.join(',')}&apiKey=${apiKey}`;
-        const res = await fetch(url);
+        const res = await fetch('/api/egg-stocks');
         const json = await res.json();
-        console.log('Polygon snapshot response', json); // debug
-        if (json && json.status === 'OK' && Array.isArray(json.tickers)) {
-          const mapped = json.tickers.map((t) => {
-            const price = t.lastTrade?.p || t.day?.c || 0;
-            const open = t.day?.o || price;
-            const changePct = open ? ((price - open) / open) * 100 : 0;
-            return { symbol: t.ticker, price, changePct };
-          });
-          console.table(mapped); // Dev console output
-          setEggStocks(mapped);
-        }
-        // If status OK but no tickers, set to empty array
-        if (json && Array.isArray(json.tickers) && json.tickers.length === 0) {
+        console.log('Egg stock API response', json);
+        if (json.data && Array.isArray(json.data)) {
+          setEggStocks(json.data);
+        } else {
           setEggStocks([]);
         }
       } catch (err) {
-        console.error('Egg stock fetch error', err);
+        console.error('Client egg stock fetch error', err);
+        setEggStocks([]);
       }
     }
 
     fetchEggStocks();
-    const id = setInterval(fetchEggStocks, 60_000); // refresh each minute
+    const id = setInterval(fetchEggStocks, 60_000);
     return () => clearInterval(id);
   }, []);
 
