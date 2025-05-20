@@ -9,12 +9,16 @@ import FredChart from './FredChart.jsx';
 
 const MOBILE_BREAKPOINT = 768;
 
+// Polygon egg-related tickers (Cal-Maine Foods etc.)
+const EGG_STOCK_TICKERS = ['CALM', 'POST', 'HRL'];
+
 export default function BloombergTerminal({ zipCode, localStores = [], nationalStats = {} }) {
   const [view, setView] = useState('local'); // local | national
   const [selectedStore, setSelectedStore] = useState(localStores[0] || null);
   const [hoveredStore, setHoveredStore] = useState(null);
   const [priceType, setPriceType] = useState('regular');
   const [isMobile, setIsMobile] = useState(false);
+  const [eggStocks, setEggStocks] = useState([]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -32,6 +36,36 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
       setSelectedStore(localStores[0]);
     }
   }, [localStores, selectedStore]);
+
+  // Fetch egg-related stock quotes from Polygon once on mount
+  useEffect(() => {
+    const apiKey = process.env.NEXT_PUBLIC_POLYGON_API_KEY;
+    if (!apiKey) return;
+
+    async function fetchEggStocks() {
+      try {
+        const url = `https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/tickers?tickers=${EGG_STOCK_TICKERS.join(',')}&apiKey=${apiKey}`;
+        const res = await fetch(url);
+        const json = await res.json();
+        if (json && json.status === 'OK' && Array.isArray(json.tickers)) {
+          const mapped = json.tickers.map((t) => {
+            const price = t.lastTrade?.p || t.day?.c || 0;
+            const open = t.day?.o || price;
+            const changePct = open ? ((price - open) / open) * 100 : 0;
+            return { symbol: t.ticker, price, changePct };
+          });
+          console.table(mapped); // Dev console output
+          setEggStocks(mapped);
+        }
+      } catch (err) {
+        console.error('Egg stock fetch error', err);
+      }
+    }
+
+    fetchEggStocks();
+    const id = setInterval(fetchEggStocks, 60_000); // refresh each minute
+    return () => clearInterval(id);
+  }, []);
 
   // Fake helper data --------------------------------------------------
   const randomSeries = (n = 30, min = 5, max = 10) =>
@@ -278,6 +312,21 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
               </marquee>
             </TerminalTile>
             
+            {/* Egg Stocks from Polygon */}
+            <TerminalTile title="Egg Stocks (Live)" span={getSpan(3)} style={{minHeight: isMobile ? '120px' : 'auto'}}>
+              <div style={{ padding: 8, fontFamily: 'Menlo, monospace', fontSize: isMobile ? '0.75rem' : '0.85rem' }}>
+                {eggStocks.length === 0 ? (
+                  <div style={{ color: '#666' }}>Loading...</div>
+                ) : (
+                  eggStocks.map((stk) => (
+                    <div key={stk.symbol} style={{ color: stk.changePct >= 0 ? '#0f0' : '#f00' }}>
+                      {stk.symbol} {stk.price.toFixed(2)} {stk.changePct >= 0 ? '▲' : '▼'} {Math.abs(stk.changePct).toFixed(2)}%
+                    </div>
+                  ))
+                )}
+              </div>
+            </TerminalTile>
+
             {/* National View - Row 5 (More filler to make it distinct) */}
             <TerminalTile title="Global Production Snapshot" span={getSpan(2)} style={{minHeight: isMobile ? '100px' : 'auto'}}>
                  <div style={{padding: 8, textAlign: 'center', fontSize: isMobile ? '0.9em' : '1em', color: '#87CEEB', paddingTop: '15px'}}>
