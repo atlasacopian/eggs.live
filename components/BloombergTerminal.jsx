@@ -19,6 +19,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
   const [priceType, setPriceType] = useState('regular');
   const [isMobile, setIsMobile] = useState(false);
   const [eggStocks, setEggStocks] = useState(null);
+  const [retailerStocks, setRetailerStocks] = useState(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -58,6 +59,19 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
     fetchEggStocks();
     const id = setInterval(fetchEggStocks, 60_000);
     return () => clearInterval(id);
+  }, []);
+
+  // Retailer stocks
+  useEffect(() => {
+    async function fetchRetailers() {
+      try {
+        const res = await fetch('/api/retailer-stocks');
+        const json = await res.json();
+        if (json.data && Array.isArray(json.data)) setRetailerStocks(json.data); else setRetailerStocks([]);
+      } catch (e) { console.error('retailer fetch', e); setRetailerStocks([]); }
+    }
+    fetchRetailers();
+    const id = setInterval(fetchRetailers, 60_000); return () => clearInterval(id);
   }, []);
 
   // Fake helper data --------------------------------------------------
@@ -329,6 +343,21 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
                     </div>
                   </>
                 )}
+              </div>
+            </TerminalTile>
+
+            {/* Retailer Stocks */}
+            <TerminalTile title="Retailer Stocks" span={getSpan(3)} style={{minHeight: isMobile ? '120px' : 'auto'}}>
+              <div style={{ padding: 8, fontFamily: 'Menlo, monospace', fontSize: isMobile ? '0.75rem' : '0.85rem' }}>
+                {retailerStocks === null ? (<div style={{color:'#666'}}>Loading...</div>) : retailerStocks.length===0 ? (<div style={{color:'#666'}}>No data</div>) : (<>
+                  {retailerStocks.map(rs=> (
+                    <div key={rs.symbol} style={{color: rs.change_pct>=0?'#0f0':'#f00'}}>
+                      {rs.symbol} {rs.price.toFixed(2)} {rs.change_pct>=0?'▲':'▼'} {Math.abs(rs.change_pct).toFixed(2)}%
+                    </div>))}
+                  <div style={{color:'#666',fontSize:'0.7em',marginTop:4}}>
+                     Last update {(() => {const latest = retailerStocks.reduce((a,b)=> new Date(a.updated_at)>new Date(b.updated_at)?a:b); const dt=new Date(latest.updated_at); return dt.toLocaleString('en-US',{hour:'2-digit',minute:'2-digit',timeZone:'America/New_York',hour12:false})+' ET';})()}
+                  </div>
+                </>)}
               </div>
             </TerminalTile>
 
