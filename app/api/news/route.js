@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-export const revalidate = 600; // revalidate at most every 10 minutes
+export const revalidate = 3600; // revalidate at most every hour
 
 export async function GET() {
   const { GNEWS_API_KEY } = process.env;
