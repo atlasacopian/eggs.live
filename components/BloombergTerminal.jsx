@@ -273,12 +273,14 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
         {view === 'national' && (
           <>
             {/* National View - Row 1 (5 columns total) */}
-            <TerminalTile title="Retail Egg CPI (FRED)" span={getSpan(3)} style={{minHeight: isMobile ? '250px' : '300px'}}>
+            <TerminalTile title="Retail Egg CPI" span={getSpan(3)} style={{minHeight: isMobile ? '250px' : '300px'}}>
               <FredChart symbol="APU0000703111" start="1980-01-01" />
+              <div style={{fontSize:'0.6em',color:'#666',marginTop:4}}>Source: FRED</div>
             </TerminalTile>
 
-            <TerminalTile title="USDA National Egg Prices (Weekly)" span={getSpan(3)} style={{minHeight: isMobile ? '250px' : '300px'}}>
+            <TerminalTile title="USDA National Egg Prices" span={getSpan(3)} style={{minHeight: isMobile ? '250px' : '300px'}}>
               <UsdaPriceChart />
+              <div style={{fontSize:'0.6em',color:'#666',marginTop:4}}>Source: USDA</div>
             </TerminalTile>
 
             {/* National View - Row 2: Market indices */}
