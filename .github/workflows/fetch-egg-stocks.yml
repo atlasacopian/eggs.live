@@ -2,8 +2,8 @@ name: Fetch Egg Stock Quotes
 
 on:
   schedule:
-    # Every 5 minutes (GitHub guarantees at best ~5-minute granularity)
-    - cron: '*/5 * * * *'
+    # Every 30 minutes
+    - cron: '*/30 * * * *'
   workflow_dispatch:
 
 jobs:
