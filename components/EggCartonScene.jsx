@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, Suspense, useState, useMemo, forwardRef } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { useGLTF, useTexture } from '@react-three/drei'
+import { useGLTF } from '@react-three/drei'
 import { Center, Environment, ContactShadows } from '@react-three/drei'
 import * as THREE from 'three'
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
@@ -14,47 +14,11 @@ useGLTF.preload('/new%20egg.glb')
 const ModelPrimitive = forwardRef((props, ref) => {
   // Load GLB model using useGLTF and clone directly for fast initial rendering
   const gltf = useGLTF('/new%20egg.glb')
-  // Load original bump and gloss textures from White_Egg
-  const [bumpMap, glossMap] = useTexture([
-    '/White_Egg/Egg_bump.png',
-    '/White_Egg/EGG_Gloss.png'
-  ])
-
-  // Tile textures to avoid UV seam
-  bumpMap.wrapS = bumpMap.wrapT = THREE.RepeatWrapping
-  glossMap.wrapS = glossMap.wrapT = THREE.RepeatWrapping
 
   const model = useMemo(() => {
-    const cloned = gltf.scene.clone()
-    cloned.traverse((child) => {
-      if (child.isMesh && child.material) {
-        // Weld and smooth geometry to remove UV seam
-        let geo = child.geometry.clone()
-        geo = mergeVertices(geo)
-        if (geo.attributes.uv) {
-          geo.setAttribute('uv2', geo.attributes.uv)
-        }
-        geo.computeVertexNormals()
-        child.geometry = geo
-        // Apply original egg material properties
-        const mat = child.material;
-        // Use base white diffuse from MTL Kd
-        mat.color = new THREE.Color(0.941177, 0.941177, 0.941177);
-        // Subtle bump for light surface detail
-        mat.bumpMap = bumpMap
-        mat.bumpScale = 0.06
-        // Remove roughnessMap to avoid visible seam artifacts from the map
-        delete mat.roughnessMap
-        mat.roughness = 0.85
-        // Egg is non-metallic
-        mat.metalness = 0.0
-        // Increase environment reflection intensity
-        mat.envMapIntensity = 1.0
-        mat.needsUpdate = true;
-      }
-    })
-    return cloned
-  }, [gltf, bumpMap, glossMap])
+    // Clone the scene so each instance has its own copy
+    return gltf.scene.clone()
+  }, [gltf])
 
   return <primitive ref={ref} object={model} scale={6} {...props} />
 })
