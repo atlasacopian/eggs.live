@@ -36,7 +36,7 @@ export default function EggNewsPanel({ fontSize = '0.8rem' }) {
             {a.title.length > 120 ? a.title.slice(0, 117) + '…' : a.title}
           </a>
           <span style={{ color: '#999', marginLeft: 6, fontSize: '0.7em' }}>
-            {a.source}
+            {a.source === 'Cable News Network' ? 'CNN' : a.source}
           </span>
           <span style={{ color: '#666', marginLeft: 4, fontSize: '0.7em' }}>
             {new Date(a.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
