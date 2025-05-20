@@ -21,7 +21,12 @@ export async function GET() {
       .order('published_at', { ascending: false })
       .limit(20);
     if (error) throw error;
-    let articles = data || [];
+    let articles = (data || []).map(r=>({
+      title: r.title,
+      url: r.url,
+      publishedAt: r.published_at,
+      source: r.source
+    }));
     // prioritise major outlets
     articles = articles.sort((a,b)=>{
       const ia = PRIORITY_SOURCES.findIndex(s=>a.source && a.source.toLowerCase().includes(s.toLowerCase()));
