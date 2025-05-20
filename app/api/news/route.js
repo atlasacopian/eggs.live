@@ -7,7 +7,7 @@ export async function GET() {
   if (!GNEWS_API_KEY) {
     return NextResponse.json({ error: 'Missing GNEWS_API_KEY' }, { status: 500 });
   }
-  const endpoint = `https://gnews.io/api/v4/search?q=egg%20prices&lang=en&country=us&max=10&apikey=${GNEWS_API_KEY}`;
+  const endpoint = `https://gnews.io/api/v4/search?q=egg%20price&lang=en&country=us&max=10&apikey=${GNEWS_API_KEY}`;
 
   try {
     const resp = await fetch(endpoint);
