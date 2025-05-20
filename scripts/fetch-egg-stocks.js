@@ -28,13 +28,13 @@ function marketIsOpen() {
   return minutes >= open && minutes <= close;
 }
 
-if (!marketIsOpen()) {
-  console.log('Market closed – skipping Polygon fetch.');
+if (!marketIsOpen() && !process.env.FORCE_POLYGON_FETCH) {
+  console.log('Market closed – skipping Polygon fetch. Set FORCE_POLYGON_FETCH=1 to override.');
   process.exit(0);
 }
 
 // Tickers we care about (major companies that sell eggs)
-const TICKERS = ['CALM', 'POST', 'HRL'];
+const TICKERS = ['CALM', 'POST', 'HRL', 'VITL'];
 
 async function fetchSnapshot () {
   const url = `https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/tickers?tickers=${TICKERS.join(',')}&apiKey=${POLYGON_API_KEY}`;
@@ -88,4 +88,4 @@ async function fetchSnapshot () {
     console.error('❌ Error', err);
     process.exit(1);
   }
-})(); 
+})();

@@ -10,7 +10,7 @@ import FredChart from './FredChart.jsx';
 const MOBILE_BREAKPOINT = 768;
 
 // Polygon egg-related tickers (Cal-Maine Foods etc.)
-const EGG_STOCK_TICKERS = ['CALM', 'POST', 'HRL'];
+const EGG_STOCK_TICKERS = ['CALM', 'POST', 'HRL', 'VITL'];
 
 export default function BloombergTerminal({ zipCode, localStores = [], nationalStats = {} }) {
   const [view, setView] = useState('local'); // local | national
