@@ -7,13 +7,13 @@ import { Center, Environment, ContactShadows } from '@react-three/drei'
 import * as THREE from 'three'
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
-// Preload the updated egg GLB so it's ready when the scene mounts
-useGLTF.preload('/egg.glb')
+// Preload the new, smaller egg GLB so it's ready when the scene mounts
+useGLTF.preload('/new%20egg.glb')
 
 // Update ModelPrimitive for immediate load
 const ModelPrimitive = forwardRef((props, ref) => {
   // Load GLB model using useGLTF and clone directly for fast initial rendering
-  const gltf = useGLTF('/egg.glb')
+  const gltf = useGLTF('/new%20egg.glb')
   // Load original bump and gloss textures from White_Egg
   const [bumpMap, glossMap] = useTexture([
     '/White_Egg/Egg_bump.png',
@@ -88,8 +88,8 @@ export function Experience({ onInteractionStart }) {
 
   // Apply animation based on device type
   useFrame((state, delta) => {
-    if (centerRef.current) {
-      if (isMobile) {
+    if (centerRef.current) { 
+      if (isMobile) { 
         // Mobile: Dynamic spin with oscillation
         centerRef.current.rotation.y += delta * 0.2; // Faster spin
         centerRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.5) * 0.1;
