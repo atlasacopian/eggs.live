@@ -121,7 +121,7 @@ export function Experience({ onInteractionStart }) {
       {/* Ground shadows */}
       <ContactShadows resolution={1024} position={[0, -0.01, 0]} scale={10} blur={2} far={0.5} opacity={0.5} />
       <Suspense fallback={null}>
-        <Center ref={centerRef} position={[0, 0, 0]} rotation={[Math.PI, 0, 0]}>
+        <Center ref={centerRef} position={[0, 0, 0]} rotation={[0, 0, 0]}>
           <group>
             <ModelPrimitive />
           </group>
