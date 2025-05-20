@@ -305,8 +305,8 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
               </marquee>
             </TerminalTile>
             
-            {/* Egg Stocks from Polygon */}
-            <TerminalTile title="Egg Stocks (Live)" span={getSpan(3)} style={{minHeight: isMobile ? '120px' : 'auto'}}>
+            {/* Shell Market Index */}
+            <TerminalTile title="Shell Market Index" span={getSpan(3)} style={{minHeight: isMobile ? '120px' : 'auto'}}>
               <div style={{ padding: 8, fontFamily: 'Menlo, monospace', fontSize: isMobile ? '0.75rem' : '0.85rem' }}>
                 {eggStocks === null ? (
                   <div style={{ color: '#666' }}>Loading...</div>
