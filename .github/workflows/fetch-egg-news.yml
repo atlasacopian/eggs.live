@@ -1,0 +1,22 @@
+name: Fetch Egg News
+
+on:
+  schedule:
+    - cron: '7 * * * *'  # every hour at minute 7
+  workflow_dispatch:
+
+jobs:
+  fetch-news:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Run fetch-egg-news script
+        run: node scripts/fetch-egg-news.js
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GNEWS_API_KEY: ${{ secrets.GNEWS_API_KEY }} 
