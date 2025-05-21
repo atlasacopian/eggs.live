@@ -135,13 +135,23 @@ export default function EggCartonScene({ onInteractionStart }) {
       <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none' }}>
         <Canvas
           camera={{ position: [0, 0, 12], fov: 35 }}
-          onCreated={({ scene, camera }) => {
-            scene.background = null; // True transparency
-            camera.lookAt(0, 0, 0); // aim at world origin to center the egg
+          shadows={true}
+          onCreated={({ scene, camera, gl }) => {
+            // White background for scene
+            scene.background = new THREE.Color(0xffffff);
+            gl.setClearColor(0xffffff, 1);
+            gl.shadowMap.enabled = true;
+            gl.shadowMap.type = THREE.PCFSoftShadowMap;
+            camera.lookAt(0, 0, 0);
           }}
         >
           {/* Soft ambient fill to reduce harsh shadows */}
           <ambientLight intensity={0.5} />
+          {/* Background plane to catch dynamic light shadows */}
+          <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -2, 0]}>
+            <planeBufferGeometry args={[50, 50]} />
+            <shadowMaterial transparent opacity={0.2} />
+          </mesh>
           {/* Show model when ready, no loading UI */}
           <Suspense fallback={null}>
             <Experience onInteractionStart={onInteractionStart} />
