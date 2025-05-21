@@ -118,7 +118,7 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
   return (
     <div style={headerStyle}>
       <div style={infoGroupStyle}>
-        <a href="/" style={eggsLiveStyle}>EGGS.LIVE</a>
+        <a href="/" style={eggsLiveStyle}>eggs.live</a>
       </div>
 
       <div style={buttonGroupStyle}>
