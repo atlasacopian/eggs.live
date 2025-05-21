@@ -47,15 +47,17 @@ export default function Home() {
         overflow: 'hidden',
       }}
     >
-      <div style={{ position: 'absolute', top: 16, left: 16, right: 16, zIndex: 10 }}>
-        {/* ticker with white background and simple text style */}
-        <div style={{ backgroundColor: '#fff', border: 'none', padding: '8px 16px', overflow: 'hidden', whiteSpace: 'nowrap', fontFamily: 'Menlo, monospace', color: '#000' }}>
-          <marquee scrollamount="4" style={{ fontSize: '10px' }}>
-            <span style={{ marginRight: '1.5rem', color: '#0f0', fontFamily: 'Menlo, monospace' }}>
-              EGG 5.43 ▲ 1.31%
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}>
+        <div style={{ backgroundColor: '#fff', padding: '8px 0', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+          <marquee scrollamount="6" style={{ fontFamily: 'Menlo, monospace', fontSize: '16px', color: '#000' }}>
+            <span style={{ margin: '0 2rem', color: '#0f0' }}>
+              EGG 64.69 ▲ 2.43%
             </span>
-            <span style={{ marginRight: '1.5rem', color: '#0f0', fontFamily: 'Menlo, monospace' }}>
+            <span style={{ margin: '0 2rem', color: '#f00' }}>
               YOLK 73.90 ▼ 1.59%
+            </span>
+            <span style={{ margin: '0 2rem', color: '#0f0' }}>
+              ALB 88.12 ▲ 0.45%
             </span>
           </marquee>
         </div>
