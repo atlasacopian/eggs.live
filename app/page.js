@@ -66,7 +66,7 @@ export default function Home() {
       <div
         style={{
           position: 'absolute',
-          top: '-96px',
+          top: '64px',
           left: 0,
           right: 0,
           zIndex: 50,
