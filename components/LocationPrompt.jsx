@@ -59,6 +59,7 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
                 className={styles.zipInput}
                 type="text"
                 maxLength={5}
+                placeholder="12345"
                 value={zipCode}
                 onChange={(e) => setZipCode(e.target.value)}
                 autoFocus

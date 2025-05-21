@@ -162,7 +162,7 @@
     box-sizing: border-box;
   }
   .zipInput {
-    width: 9ch;
+    width: 12ch;
     box-sizing: border-box;
   }
   /* Arrow already static, extra spacing included in width */
