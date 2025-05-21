@@ -78,7 +78,7 @@ export default function Home() {
         }}
         className="header-container"
       >
-        <img src="/logo-test.png" alt="eggs.live" style={{ height: '256px', objectFit: 'contain', marginBottom: '16px' }} />
+        <img src="/logo-test.png" alt="eggs.live" style={{ height: '256px', objectFit: 'contain', marginBottom: '-16px' }} />
         <div style={{ fontWeight: 400, letterSpacing: 2, fontFamily: 'Menlo, monospace', fontSize: '1.2rem', opacity: 0.8, textAlign: 'center' }}>
           TRACKING THE EGG-CONOMY
         </div>
