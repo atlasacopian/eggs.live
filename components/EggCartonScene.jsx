@@ -79,11 +79,11 @@ export function Experience({ onInteractionStart }) {
         centerRef.current.rotation.z = Math.sin(state.clock.elapsedTime * 0.3) * 0.05;
       } else {
         // Desktop: follow mouse like production site
-        const targetY = mouse.current.x * 0.6;
-        const targetX = mouse.current.y * 0.4;
+        const targetY = mouse.current.x * 0.8;
+        const targetX = mouse.current.y * 0.6;
         // Smooth interpolation
-        centerRef.current.rotation.y = THREE.MathUtils.lerp(centerRef.current.rotation.y, targetY, 0.1);
-        centerRef.current.rotation.x = THREE.MathUtils.lerp(centerRef.current.rotation.x, targetX, 0.1);
+        centerRef.current.rotation.y = THREE.MathUtils.lerp(centerRef.current.rotation.y, targetY, 0.2);
+        centerRef.current.rotation.x = THREE.MathUtils.lerp(centerRef.current.rotation.x, targetX, 0.2);
         // Clamp X rotation to avoid flipping under
         centerRef.current.rotation.x = THREE.MathUtils.clamp(centerRef.current.rotation.x, -0.1, Math.PI / 2);
       }
