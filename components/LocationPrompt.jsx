@@ -57,6 +57,7 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
               <span className={styles.bracket}>[</span>
               <input
                 className={styles.zipInput}
+                style={{ width: '5ch', paddingRight: 0 }}
                 type="text"
                 maxLength={5}
                 placeholder="12345"
@@ -64,7 +65,8 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
                 onChange={(e) => setZipCode(e.target.value)}
                 autoFocus
               />
-              <button type="submit" className={styles.enterHint}>↵</button>
+              {/* Press Enter to submit */}
+              <span style={{ marginLeft: '0.5ch', fontFamily: 'Roboto Mono, monospace', fontSize: '9px', opacity: 0.6 }}>↵</span>
               <span className={styles.bracket}>]</span>
             </form>
           )}
