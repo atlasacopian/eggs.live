@@ -47,6 +47,8 @@ ModelPrimitive.displayName = 'ModelPrimitive'
 export function Experience({ onInteractionStart }) {
   const centerRef = useRef()
   const mouse = useRef({ x: 0, y: 0 }) // For desktop mouse tracking
+  // Dynamic point light reference
+  const dynamicLightRef = useRef()
   const [isMobile, setIsMobile] = useState(false);
 
   // Detect touch device on mount
@@ -71,6 +73,13 @@ export function Experience({ onInteractionStart }) {
 
   // Apply animation based on device type
   useFrame((state, delta) => {
+    // Update dynamic light position and intensity
+    if (dynamicLightRef.current) {
+      const t = state.clock.elapsedTime
+      dynamicLightRef.current.position.x = Math.sin(t * 0.5) * 6
+      dynamicLightRef.current.position.z = Math.cos(t * 0.5) * 6
+      dynamicLightRef.current.intensity = 0.5 + Math.sin(t * 2) * 0.5
+    }
     if (centerRef.current) { 
       if (isMobile) { 
         // Mobile: Dynamic spin with oscillation
@@ -104,6 +113,8 @@ export function Experience({ onInteractionStart }) {
       {/* Directional lights for subtle highlights */}
       <directionalLight position={[5, 5, 5]} intensity={0.6} />
       <directionalLight position={[-5, 5, -5]} intensity={0.3} />
+      {/* Moving dynamic point light for interest */}
+      <pointLight ref={dynamicLightRef} color={0xffffff} intensity={1} position={[0, 5, 0]} />
       {/* Ground shadows */}
       <ContactShadows resolution={1024} position={[0, -0.01, 0]} scale={10} blur={2} far={0.5} opacity={0.5} />
       <Suspense fallback={null}>
