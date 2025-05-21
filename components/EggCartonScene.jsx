@@ -3,9 +3,7 @@
 import { useRef, useEffect, Suspense, useState, useMemo, forwardRef } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { useGLTF } from '@react-three/drei'
-import { Center, Environment, ContactShadows, useTexture } from '@react-three/drei'
-import { useLoader } from '@react-three/fiber'
-import { TextureLoader } from 'three'
+import { Center, Environment, ContactShadows } from '@react-three/drei'
 import * as THREE from 'three'
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
@@ -16,8 +14,6 @@ useGLTF.preload('/final.glb')
 const ModelPrimitive = forwardRef((props, ref) => {
   // Load GLB model using useGLTF and clone directly for fast initial rendering
   const gltf = useGLTF('/final.glb')
-  // Logo texture for egg surface
-  const logoTexture = useTexture('/logo test.png')
 
   const model = useMemo(() => {
     const cloned = gltf.scene.clone()
@@ -53,8 +49,6 @@ export function Experience({ onInteractionStart }) {
   const mouse = useRef({ x: 0, y: 0 }) // For desktop mouse tracking
   // Dynamic point light reference
   const dynamicLightRef = useRef()
-  // Logo texture for decal mapping
-  const logoTexture = useLoader(TextureLoader, '/logo test.png')
   const [isMobile, setIsMobile] = useState(false);
 
   // Detect touch device on mount
@@ -126,13 +120,7 @@ export function Experience({ onInteractionStart }) {
       <Suspense fallback={null}>
         <Center ref={centerRef} position={[0, 0, 0]} rotation={[0, 0, 0]}>
           <group>
-            {/* Egg model scaled to 6 */}
-            <ModelPrimitive scale={6} />
-            {/* Logo plane mapped onto egg surface, scaled to egg */}
-            <mesh position={[0, 0, 1.02 * 6]} rotation={[0, 0, 0]} scale={[4, 4, 4]}>
-              <planeGeometry args={[1, 1]} />
-              <meshBasicMaterial map={logoTexture} transparent depthWrite={false} />
-            </mesh>
+            <ModelPrimitive />
           </group>
         </Center>
       </Suspense>
