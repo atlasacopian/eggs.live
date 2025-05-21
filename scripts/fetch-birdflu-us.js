@@ -25,14 +25,16 @@ const CSV_URL = 'https://publicdashboards.dl.usda.gov/t/MRP_PUB/views/VS_Avian_H
     const csvText = await res.text();
     const { data } = Papa.parse(csvText, { header: true, skipEmptyLines: true });
 
-    const rows = data.map(row => ({
-      report_date: row['report_date'],
-      state: row['state'],
-      county: row['county'],
-      flock_type: row['flock_type'],
-      birds_affected: Number(row['birds_affected'] || 0),
-      depop_status: row['depopulation_status']
-    }));
+    const rows = data
+      .filter(row => row['Confirmed']) // ensure the Confirmed date exists
+      .map(row => ({
+        report_date: row['Confirmed'],
+        state: row['State'],
+        county: row['County Name'],
+        flock_type: row['Production'],
+        birds_affected: Number((row['Birds Affected'] || '0').replace(/,/g, '')),
+        depop_status: row['Control Area Released']
+      }));
 
     const { error } = await sb.from('bird_flu_outbreaks').upsert(rows, { onConflict: 'report_date,state,county,flock_type' });
     if (error) throw error;

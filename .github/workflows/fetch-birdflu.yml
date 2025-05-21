@@ -2,7 +2,7 @@ name: Fetch Bird Flu Data
 
 on:
   schedule:
-    - cron: '0 12 * * *' # once daily at 12:00 UTC (~08:00 ET)
+    - cron: '0 8 * * *'  # daily at 08:00 UTC ≈ 00:00 PST / 01:00 PDT (midnight LA)
   workflow_dispatch:
 
 jobs:

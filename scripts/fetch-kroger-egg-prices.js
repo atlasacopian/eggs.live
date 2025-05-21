@@ -310,7 +310,14 @@ async function fetchStoreEggs (location_id_raw) {
   const startAtEnv = Number(process.env.START_AT ?? '0');
   const endAtEnv = Number(process.env.END_AT ?? stores.length);
   const startIdx = isNaN(startAtEnv) ? 0 : Math.max(0, startAtEnv);
-  const endIdxExclusive = isNaN(endAtEnv) ? stores.length : Math.min(stores.length, endAtEnv);
+  let endIdxExclusive = isNaN(endAtEnv) ? stores.length : Math.min(stores.length, endAtEnv);
+
+  // Optional: MAX_STORES_PER_RUN lets us cap the number of stores handled in one execution
+  // regardless of the START/END range (handy for staying under daily API quotas).
+  const maxStoresPerRun = Number(process.env.MAX_STORES_PER_RUN ?? '0');
+  if (maxStoresPerRun > 0) {
+    endIdxExclusive = Math.min(endIdxExclusive, startIdx + maxStoresPerRun);
+  }
 
   const storesToProcess = stores.slice(startIdx, endIdxExclusive);
 

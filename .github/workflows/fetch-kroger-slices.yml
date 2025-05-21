@@ -2,9 +2,6 @@ name: Fetch Kroger Egg Prices - Sliced
 
 on:
   workflow_dispatch:
-  schedule:
-    # 08:00 UTC = 00:00 Los Angeles during standard time, 01:00 during daylight-time
-    - cron: '0 8 * * *'
 
 jobs:
   fetch-sliced:

@@ -1,0 +1,59 @@
+name: Fetch Kroger Egg Prices - Halves
+
+on:
+  schedule:
+    # Run once per day at midnight Los Angeles time (handles PST/PDT automatically)
+    - cron: '0 0 * * *'
+      timezone: 'America/Los_Angeles'
+  workflow_dispatch:
+
+jobs:
+  fetch-half:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: kroger-halves
+      cancel-in-progress: false
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      KROGER_CLIENT_ID: ${{ secrets.KROGER_CLIENT_ID }}
+      KROGER_CLIENT_SECRET: ${{ secrets.KROGER_CLIENT_SECRET }}
+      # Request-spacing delays (safe defaults ‑ adjust if needed)
+      STORE_DELAY_MS: 7000  # 1 request every 7 s  ≈ 500 req/h
+      PAGE_DELAY_MS:  4000
+      # Extra safety: never process more than this many stores per run
+      MAX_STORES_PER_RUN: 1500
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Determine START_AT / END_AT for today (first vs second half)
+        id: half
+        run: |
+          # We split the full store list (~2 900) into two halves of 1 500 each.
+          HALF_SIZE=1500
+          # Day-of-year modulo 2 decides which half to run.
+          DAY_PARITY=$(date -u +%j)
+          if [ $(( DAY_PARITY % 2 )) -eq 0 ]; then
+            START=0
+            END=$HALF_SIZE
+            echo "Running FIRST half of stores (0-$((HALF_SIZE-1))) for even UTC day $DAY_PARITY"
+          else
+            START=$HALF_SIZE
+            END=6000   # big number beyond actual store count; script will clamp
+            echo "Running SECOND half of stores ($HALF_SIZE-end) for odd UTC day $DAY_PARITY"
+          fi
+          echo "START_AT=$START" >> "$GITHUB_ENV"
+          echo "END_AT=$END" >> "$GITHUB_ENV"
+
+      - name: Fetch Kroger Egg Prices (half run)
+        run: node scripts/fetch-kroger-egg-prices.js 

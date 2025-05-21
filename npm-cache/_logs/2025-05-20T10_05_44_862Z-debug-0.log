@@ -1,0 +1,816 @@
+0 verbose cli /usr/local/bin/node /usr/local/bin/npm
+1 info using npm@10.9.0
+2 info using node@v22.11.0
+3 silly config load:file:/usr/local/lib/node_modules/npm/npmrc
+4 silly config load:file:/Users/atlasacopian/eggs.live/eggs-live-next/.npmrc
+5 silly config load:file:/Users/atlasacopian/.npmrc
+6 silly config load:file:/usr/local/etc/npmrc
+7 verbose title npm install papaparse
+8 verbose argv "install" "papaparse" "--save"
+9 verbose logfile logs-max:10 dir:/Users/atlasacopian/eggs.live/eggs-live-next/npm-cache/_logs/2025-05-20T10_05_44_862Z-
+10 verbose logfile /Users/atlasacopian/eggs.live/eggs-live-next/npm-cache/_logs/2025-05-20T10_05_44_862Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:4345298944 maxSize:1086324736 maxEntrySize:543162368
+13 silly idealTree buildDeps
+14 silly fetch manifest papaparse@*
+15 silly packumentCache full:https://registry.npmjs.org/papaparse cache-miss
+16 http fetch GET 200 https://registry.npmjs.org/papaparse 216ms (cache miss)
+17 silly packumentCache full:https://registry.npmjs.org/papaparse set size:undefined disposed:false
+18 silly placeDep ROOT papaparse@5.5.3 OK for: egg-prices@1.0.0 want: *
+19 silly reify mark retired [
+19 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@cesium/engine'
+19 silly reify ]
+20 silly reify mark retired [
+20 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@cesium/widgets'
+20 silly reify ]
+21 silly reify mark retired [
+21 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@protobufjs/aspromise'
+21 silly reify ]
+22 silly reify mark retired [
+22 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@protobufjs/base64'
+22 silly reify ]
+23 silly reify mark retired [
+23 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@protobufjs/codegen'
+23 silly reify ]
+24 silly reify mark retired [
+24 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@protobufjs/eventemitter'
+24 silly reify ]
+25 silly reify mark retired [
+25 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@protobufjs/fetch'
+25 silly reify ]
+26 silly reify mark retired [
+26 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@protobufjs/float'
+26 silly reify ]
+27 silly reify mark retired [
+27 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@protobufjs/inquire'
+27 silly reify ]
+28 silly reify mark retired [
+28 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@protobufjs/path'
+28 silly reify ]
+29 silly reify mark retired [
+29 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@protobufjs/pool'
+29 silly reify ]
+30 silly reify mark retired [
+30 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@protobufjs/utf8'
+30 silly reify ]
+31 silly reify mark retired [
+31 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@types/trusted-types'
+31 silly reify ]
+32 silly reify mark retired [
+32 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@zip.js/zip.js'
+32 silly reify ]
+33 silly reify mark retired [
+33 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/autolinker'
+33 silly reify ]
+34 silly reify mark retired [
+34 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/bitmap-sdf'
+34 silly reify ]
+35 silly reify mark retired [
+35 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/bluebird'
+35 silly reify ]
+36 silly reify mark retired [ '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/cesium' ]
+37 silly reify mark retired [
+37 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/commander'
+37 silly reify ]
+38 silly reify mark retired [
+38 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/dompurify'
+38 silly reify ]
+39 silly reify mark retired [ '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/earcut' ]
+40 silly reify mark retired [
+40 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/gltf-pipeline',
+40 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.bin/gltf-pipeline'
+40 silly reify ]
+41 silly reify mark retired [
+41 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/grapheme-splitter'
+41 silly reify ]
+42 silly reify mark retired [ '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/jsep' ]
+43 silly reify mark retired [ '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/kdbush' ]
+44 silly reify mark retired [
+44 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/ktx-parse'
+44 silly reify ]
+45 silly reify mark retired [ '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/lerc' ]
+46 silly reify mark retired [ '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/long' ]
+47 silly reify mark retired [
+47 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/mersenne-twister'
+47 silly reify ]
+48 silly reify mark retired [
+48 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/mime',
+48 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.bin/mime'
+48 silly reify ]
+49 silly reify mark retired [
+49 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/nosleep.js'
+49 silly reify ]
+50 silly reify mark retired [
+50 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/object-hash'
+50 silly reify ]
+51 silly reify mark retired [ '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/pako' ]
+52 silly reify mark retired [
+52 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/protobufjs'
+52 silly reify ]
+53 silly reify mark retired [
+53 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/quickselect'
+53 silly reify ]
+54 silly reify mark retired [ '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/rbush' ]
+55 silly reify mark retired [
+55 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/topojson-client',
+55 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.bin/topo2geo',
+55 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.bin/topomerge',
+55 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.bin/topoquantize'
+55 silly reify ]
+56 silly reify mark retired [ '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/urijs' ]
+57 silly reify moves {
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@cesium/engine': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@cesium/.engine-jOnmZFLs',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@cesium/widgets': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@cesium/.widgets-Z2tFoO5g',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@protobufjs/aspromise': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@protobufjs/.aspromise-mJMXGU50',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@protobufjs/base64': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@protobufjs/.base64-UfFq3wdo',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@protobufjs/codegen': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@protobufjs/.codegen-DK4NWbXg',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@protobufjs/eventemitter': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@protobufjs/.eventemitter-qbpEov9d',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@protobufjs/fetch': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@protobufjs/.fetch-qL3EdMep',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@protobufjs/float': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@protobufjs/.float-4xdFfDeh',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@protobufjs/inquire': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@protobufjs/.inquire-dnDrnPCc',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@protobufjs/path': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@protobufjs/.path-KqXfgw0O',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@protobufjs/pool': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@protobufjs/.pool-8HUYiri6',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@protobufjs/utf8': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@protobufjs/.utf8-iEq5M9x9',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@types/trusted-types': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@types/.trusted-types-70tHhMEj',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@zip.js/zip.js': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@zip.js/.zip.js-FkJmyI38',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/autolinker': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.autolinker-3gDxZhaK',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/bitmap-sdf': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.bitmap-sdf-hO7HKQiP',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/bluebird': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.bluebird-gJqUf2Q7',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/cesium': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.cesium-8FKo2k3J',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/commander': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.commander-UUW8v1vd',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/dompurify': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.dompurify-aW1dm7Dm',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/earcut': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.earcut-z6KWJNIe',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/gltf-pipeline': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.gltf-pipeline-jR2WMKpc',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.bin/gltf-pipeline': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.bin/.gltf-pipeline-w9pWUm8K',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/grapheme-splitter': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.grapheme-splitter-wJj9tN0b',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/jsep': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.jsep-bN36Hn5v',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/kdbush': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.kdbush-Q5Rtf14b',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/ktx-parse': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.ktx-parse-MxRFWYUp',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/lerc': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.lerc-Fjs9rk8F',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/long': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.long-LQ7Ow02o',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/mersenne-twister': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.mersenne-twister-NxW1UVOs',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/mime': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.mime-jQpmlwMU',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.bin/mime': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.bin/.mime-2dpUvlgQ',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/nosleep.js': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.nosleep.js-DA56DqcT',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/object-hash': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.object-hash-D0EWH6Bx',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/pako': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.pako-Hfz1Spju',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/protobufjs': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.protobufjs-A0GeeyMF',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/quickselect': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.quickselect-UKA0fkfW',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/rbush': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.rbush-DrhFcWyi',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/topojson-client': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.topojson-client-v1BdGNMn',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.bin/topo2geo': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.bin/.topo2geo-L6HuU6Uc',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.bin/topomerge': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.bin/.topomerge-Zx30CetB',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.bin/topoquantize': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.bin/.topoquantize-IZl8AvHl',
+57 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/urijs': '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/.urijs-XCLRxKAE'
+57 silly reify }
+58 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@tailwindcss/oxide-wasm32-wasi
+59 silly reify mark deleted [
+59 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@tailwindcss/oxide-wasm32-wasi'
+59 silly reify ]
+60 silly audit bulk request {
+60 silly audit   '@alloc/quick-lru': [ '5.2.0' ],
+60 silly audit   '@babel/code-frame': [ '7.27.1' ],
+60 silly audit   '@babel/helper-validator-identifier': [ '7.27.1' ],
+60 silly audit   '@babel/runtime': [ '7.27.1' ],
+60 silly audit   '@dimforge/rapier3d-compat': [ '0.12.0' ],
+60 silly audit   '@emnapi/runtime': [ '1.4.3' ],
+60 silly audit   '@img/sharp-darwin-arm64': [ '0.34.1' ],
+60 silly audit   '@img/sharp-darwin-x64': [ '0.34.1' ],
+60 silly audit   '@img/sharp-libvips-darwin-arm64': [ '1.1.0' ],
+60 silly audit   '@img/sharp-libvips-darwin-x64': [ '1.1.0' ],
+60 silly audit   '@img/sharp-libvips-linux-arm': [ '1.1.0' ],
+60 silly audit   '@img/sharp-libvips-linux-arm64': [ '1.1.0' ],
+60 silly audit   '@img/sharp-libvips-linux-ppc64': [ '1.1.0' ],
+60 silly audit   '@img/sharp-libvips-linux-s390x': [ '1.1.0' ],
+60 silly audit   '@img/sharp-libvips-linux-x64': [ '1.1.0' ],
+60 silly audit   '@img/sharp-libvips-linuxmusl-arm64': [ '1.1.0' ],
+60 silly audit   '@img/sharp-libvips-linuxmusl-x64': [ '1.1.0' ],
+60 silly audit   '@img/sharp-linux-arm': [ '0.34.1' ],
+60 silly audit   '@img/sharp-linux-arm64': [ '0.34.1' ],
+60 silly audit   '@img/sharp-linux-s390x': [ '0.34.1' ],
+60 silly audit   '@img/sharp-linux-x64': [ '0.34.1' ],
+60 silly audit   '@img/sharp-linuxmusl-arm64': [ '0.34.1' ],
+60 silly audit   '@img/sharp-linuxmusl-x64': [ '0.34.1' ],
+60 silly audit   '@img/sharp-wasm32': [ '0.34.1' ],
+60 silly audit   '@img/sharp-win32-ia32': [ '0.34.1' ],
+60 silly audit   '@img/sharp-win32-x64': [ '0.34.1' ],
+60 silly audit   '@mediapipe/tasks-vision': [ '0.10.17' ],
+60 silly audit   '@monogrid/gainmap-js': [ '3.1.0' ],
+60 silly audit   '@next/env': [ '15.3.1' ],
+60 silly audit   '@next/swc-darwin-arm64': [ '15.3.1' ],
+60 silly audit   '@next/swc-darwin-x64': [ '15.3.1' ],
+60 silly audit   '@next/swc-linux-arm64-gnu': [ '15.3.1' ],
+60 silly audit   '@next/swc-linux-arm64-musl': [ '15.3.1' ],
+60 silly audit   '@next/swc-linux-x64-gnu': [ '15.3.1' ],
+60 silly audit   '@next/swc-linux-x64-musl': [ '15.3.1' ],
+60 silly audit   '@next/swc-win32-arm64-msvc': [ '15.3.1' ],
+60 silly audit   '@next/swc-win32-x64-msvc': [ '15.3.1' ],
+60 silly audit   '@puppeteer/browsers': [ '2.10.3' ],
+60 silly audit   '@react-three/drei': [ '10.0.7' ],
+60 silly audit   '@react-three/fiber': [ '9.1.2' ],
+60 silly audit   '@supabase/auth-js': [ '2.69.1' ],
+60 silly audit   '@supabase/functions-js': [ '2.4.4' ],
+60 silly audit   '@supabase/node-fetch': [ '2.6.15' ],
+60 silly audit   '@supabase/postgrest-js': [ '1.19.4' ],
+60 silly audit   '@supabase/realtime-js': [ '2.11.2' ],
+60 silly audit   '@supabase/storage-js': [ '2.7.1' ],
+60 silly audit   '@supabase/supabase-js': [ '2.49.4' ],
+60 silly audit   '@swc/counter': [ '0.1.3' ],
+60 silly audit   '@swc/helpers': [ '0.5.15' ],
+60 silly audit   '@tailwindcss/node': [ '4.1.5' ],
+60 silly audit   '@tailwindcss/oxide': [ '4.1.5' ],
+60 silly audit   '@tailwindcss/oxide-android-arm64': [ '4.1.5' ],
+60 silly audit   '@tailwindcss/oxide-darwin-arm64': [ '4.1.5' ],
+60 silly audit   '@tailwindcss/oxide-darwin-x64': [ '4.1.5' ],
+60 silly audit   '@tailwindcss/oxide-freebsd-x64': [ '4.1.5' ],
+60 silly audit   '@tailwindcss/oxide-linux-arm-gnueabihf': [ '4.1.5' ],
+60 silly audit   '@tailwindcss/oxide-linux-arm64-gnu': [ '4.1.5' ],
+60 silly audit   '@tailwindcss/oxide-linux-arm64-musl': [ '4.1.5' ],
+60 silly audit   '@tailwindcss/oxide-linux-x64-gnu': [ '4.1.5' ],
+60 silly audit   '@tailwindcss/oxide-linux-x64-musl': [ '4.1.5' ],
+60 silly audit   '@tailwindcss/oxide-win32-arm64-msvc': [ '4.1.5' ],
+60 silly audit   '@tailwindcss/oxide-win32-x64-msvc': [ '4.1.5' ],
+60 silly audit   '@tailwindcss/postcss': [ '4.1.5' ],
+60 silly audit   '@tootallnate/quickjs-emscripten': [ '0.23.0' ],
+60 silly audit   '@tweenjs/tween.js': [ '23.1.3' ],
+60 silly audit   '@types/d3-array': [ '3.2.1' ],
+60 silly audit   '@types/d3-color': [ '3.1.3' ],
+60 silly audit   '@types/d3-ease': [ '3.0.2' ],
+60 silly audit   '@types/d3-interpolate': [ '3.0.4' ],
+60 silly audit   '@types/d3-path': [ '3.1.1' ],
+60 silly audit   '@types/d3-scale': [ '4.0.9' ],
+60 silly audit   '@types/d3-shape': [ '3.1.7' ],
+60 silly audit   '@types/d3-time': [ '3.0.4' ],
+60 silly audit   '@types/d3-timer': [ '3.0.2' ],
+60 silly audit   '@types/debug': [ '4.1.12' ],
+60 silly audit   '@types/draco3d': [ '1.4.10' ],
+60 silly audit   '@types/ms': [ '2.1.0' ],
+60 silly audit   '@types/node': [ '22.15.3' ],
+60 silly audit   '@types/offscreencanvas': [ '2019.7.3' ],
+60 silly audit   '@types/phoenix': [ '1.6.6' ],
+60 silly audit   '@types/react': [ '19.1.2' ],
+60 silly audit   '@types/react-reconciler': [ '0.28.9' ],
+60 silly audit   '@types/stats.js': [ '0.17.3' ],
+60 silly audit   '@types/three': [ '0.176.0' ],
+60 silly audit   '@types/webxr': [ '0.5.22' ],
+60 silly audit   '@types/ws': [ '8.18.1' ],
+60 silly audit   '@types/yauzl': [ '2.10.3' ],
+60 silly audit   '@use-gesture/core': [ '10.3.1' ],
+60 silly audit   '@use-gesture/react': [ '10.3.1' ],
+60 silly audit   '@webgpu/types': [ '0.1.60' ],
+60 silly audit   'agent-base': [ '7.1.3' ],
+60 silly audit   'ansi-regex': [ '5.0.1' ],
+60 silly audit   'ansi-styles': [ '4.3.0' ],
+60 silly audit   argparse: [ '2.0.1' ],
+60 silly audit   'arr-union': [ '3.1.0' ],
+60 silly audit   'ast-types': [ '0.13.4' ],
+60 silly audit   asynckit: [ '0.4.0' ],
+60 silly audit   autoprefixer: [ '10.4.21' ],
+60 silly audit   axios: [ '1.9.0' ],
+60 silly audit   b4a: [ '1.6.7' ],
+60 silly audit   'balanced-match': [ '1.0.2' ],
+60 silly audit   'bare-events': [ '2.5.4' ],
+60 silly audit   'bare-fs': [ '4.1.4' ],
+60 silly audit   'bare-os': [ '3.6.1' ],
+60 silly audit   'bare-path': [ '3.0.0' ],
+60 silly audit   'bare-stream': [ '2.6.5' ],
+60 silly audit   'base64-js': [ '1.5.1' ],
+60 silly audit   'basic-ftp': [ '5.0.5' ],
+60 silly audit   'bidi-js': [ '1.0.3' ],
+60 silly audit   'brace-expansion': [ '1.1.11' ],
+60 silly audit   browserslist: [ '4.24.5' ],
+60 silly audit   buffer: [ '6.0.3' ],
+60 silly audit   'buffer-crc32': [ '0.2.13' ],
+60 silly audit   busboy: [ '1.6.0' ],
+60 silly audit   'call-bind-apply-helpers': [ '1.0.2' ],
+60 silly audit   callsites: [ '3.1.0' ],
+60 silly audit   'camera-controls': [ '2.10.1' ],
+60 silly audit   'caniuse-lite': [ '1.0.30001716' ],
+60 silly audit   'chromium-bidi': [ '4.1.1' ],
+60 silly audit   'client-only': [ '0.0.1' ],
+60 silly audit   cliui: [ '8.0.1' ],
+60 silly audit   'clone-deep': [ '0.2.4' ],
+60 silly audit   clsx: [ '2.1.1' ],
+60 silly audit   color: [ '4.2.3' ],
+60 silly audit   'color-convert': [ '2.0.1' ],
+60 silly audit   'color-name': [ '1.1.4' ],
+60 silly audit   'color-string': [ '1.9.1' ],
+60 silly audit   'combined-stream': [ '1.0.8' ],
+60 silly audit   'concat-map': [ '0.0.1' ],
+60 silly audit   cosmiconfig: [ '9.0.0' ],
+60 silly audit   'cross-env': [ '7.0.3' ],
+60 silly audit   'cross-spawn': [ '7.0.6' ],
+60 silly audit   csstype: [ '3.1.3' ],
+60 silly audit   'csv-parse': [ '5.6.0' ],
+60 silly audit   'd3-array': [ '3.2.4' ],
+60 silly audit   'd3-color': [ '3.1.0' ],
+60 silly audit   'd3-ease': [ '3.0.1' ],
+60 silly audit   'd3-format': [ '3.1.0' ],
+60 silly audit   'd3-interpolate': [ '3.0.1' ],
+60 silly audit   'd3-path': [ '3.1.0' ],
+60 silly audit   'd3-scale': [ '4.0.2' ],
+60 silly audit   'd3-shape': [ '3.2.0' ],
+60 silly audit   'd3-time': [ '3.1.0' ],
+60 silly audit   'd3-time-format': [ '4.1.0' ],
+60 silly audit   'd3-timer': [ '3.0.1' ],
+60 silly audit   'data-uri-to-buffer': [ '4.0.1', '6.0.2' ],
+60 silly audit   debug: [ '4.4.0' ],
+60 silly audit   'decimal.js-light': [ '2.5.1' ],
+60 silly audit   deepmerge: [ '4.3.1' ],
+60 silly audit   degenerator: [ '5.0.1' ],
+60 silly audit   'delayed-stream': [ '1.0.0' ],
+60 silly audit   'detect-gpu': [ '5.0.70' ],
+60 silly audit   'detect-libc': [ '2.0.4' ],
+60 silly audit   'devtools-protocol': [ '0.0.1439962' ],
+60 silly audit   'dom-helpers': [ '5.2.1' ],
+60 silly audit   dotenv: [ '10.0.0' ],
+60 silly audit   draco3d: [ '1.5.7' ],
+60 silly audit   'dunder-proto': [ '1.0.1' ],
+60 silly audit   'electron-to-chromium': [ '1.5.149' ],
+60 silly audit   'emoji-regex': [ '8.0.0' ],
+60 silly audit   'end-of-stream': [ '1.4.4' ],
+60 silly audit   'enhanced-resolve': [ '5.18.1' ],
+60 silly audit   entities: [ '2.2.0' ],
+60 silly audit   'env-paths': [ '2.2.1' ],
+60 silly audit   'error-ex': [ '1.3.2' ],
+60 silly audit   'es-define-property': [ '1.0.1' ],
+60 silly audit   'es-errors': [ '1.3.0' ],
+60 silly audit   'es-object-atoms': [ '1.1.1' ],
+60 silly audit   'es-set-tostringtag': [ '2.1.0' ],
+60 silly audit   escalade: [ '3.2.0' ],
+60 silly audit   escodegen: [ '2.1.0' ],
+60 silly audit   esprima: [ '4.0.1' ],
+60 silly audit   estraverse: [ '5.3.0' ],
+60 silly audit   esutils: [ '2.0.3' ],
+60 silly audit   eventemitter3: [ '4.0.7' ],
+60 silly audit   'extract-zip': [ '2.0.1' ],
+60 silly audit   'fast-equals': [ '5.2.2' ],
+60 silly audit   'fast-fifo': [ '1.3.2' ],
+60 silly audit   'fd-slicer': [ '1.1.0' ],
+60 silly audit   'fetch-blob': [ '3.2.0' ],
+60 silly audit   fflate: [ '0.8.2', '0.6.10' ],
+60 silly audit   'follow-redirects': [ '1.15.9' ],
+60 silly audit   'for-in': [ '1.0.2', '0.1.8' ],
+60 silly audit   'for-own': [ '0.1.5' ],
+60 silly audit   'form-data': [ '4.0.2' ],
+60 silly audit   'formdata-polyfill': [ '4.0.10' ],
+60 silly audit   'fraction.js': [ '4.3.7' ],
+60 silly audit   'framer-motion': [ '11.18.2' ],
+60 silly audit   'fs-extra': [ '10.1.0' ],
+60 silly audit   'fs.realpath': [ '1.0.0' ],
+60 silly audit   'function-bind': [ '1.1.2' ],
+60 silly audit   'get-caller-file': [ '2.0.5' ],
+60 silly audit   'get-intrinsic': [ '1.3.0' ],
+60 silly audit   'get-proto': [ '1.0.1' ],
+60 silly audit   'get-stream': [ '5.2.0' ],
+60 silly audit   'get-uri': [ '6.0.4' ],
+60 silly audit   glob: [ '7.2.3' ],
+60 silly audit   'glsl-noise': [ '0.0.0' ],
+60 silly audit   gopd: [ '1.2.0' ],
+60 silly audit   'graceful-fs': [ '4.2.11' ],
+60 silly audit   'has-symbols': [ '1.1.0' ],
+60 silly audit   'has-tostringtag': [ '1.0.2' ],
+60 silly audit   hasown: [ '2.0.2' ],
+60 silly audit   'hls.js': [ '1.6.2' ],
+60 silly audit   'http-proxy-agent': [ '7.0.2' ],
+60 silly audit   'https-proxy-agent': [ '7.0.6' ],
+60 silly audit   ieee754: [ '1.2.1' ],
+60 silly audit   immediate: [ '3.0.6' ],
+60 silly audit   'import-fresh': [ '3.3.1' ],
+60 silly audit   inflight: [ '1.0.6' ],
+60 silly audit   inherits: [ '2.0.4' ],
+60 silly audit   internmap: [ '2.0.3' ],
+60 silly audit   'ip-address': [ '9.0.5' ],
+60 silly audit   'is-arrayish': [ '0.2.1', '0.3.2' ],
+60 silly audit   'is-buffer': [ '1.1.6' ],
+60 silly audit   'is-extendable': [ '0.1.1' ],
+60 silly audit   'is-fullwidth-code-point': [ '3.0.0' ],
+60 silly audit   'is-plain-object': [ '2.0.4' ],
+60 silly audit   'is-promise': [ '2.2.2' ],
+60 silly audit   isexe: [ '2.0.0' ],
+60 silly audit   isobject: [ '3.0.1' ],
+60 silly audit   'its-fine': [ '2.0.0' ],
+60 silly audit   jiti: [ '2.4.2' ],
+60 silly audit   'js-tokens': [ '4.0.0' ],
+60 silly audit   'js-yaml': [ '4.1.0' ],
+60 silly audit   jsbn: [ '1.1.0' ],
+60 silly audit   'json-parse-even-better-errors': [ '2.3.1' ],
+60 silly audit   jsonfile: [ '6.1.0' ],
+60 silly audit   'kind-of': [ '3.2.2', '2.0.1' ],
+60 silly audit   'lazy-cache': [ '1.0.4', '0.2.7' ],
+60 silly audit   lie: [ '3.3.0' ],
+60 silly audit   lightningcss: [ '1.29.2' ],
+60 silly audit   'lightningcss-darwin-arm64': [ '1.29.2' ],
+60 silly audit   'lightningcss-darwin-x64': [ '1.29.2' ],
+60 silly audit   'lightningcss-freebsd-x64': [ '1.29.2' ],
+60 silly audit   'lightningcss-linux-arm-gnueabihf': [ '1.29.2' ],
+60 silly audit   'lightningcss-linux-arm64-gnu': [ '1.29.2' ],
+60 silly audit   'lightningcss-linux-arm64-musl': [ '1.29.2' ],
+60 silly audit   'lightningcss-linux-x64-gnu': [ '1.29.2' ],
+60 silly audit   'lightningcss-linux-x64-musl': [ '1.29.2' ],
+60 silly audit   'lightningcss-win32-arm64-msvc': [ '1.29.2' ],
+60 silly audit   'lightningcss-win32-x64-msvc': [ '1.29.2' ],
+60 silly audit   'lines-and-columns': [ '1.2.4' ],
+60 silly audit   lodash: [ '4.17.21' ],
+60 silly audit   'loose-envify': [ '1.4.0' ],
+60 silly audit   'lru-cache': [ '7.18.3' ],
+60 silly audit   maath: [ '0.10.8' ],
+60 silly audit   'math-intrinsics': [ '1.1.0' ],
+60 silly audit   'merge-deep': [ '3.0.3' ],
+60 silly audit   meshline: [ '3.3.1' ],
+60 silly audit   meshoptimizer: [ '0.18.1' ],
+60 silly audit   'mime-db': [ '1.52.0' ],
+60 silly audit   'mime-types': [ '2.1.35' ],
+60 silly audit   minimatch: [ '3.1.2' ],
+60 silly audit   mitt: [ '3.0.1' ],
+60 silly audit   'mixin-object': [ '2.0.1' ],
+60 silly audit   'motion-dom': [ '11.18.1' ],
+60 silly audit   'motion-utils': [ '11.18.1' ],
+60 silly audit   ms: [ '2.1.3' ],
+60 silly audit   nanoid: [ '3.3.11' ],
+60 silly audit   netmask: [ '2.0.2' ],
+60 silly audit   next: [ '15.3.1' ],
+60 silly audit   postcss: [ '8.4.31', '8.5.3' ],
+60 silly audit   'node-domexception': [ '1.0.0' ],
+60 silly audit   'node-fetch': [ '3.3.2' ],
+60 silly audit   'node-releases': [ '2.0.19' ],
+60 silly audit   'normalize-range': [ '0.1.2' ],
+60 silly audit   'object-assign': [ '4.1.1' ],
+60 silly audit   once: [ '1.4.0' ],
+60 silly audit   'p-limit': [ '6.2.0' ],
+60 silly audit   'pac-proxy-agent': [ '7.2.0' ],
+60 silly audit   'pac-resolver': [ '7.0.1' ],
+60 silly audit   'parent-module': [ '1.0.1' ],
+60 silly audit   'parse-json': [ '5.2.0' ],
+60 silly audit   'path-is-absolute': [ '1.0.1' ],
+60 silly audit   'path-key': [ '3.1.1' ],
+60 silly audit   pend: [ '1.2.0' ],
+60 silly audit   picocolors: [ '1.1.1' ],
+60 silly audit   'postcss-value-parser': [ '4.2.0' ],
+60 silly audit   potpack: [ '1.0.2' ],
+60 silly audit   progress: [ '2.0.3' ],
+60 silly audit   'promise-worker-transferable': [ '1.0.4' ],
+60 silly audit   'prop-types': [ '15.8.1' ],
+60 silly audit   'react-is': [ '16.13.1', '18.3.1' ],
+60 silly audit   'proxy-agent': [ '6.5.0' ],
+60 silly audit   'proxy-from-env': [ '1.1.0' ],
+60 silly audit   pump: [ '3.0.2' ],
+60 silly audit   puppeteer: [ '24.8.0' ],
+60 silly audit   'puppeteer-core': [ '24.8.0' ],
+60 silly audit   'puppeteer-extra': [ '3.3.6' ],
+60 silly audit   'puppeteer-extra-plugin': [ '3.2.3' ],
+60 silly audit   'puppeteer-extra-plugin-stealth': [ '2.11.2' ],
+60 silly audit   'puppeteer-extra-plugin-user-data-dir': [ '2.4.1' ],
+60 silly audit   'puppeteer-extra-plugin-user-preferences': [ '2.4.1' ],
+60 silly audit   react: [ '19.1.0' ],
+60 silly audit   'react-dom': [ '19.1.0' ],
+60 silly audit   scheduler: [ '0.26.0', '0.25.0' ],
+60 silly audit   'react-reconciler': [ '0.31.0' ],
+60 silly audit   'react-smooth': [ '4.0.4' ],
+60 silly audit   'react-transition-group': [ '4.4.5' ],
+60 silly audit   'react-use-measure': [ '2.1.7' ],
+60 silly audit   recharts: [ '2.15.3' ],
+60 silly audit   'recharts-scale': [ '0.4.5' ],
+60 silly audit   'require-directory': [ '2.1.1' ],
+60 silly audit   'require-from-string': [ '2.0.2' ],
+60 silly audit   'resolve-from': [ '4.0.0' ],
+60 silly audit   rimraf: [ '3.0.2' ],
+60 silly audit   'rss-parser': [ '3.13.0' ],
+60 silly audit   sax: [ '1.4.1' ],
+60 silly audit   semver: [ '7.7.1' ],
+60 silly audit   'shallow-clone': [ '0.1.2' ],
+60 silly audit   sharp: [ '0.34.1' ],
+60 silly audit   'shebang-command': [ '2.0.0' ],
+60 silly audit   'shebang-regex': [ '3.0.0' ],
+60 silly audit   'simple-swizzle': [ '0.2.2' ],
+60 silly audit   'smart-buffer': [ '4.2.0' ],
+60 silly audit   socks: [ '2.8.4' ],
+60 silly audit   'socks-proxy-agent': [ '8.0.5' ],
+60 silly audit   'source-map': [ '0.6.1' ],
+60 silly audit   'source-map-js': [ '1.2.1' ],
+60 silly audit   'sprintf-js': [ '1.1.3' ],
+60 silly audit   'stats-gl': [ '2.4.2' ],
+60 silly audit   three: [ '0.170.0', '0.176.0' ],
+60 silly audit   'stats.js': [ '0.17.0' ],
+60 silly audit   streamsearch: [ '1.1.0' ],
+60 silly audit   streamx: [ '2.22.0' ],
+60 silly audit   'string-width': [ '4.2.3' ],
+60 silly audit   'strip-ansi': [ '6.0.1' ],
+60 silly audit   'styled-jsx': [ '5.1.6' ],
+60 silly audit   'suspend-react': [ '0.1.3' ],
+60 silly audit   tailwindcss: [ '4.1.5' ],
+60 silly audit   tapable: [ '2.2.1' ],
+60 silly audit   'tar-fs': [ '3.0.8' ],
+60 silly audit   'tar-stream': [ '3.1.7' ],
+60 silly audit   'text-decoder': [ '1.2.3' ],
+60 silly audit   'three-mesh-bvh': [ '0.8.3' ],
+60 silly audit   'three-stdlib': [ '2.36.0' ],
+60 silly audit   'tiny-invariant': [ '1.3.3' ],
+60 silly audit   tr46: [ '0.0.3' ],
+60 silly audit   'troika-three-text': [ '0.52.4' ],
+60 silly audit   'troika-three-utils': [ '0.52.4' ],
+60 silly audit   'troika-worker-utils': [ '0.52.0' ],
+60 silly audit   tslib: [ '2.8.1' ],
+60 silly audit   'tunnel-rat': [ '0.1.2' ],
+60 silly audit   zustand: [ '4.5.6', '5.0.4' ],
+60 silly audit   'typed-query-selector': [ '2.12.0' ],
+60 silly audit   typescript: [ '5.8.3' ],
+60 silly audit   'undici-types': [ '6.21.0' ],
+60 silly audit   universalify: [ '2.0.1' ],
+60 silly audit   'update-browserslist-db': [ '1.1.3' ],
+60 silly audit   'use-sync-external-store': [ '1.5.0' ],
+60 silly audit   'utility-types': [ '3.11.0' ],
+60 silly audit   'victory-vendor': [ '36.9.2' ],
+60 silly audit   'web-streams-polyfill': [ '3.3.3' ],
+60 silly audit   'webgl-constants': [ '1.1.1' ],
+60 silly audit   'webgl-sdf-generator': [ '1.1.1' ],
+60 silly audit   'webidl-conversions': [ '3.0.1' ],
+60 silly audit   'whatwg-url': [ '5.0.0' ],
+60 silly audit   which: [ '2.0.2' ],
+60 silly audit   'wrap-ansi': [ '7.0.0' ],
+60 silly audit   wrappy: [ '1.0.2' ],
+60 silly audit   ws: [ '8.18.2' ],
+60 silly audit   xml2js: [ '0.5.0' ],
+60 silly audit   xmlbuilder: [ '11.0.1' ],
+60 silly audit   y18n: [ '5.0.8' ],
+60 silly audit   yargs: [ '17.7.2' ],
+60 silly audit   'yargs-parser': [ '21.1.1' ],
+60 silly audit   yauzl: [ '2.10.0' ],
+60 silly audit   'yocto-queue': [ '1.2.1' ],
+60 silly audit   zod: [ '3.24.3' ],
+60 silly audit   papaparse: [ '5.5.3' ],
+60 silly audit   '@tailwindcss/oxide-wasm32-wasi': [ '4.1.5' ]
+60 silly audit }
+61 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/lightningcss-win32-x64-msvc
+62 silly reify mark deleted [
+62 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/lightningcss-win32-x64-msvc'
+62 silly reify ]
+63 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/lightningcss-win32-arm64-msvc
+64 silly reify mark deleted [
+64 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/lightningcss-win32-arm64-msvc'
+64 silly reify ]
+65 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/lightningcss-linux-x64-musl
+66 silly reify mark deleted [
+66 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/lightningcss-linux-x64-musl'
+66 silly reify ]
+67 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/lightningcss-linux-x64-gnu
+68 silly reify mark deleted [
+68 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/lightningcss-linux-x64-gnu'
+68 silly reify ]
+69 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/lightningcss-linux-arm64-musl
+70 silly reify mark deleted [
+70 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/lightningcss-linux-arm64-musl'
+70 silly reify ]
+71 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/lightningcss-linux-arm64-gnu
+72 silly reify mark deleted [
+72 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/lightningcss-linux-arm64-gnu'
+72 silly reify ]
+73 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/lightningcss-linux-arm-gnueabihf
+74 silly reify mark deleted [
+74 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/lightningcss-linux-arm-gnueabihf'
+74 silly reify ]
+75 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/lightningcss-freebsd-x64
+76 silly reify mark deleted [
+76 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/lightningcss-freebsd-x64'
+76 silly reify ]
+77 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/lightningcss-darwin-x64
+78 silly reify mark deleted [
+78 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/lightningcss-darwin-x64'
+78 silly reify ]
+79 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@tailwindcss/oxide-win32-x64-msvc
+80 silly reify mark deleted [
+80 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@tailwindcss/oxide-win32-x64-msvc'
+80 silly reify ]
+81 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@tailwindcss/oxide-win32-arm64-msvc
+82 silly reify mark deleted [
+82 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@tailwindcss/oxide-win32-arm64-msvc'
+82 silly reify ]
+83 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@tailwindcss/oxide-linux-x64-musl
+84 silly reify mark deleted [
+84 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@tailwindcss/oxide-linux-x64-musl'
+84 silly reify ]
+85 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@tailwindcss/oxide-linux-x64-gnu
+86 silly reify mark deleted [
+86 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@tailwindcss/oxide-linux-x64-gnu'
+86 silly reify ]
+87 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@tailwindcss/oxide-linux-arm64-musl
+88 silly reify mark deleted [
+88 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@tailwindcss/oxide-linux-arm64-musl'
+88 silly reify ]
+89 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@tailwindcss/oxide-linux-arm64-gnu
+90 silly reify mark deleted [
+90 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@tailwindcss/oxide-linux-arm64-gnu'
+90 silly reify ]
+91 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@tailwindcss/oxide-linux-arm-gnueabihf
+92 silly reify mark deleted [
+92 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@tailwindcss/oxide-linux-arm-gnueabihf'
+92 silly reify ]
+93 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@tailwindcss/oxide-freebsd-x64
+94 silly reify mark deleted [
+94 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@tailwindcss/oxide-freebsd-x64'
+94 silly reify ]
+95 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@tailwindcss/oxide-darwin-x64
+96 silly reify mark deleted [
+96 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@tailwindcss/oxide-darwin-x64'
+96 silly reify ]
+97 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@tailwindcss/oxide-android-arm64
+98 silly reify mark deleted [
+98 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@tailwindcss/oxide-android-arm64'
+98 silly reify ]
+99 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@next/swc-win32-x64-msvc
+100 silly reify mark deleted [
+100 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@next/swc-win32-x64-msvc'
+100 silly reify ]
+101 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@next/swc-win32-arm64-msvc
+102 silly reify mark deleted [
+102 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@next/swc-win32-arm64-msvc'
+102 silly reify ]
+103 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@next/swc-linux-x64-musl
+104 silly reify mark deleted [
+104 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@next/swc-linux-x64-musl'
+104 silly reify ]
+105 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@next/swc-linux-x64-gnu
+106 silly reify mark deleted [
+106 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@next/swc-linux-x64-gnu'
+106 silly reify ]
+107 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@next/swc-linux-arm64-musl
+108 silly reify mark deleted [
+108 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@next/swc-linux-arm64-musl'
+108 silly reify ]
+109 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@next/swc-linux-arm64-gnu
+110 silly reify mark deleted [
+110 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@next/swc-linux-arm64-gnu'
+110 silly reify ]
+111 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@next/swc-darwin-x64
+112 silly reify mark deleted [
+112 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@next/swc-darwin-x64'
+112 silly reify ]
+113 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-win32-x64
+114 silly reify mark deleted [
+114 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-win32-x64'
+114 silly reify ]
+115 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-win32-ia32
+116 silly reify mark deleted [
+116 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-win32-ia32'
+116 silly reify ]
+117 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-wasm32
+118 silly reify mark deleted [
+118 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-wasm32'
+118 silly reify ]
+119 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-linuxmusl-x64
+120 silly reify mark deleted [
+120 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-linuxmusl-x64'
+120 silly reify ]
+121 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-linuxmusl-arm64
+122 silly reify mark deleted [
+122 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-linuxmusl-arm64'
+122 silly reify ]
+123 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-linux-x64
+124 silly reify mark deleted [
+124 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-linux-x64'
+124 silly reify ]
+125 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-linux-s390x
+126 silly reify mark deleted [
+126 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-linux-s390x'
+126 silly reify ]
+127 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-linux-arm64
+128 silly reify mark deleted [
+128 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-linux-arm64'
+128 silly reify ]
+129 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-linux-arm
+130 silly reify mark deleted [
+130 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-linux-arm'
+130 silly reify ]
+131 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-libvips-linuxmusl-x64
+132 silly reify mark deleted [
+132 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-libvips-linuxmusl-x64'
+132 silly reify ]
+133 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-libvips-linuxmusl-arm64
+134 silly reify mark deleted [
+134 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-libvips-linuxmusl-arm64'
+134 silly reify ]
+135 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-libvips-linux-x64
+136 silly reify mark deleted [
+136 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-libvips-linux-x64'
+136 silly reify ]
+137 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-libvips-linux-s390x
+138 silly reify mark deleted [
+138 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-libvips-linux-s390x'
+138 silly reify ]
+139 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-libvips-linux-ppc64
+140 silly reify mark deleted [
+140 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-libvips-linux-ppc64'
+140 silly reify ]
+141 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-libvips-linux-arm64
+142 silly reify mark deleted [
+142 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-libvips-linux-arm64'
+142 silly reify ]
+143 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-libvips-linux-arm
+144 silly reify mark deleted [
+144 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-libvips-linux-arm'
+144 silly reify ]
+145 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-libvips-darwin-x64
+146 silly reify mark deleted [
+146 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-libvips-darwin-x64'
+146 silly reify ]
+147 verbose reify failed optional dependency /Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-darwin-x64
+148 silly reify mark deleted [
+148 silly reify   '/Users/atlasacopian/eggs.live/eggs-live-next/node_modules/@img/sharp-darwin-x64'
+148 silly reify ]
+149 silly tarball no local data for papaparse@https://registry.npmjs.org/papaparse/-/papaparse-5.5.3.tgz. Extracting by manifest.
+150 http fetch POST 200 https://registry.npmjs.org/-/npm/v1/security/advisories/bulk 94ms
+151 silly audit report {}
+152 http fetch GET 200 https://registry.npmjs.org/papaparse/-/papaparse-5.5.3.tgz 133ms (cache miss)
+153 silly ADD node_modules/papaparse
+154 silly ADD
+155 silly ADD
+156 silly ADD
+157 silly ADD
+158 silly ADD
+159 silly ADD
+160 silly ADD
+161 silly ADD
+162 silly ADD
+163 silly ADD
+164 silly ADD
+165 silly ADD
+166 silly ADD
+167 silly ADD
+168 silly ADD
+169 silly ADD
+170 silly ADD
+171 silly ADD
+172 silly ADD
+173 silly ADD
+174 silly ADD
+175 silly ADD
+176 silly ADD
+177 silly ADD
+178 silly ADD
+179 silly ADD
+180 silly ADD
+181 silly ADD
+182 silly ADD
+183 silly ADD
+184 silly ADD
+185 silly ADD
+186 silly ADD
+187 silly ADD
+188 silly ADD
+189 silly ADD
+190 silly ADD
+191 silly ADD
+192 silly ADD
+193 silly ADD
+194 silly ADD
+195 silly ADD
+196 silly ADD
+197 silly ADD
+198 silly ADD
+199 silly REMOVE node_modules/urijs
+200 silly REMOVE node_modules/topojson-client
+201 silly REMOVE node_modules/rbush
+202 silly REMOVE node_modules/quickselect
+203 silly REMOVE node_modules/protobufjs
+204 silly REMOVE node_modules/pako
+205 silly REMOVE node_modules/object-hash
+206 silly REMOVE node_modules/nosleep.js
+207 silly REMOVE node_modules/mime
+208 silly REMOVE node_modules/mersenne-twister
+209 silly REMOVE node_modules/long
+210 silly REMOVE node_modules/lerc
+211 silly REMOVE node_modules/ktx-parse
+212 silly REMOVE node_modules/kdbush
+213 silly REMOVE node_modules/jsep
+214 silly REMOVE node_modules/grapheme-splitter
+215 silly REMOVE node_modules/gltf-pipeline
+216 silly REMOVE node_modules/gltf-pipeline/node_modules/fs-extra
+217 silly REMOVE node_modules/earcut
+218 silly REMOVE node_modules/dompurify
+219 silly REMOVE node_modules/commander
+220 silly REMOVE node_modules/cesium
+221 silly REMOVE node_modules/bluebird
+222 silly REMOVE node_modules/bitmap-sdf
+223 silly REMOVE node_modules/autolinker
+224 silly REMOVE node_modules/@zip.js/zip.js
+225 silly REMOVE node_modules/@types/trusted-types
+226 silly REMOVE node_modules/@protobufjs/utf8
+227 silly REMOVE node_modules/@protobufjs/pool
+228 silly REMOVE node_modules/@protobufjs/path
+229 silly REMOVE node_modules/@protobufjs/inquire
+230 silly REMOVE node_modules/@protobufjs/float
+231 silly REMOVE node_modules/@protobufjs/fetch
+232 silly REMOVE node_modules/@protobufjs/eventemitter
+233 silly REMOVE node_modules/@protobufjs/codegen
+234 silly REMOVE node_modules/@protobufjs/base64
+235 silly REMOVE node_modules/@protobufjs/aspromise
+236 silly REMOVE node_modules/@cesium/widgets
+237 silly REMOVE node_modules/@cesium/engine
+238 silly REMOVE node_modules/@cesium/engine/node_modules/meshoptimizer
+239 silly REMOVE node_modules/@cesium/engine/node_modules/@tweenjs/tween.js
+240 verbose cwd /Users/atlasacopian/eggs.live/eggs-live-next
+241 verbose os Darwin 24.5.0
+242 verbose node v22.11.0
+243 verbose npm  v10.9.0
+244 verbose exit 0
+245 info ok
