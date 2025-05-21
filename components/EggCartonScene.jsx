@@ -8,12 +8,12 @@ import * as THREE from 'three'
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
 // Preload the original egg GLB so it's ready when the scene mounts
-useGLTF.preload('/egg.glb')
+useGLTF.preload('/final.glb')
 
 // Update ModelPrimitive for immediate load
 const ModelPrimitive = forwardRef((props, ref) => {
   // Load GLB model using useGLTF and clone directly for fast initial rendering
-  const gltf = useGLTF('/egg.glb')
+  const gltf = useGLTF('/final.glb')
 
   const model = useMemo(() => {
     const cloned = gltf.scene.clone()
