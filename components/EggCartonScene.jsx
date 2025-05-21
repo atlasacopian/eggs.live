@@ -117,16 +117,15 @@ export function Experience({ onInteractionStart }) {
   )
 }
 
-// Main Scene component only sets up the Canvas
+// Main Scene component only sets up the Canvas wrapper occupying the full viewport
 export default function EggCartonScene({ onInteractionStart }) {
   return (
     <>
-      {/* Push the entire canvas down so the logo and tagline have breathing room above the egg */}
-      <div style={{ position: 'absolute', top: 320, left: 0, width: '100%', height: 'calc(100% - 320px)', zIndex: 0, pointerEvents: 'none' }}>
+      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none' }}>
         <Canvas
           camera={{ position: [0, 0, 12], fov: 35 }}
           onCreated={({ scene, camera, gl }) => {
-            // Restore transparent background
+            // Ensure transparent background behind the egg
             scene.background = null;
             gl.setClearColor(0x000000, 0);
             camera.lookAt(0, 0, 0);
@@ -134,7 +133,7 @@ export default function EggCartonScene({ onInteractionStart }) {
         >
           {/* Soft ambient fill to reduce harsh shadows */}
           <ambientLight intensity={0.5} />
-          {/* Show model when ready, no loading UI */}
+          {/* Render the experience (egg model & lighting) */}
           <Suspense fallback={null}>
             <Experience onInteractionStart={onInteractionStart} />
           </Suspense>
