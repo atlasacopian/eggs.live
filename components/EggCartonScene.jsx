@@ -3,7 +3,7 @@
 import { useRef, useEffect, Suspense, useState, useMemo, forwardRef } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { useGLTF } from '@react-three/drei'
-import { Center, Environment, ContactShadows, Decal } from '@react-three/drei'
+import { Center, Environment, ContactShadows, useTexture } from '@react-three/drei'
 import { useLoader } from '@react-three/fiber'
 import { TextureLoader } from 'three'
 import * as THREE from 'three'
@@ -16,6 +16,8 @@ useGLTF.preload('/final.glb')
 const ModelPrimitive = forwardRef((props, ref) => {
   // Load GLB model using useGLTF and clone directly for fast initial rendering
   const gltf = useGLTF('/final.glb')
+  // Logo texture for egg surface
+  const logoTexture = useTexture('/logo test.png')
 
   const model = useMemo(() => {
     const cloned = gltf.scene.clone()
@@ -124,15 +126,13 @@ export function Experience({ onInteractionStart }) {
       <Suspense fallback={null}>
         <Center ref={centerRef} position={[0, 0, 0]} rotation={[0, 0, 0]}>
           <group>
-            <ModelPrimitive />
-            {/* Decal logo on egg surface */}
-            <Decal
-              map={logoTexture}
-              position={[0, 0, 6]}
-              rotation={[0, 0, 0]}
-              scale={3}
-              flatShading={true}
-            />
+            {/* Egg model scaled to 6 */}
+            <ModelPrimitive scale={6} />
+            {/* Logo plane mapped onto egg surface, scaled to egg */}
+            <mesh position={[0, 0, 1.02 * 6]} rotation={[0, 0, 0]} scale={[4, 4, 4]}>
+              <planeGeometry args={[1, 1]} />
+              <meshBasicMaterial map={logoTexture} transparent depthWrite={false} />
+            </mesh>
           </group>
         </Center>
       </Suspense>
