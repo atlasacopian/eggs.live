@@ -121,7 +121,8 @@ export function Experience({ onInteractionStart }) {
 export default function EggCartonScene({ onInteractionStart }) {
   return (
     <>
-      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none' }}>
+      {/* Push the entire canvas down so the logo and tagline have breathing room above the egg */}
+      <div style={{ position: 'absolute', top: 320, left: 0, width: '100%', height: 'calc(100% - 320px)', zIndex: 0, pointerEvents: 'none' }}>
         <Canvas
           camera={{ position: [0, 0, 12], fov: 35 }}
           onCreated={({ scene, camera, gl }) => {
