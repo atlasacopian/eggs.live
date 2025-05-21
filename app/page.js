@@ -48,17 +48,17 @@ export default function Home() {
       }}
     >
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}>
-        <div style={{ backgroundColor: '#fff', padding: '8px 0', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-          <marquee scrollamount="6" style={{ fontFamily: 'Menlo, monospace', fontSize: '16px', color: '#000' }}>
-            <span style={{ margin: '0 2rem', color: '#0f0' }}>
-              EGG 64.69 ▲ 2.43%
-            </span>
-            <span style={{ margin: '0 2rem', color: '#f00' }}>
-              YOLK 73.90 ▼ 1.59%
-            </span>
-            <span style={{ margin: '0 2rem', color: '#0f0' }}>
-              ALB 88.12 ▲ 0.45%
-            </span>
+        <div style={{ backgroundColor: '#000', padding: '8px 0', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+          <marquee scrollamount="6" style={{ fontFamily: 'Menlo, monospace', fontSize: '16px', color: '#fff' }}>
+            <span style={{ margin: '0 2rem', color: '#0f0' }}>EGG 64.69 ▲ 2.43%</span>
+            <span style={{ margin: '0 2rem', color: '#f00' }}>YOLK 73.90 ▼ 1.59%</span>
+            <span style={{ margin: '0 2rem', color: '#0f0' }}>ALB 88.12 ▲ 0.45%</span>
+            <span style={{ margin: '0 2rem', color: '#0f0' }}>CARTON 12.50 ▲ 0.30%</span>
+            <span style={{ margin: '0 2rem', color: '#f00' }}>SCRMBL 32.10 ▼ 0.20%</span>
+            <span style={{ margin: '0 2rem', color: '#0f0' }}>FRESH 102.00 ▲ 0.55%</span>
+            <span style={{ margin: '0 2rem', color: '#f00' }}>GRADE 90.00 ▼ 0.10%</span>
+            <span style={{ margin: '0 2rem', color: '#0f0' }}>WHOLE 150.25 ▲ 0.75%</span>
+            <span style={{ margin: '0 2rem', color: '#f00' }}>POACHED 75.00 ▼ 0.40%</span>
           </marquee>
         </div>
       </div>
