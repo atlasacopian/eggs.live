@@ -51,7 +51,12 @@ export default function Home() {
         {/* ticker with white background and simple text style */}
         <div style={{ backgroundColor: '#fff', border: 'none', padding: '8px 16px', overflow: 'hidden', whiteSpace: 'nowrap', fontFamily: 'Menlo, monospace', color: '#000' }}>
           <marquee scrollamount="4" style={{ fontSize: '10px' }}>
-            NATIONAL AVG: REG DOZEN $6.23 <span style={{ color: '#00FF00' }}>↑</span> | ORG DOZEN $6.98 <span style={{ color: '#FF0000' }}>↓</span> 🥚 123 STORES | 45 ZIP CODES 🥚
+            <span style={{ marginRight: '1.5rem', color: '#0f0', fontFamily: 'Menlo, monospace' }}>
+              EGG 5.43 ▲ 1.31%
+            </span>
+            <span style={{ marginRight: '1.5rem', color: '#0f0', fontFamily: 'Menlo, monospace' }}>
+              YOLK 73.90 ▼ 1.59%
+            </span>
           </marquee>
         </div>
       </div>
