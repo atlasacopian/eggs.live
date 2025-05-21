@@ -62,7 +62,7 @@ export default function Home() {
           </marquee>
         </div>
       </div>
-      {/* Main header placed above the egg scene */}
+      {/* Header (logo and subtitle) above the egg scene */}
       <div
         style={{
           position: 'absolute',
@@ -71,15 +71,16 @@ export default function Home() {
           right: 0,
           zIndex: 50,
           display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
           justifyContent: 'center',
-          padding: '0 16px',
-          boxSizing: 'border-box'
+          pointerEvents: 'none',
         }}
         className="header-container"
       >
         <Header />
       </div>
-      {/* 3D Egg scene on top */}
+      {/* 3D Egg scene below the header */}
       <EggCartonScene />
       <LocationPrompt 
         className="location-prompt-container"
