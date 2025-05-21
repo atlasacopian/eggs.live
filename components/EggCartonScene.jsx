@@ -149,7 +149,7 @@ export default function EggCartonScene({ onInteractionStart }) {
           <ambientLight intensity={0.5} />
           {/* Background plane to catch dynamic light shadows */}
           <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -2, 0]}>
-            <planeBufferGeometry args={[50, 50]} />
+            <planeGeometry args={[50, 50]} />
             <shadowMaterial transparent opacity={0.2} />
           </mesh>
           {/* Show model when ready, no loading UI */}
