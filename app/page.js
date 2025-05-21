@@ -48,8 +48,8 @@ export default function Home() {
       }}
     >
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}>
-        <div style={{ backgroundColor: '#000', padding: '8px 0', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-          <marquee scrollamount="6" style={{ fontFamily: 'Menlo, monospace', fontSize: '16px', color: '#fff' }}>
+        <div style={{ backgroundColor: '#000', height: '48px', display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+          <marquee scrollamount="6" style={{ width: '100%', fontFamily: 'Menlo, monospace', fontSize: '16px', color: '#fff' }}>
             <span style={{ margin: '0 2rem', color: '#0f0' }}>EGG 64.69 ▲ 2.43%</span>
             <span style={{ margin: '0 2rem', color: '#f00' }}>YOLK 73.90 ▼ 1.59%</span>
             <span style={{ margin: '0 2rem', color: '#0f0' }}>ALB 88.12 ▲ 0.45%</span>
