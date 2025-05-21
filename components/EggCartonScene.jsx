@@ -47,8 +47,6 @@ ModelPrimitive.displayName = 'ModelPrimitive'
 export function Experience({ onInteractionStart }) {
   const centerRef = useRef()
   const mouse = useRef({ x: 0, y: 0 }) // For desktop mouse tracking
-  // Dynamic point light reference
-  const dynamicLightRef = useRef()
   const [isMobile, setIsMobile] = useState(false);
 
   // Detect touch device on mount
@@ -73,13 +71,6 @@ export function Experience({ onInteractionStart }) {
 
   // Apply animation based on device type
   useFrame((state, delta) => {
-    // Update dynamic light position and intensity
-    if (dynamicLightRef.current) {
-      const t = state.clock.elapsedTime
-      dynamicLightRef.current.position.x = Math.sin(t * 0.5) * 6
-      dynamicLightRef.current.position.z = Math.cos(t * 0.5) * 6
-      dynamicLightRef.current.intensity = 0.5 + Math.sin(t * 2) * 0.5
-    }
     if (centerRef.current) { 
       if (isMobile) { 
         // Mobile: Dynamic spin with oscillation
@@ -113,8 +104,6 @@ export function Experience({ onInteractionStart }) {
       {/* Directional lights for subtle highlights */}
       <directionalLight position={[5, 5, 5]} intensity={0.6} />
       <directionalLight position={[-5, 5, -5]} intensity={0.3} />
-      {/* Moving dynamic point light for interest */}
-      <pointLight ref={dynamicLightRef} color={0xffffff} intensity={1} position={[0, 5, 0]} />
       {/* Ground shadows */}
       <ContactShadows resolution={1024} position={[0, -0.01, 0]} scale={10} blur={2} far={0.5} opacity={0.5} />
       <Suspense fallback={null}>
@@ -135,28 +124,15 @@ export default function EggCartonScene({ onInteractionStart }) {
       <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none' }}>
         <Canvas
           camera={{ position: [0, 0, 12], fov: 35 }}
-          shadows={true}
           onCreated={({ scene, camera, gl }) => {
-            // White background for scene
-            scene.background = new THREE.Color(0xffffff);
-            gl.setClearColor(0xffffff, 1);
-            gl.shadowMap.enabled = true;
-            gl.shadowMap.type = THREE.PCFSoftShadowMap;
+            // Restore transparent background
+            scene.background = null;
+            gl.setClearColor(0x000000, 0);
             camera.lookAt(0, 0, 0);
           }}
         >
-          {/* Backdrop plane behind egg for dynamic lighting effects */}
-          <mesh rotation={[0, 0, 0]} position={[0, 0, -10]} receiveShadow>
-            <planeGeometry args={[50, 50]} />
-            <meshStandardMaterial color={0xffffff} roughness={0.8} metalness={0.2} />
-          </mesh>
           {/* Soft ambient fill to reduce harsh shadows */}
           <ambientLight intensity={0.5} />
-          {/* Background plane to catch dynamic light shadows */}
-          <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -2, 0]}>
-            <planeGeometry args={[50, 50]} />
-            <shadowMaterial transparent opacity={0.2} />
-          </mesh>
           {/* Show model when ready, no loading UI */}
           <Suspense fallback={null}>
             <Experience onInteractionStart={onInteractionStart} />
