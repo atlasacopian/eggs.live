@@ -145,6 +145,11 @@ export default function EggCartonScene({ onInteractionStart }) {
             camera.lookAt(0, 0, 0);
           }}
         >
+          {/* Backdrop plane behind egg for dynamic lighting effects */}
+          <mesh rotation={[0, 0, 0]} position={[0, 0, -10]} receiveShadow>
+            <planeGeometry args={[50, 50]} />
+            <meshStandardMaterial color={0xffffff} roughness={0.8} metalness={0.2} />
+          </mesh>
           {/* Soft ambient fill to reduce harsh shadows */}
           <ambientLight intensity={0.5} />
           {/* Background plane to catch dynamic light shadows */}
