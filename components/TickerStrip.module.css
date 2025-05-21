@@ -23,7 +23,7 @@
 .tickerWrap {
   display: flex;
   width: max-content;
-  animation: scroll 60s linear infinite; /* Restore scrolling animation */
+  animation: scroll 81s linear infinite; /* Slowed down by 35% */
   will-change: transform;
 }
 
