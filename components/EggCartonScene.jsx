@@ -80,12 +80,15 @@ export function Experience({ onInteractionStart }) {
       } else {
         // Desktop: follow mouse like production site
         const targetY = mouse.current.x * 0.8;
-        const targetX = mouse.current.y * 0.6;
+        const targetX = (mouse.current.y * 0.6) + (Math.abs(mouse.current.x) * 0.3);
+        const targetZ = mouse.current.x * 0.2;
         // Smooth interpolation
         centerRef.current.rotation.y = THREE.MathUtils.lerp(centerRef.current.rotation.y, targetY, 0.2);
         centerRef.current.rotation.x = THREE.MathUtils.lerp(centerRef.current.rotation.x, targetX, 0.2);
-        // Clamp X rotation to avoid flipping under
-        centerRef.current.rotation.x = THREE.MathUtils.clamp(centerRef.current.rotation.x, -0.1, Math.PI / 2);
+        centerRef.current.rotation.z = THREE.MathUtils.lerp(centerRef.current.rotation.z, targetZ, 0.2);
+        // Clamp rotations
+        centerRef.current.rotation.x = THREE.MathUtils.clamp(centerRef.current.rotation.x, -0.1, 1.0);
+        centerRef.current.rotation.z = THREE.MathUtils.clamp(centerRef.current.rotation.z, -0.3, 0.3);
       }
     }
   })
