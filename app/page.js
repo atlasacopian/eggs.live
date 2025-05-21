@@ -6,7 +6,6 @@ import Head from 'next/head'
 import Header from '../components/Header'
 import LocationPrompt from '../components/LocationPrompt'
 import EggCartonScene from '../components/EggCartonScene'
-import TickerStrip from '../components/TickerStrip'
 
 export default function Home() {
   const router = useRouter()
@@ -49,12 +48,12 @@ export default function Home() {
       }}
     >
       <div style={{ position: 'absolute', top: 16, left: 16, right: 16, zIndex: 10 }}>
-        <TickerStrip
-          text="NATIONAL AVG: REG DOZEN $6.23 <span style='color: #00FF00;'>↑</span> | ORG DOZEN $6.98 <span style='color: #FF0000;'>↓</span>  🥚  123 STORES | 45 ZIP CODES 🥚"
-          fontSize="10px"
-          overrideBackgroundColor="#fff"
-          overrideBorderColor="#000"
-        />
+        {/* marquee ticker style from data page */}
+        <div style={{ backgroundColor: '#fff', border: '1px solid #000', borderRadius: '6px', padding: '8px 16px', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+          <marquee scrollamount="4" style={{ fontSize: '10px', color: '#000' }}>
+            NATIONAL AVG: REG DOZEN $6.23 <span style={{ color: '#00FF00' }}>↑</span> | ORG DOZEN $6.98 <span style={{ color: '#FF0000' }}>↓</span> 🥚 123 STORES | 45 ZIP CODES 🥚
+          </marquee>
+        </div>
       </div>
       {/* 3D Egg scene on top */}
       <EggCartonScene />
