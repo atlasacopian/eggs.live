@@ -300,7 +300,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
                       </div>
                     ))}
                     <div style={{ color: '#666', fontSize: '0.7em', marginTop: 4 }}>
-                      Last update {(() => {const latest=eggStocks.reduce((a,b)=> new Date(a.updated_at)>new Date(b.updated_at)?a:b);const dt=new Date(latest.updated_at);return dt.toLocaleString('en-US',{hour:'2-digit',minute:'2-digit',timeZone:'America/New_York',hour12:false})+' ET';})()}
+                      Last update {(() => {const latest=eggStocks.reduce((a,b)=> new Date(a.updated_at)>new Date(b.updated_at)?a:b);const dt=new Date(latest.updated_at);return dt.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit'})})()}
                     </div>
                   </>
                 )}
@@ -317,7 +317,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
                       {rs.symbol} {rs.price.toFixed(2)} {rs.change_pct>=0?'▲':'▼'} {Math.abs(rs.change_pct).toFixed(2)}%
                     </div>))}
                   <div style={{color:'#666',fontSize:'0.7em',marginTop:4}}>
-                     Last update {(() => {const latest = retailerStocks.reduce((a,b)=> new Date(a.updated_at)>new Date(b.updated_at)?a:b); const dt=new Date(latest.updated_at); return dt.toLocaleString('en-US',{hour:'2-digit',minute:'2-digit',timeZone:'America/New_York',hour12:false})+' ET';})()}
+                     Last update {(() => {const latest = retailerStocks.reduce((a,b)=> new Date(a.updated_at)>new Date(b.updated_at)?a:b); const dt=new Date(latest.updated_at); return dt.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit'})})()}
                   </div>
                 </>)}
                 <div style={{fontSize:'0.6em',color:'#666',marginTop:2}}>Source: Polygon.io</div>
