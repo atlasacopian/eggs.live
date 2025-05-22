@@ -25,19 +25,30 @@ export async function GET() {
       return { symbol: t.ticker, price: p, change_pct, updated_at }
     })
   } else {
-    // Fallback to previous day close
-    const aggPromises = TICKERS.map(sym =>
-      fetch(`https://api.polygon.io/v2/aggs/ticker/${sym}/prev?apiKey=${key}`, { next: { revalidate: 3600 } })
+    // Fallback to yesterday's close via free open-close endpoint
+    // Compute yesterday's date in America/New_York
+    const nowNY = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }))
+    const y = new Date(nowNY)
+    y.setDate(y.getDate() - 1)
+    const yyyy = y.getFullYear()
+    const mm = String(y.getMonth() + 1).padStart(2, '0')
+    const dd = String(y.getDate()).padStart(2, '0')
+    const date = `${yyyy}-${mm}-${dd}`
+
+    const openClosePromises = TICKERS.map(sym =>
+      fetch(`https://api.polygon.io/v1/open-close/${sym}/${date}?adjusted=true&apiKey=${key}`)
     )
-    const aggRes = await Promise.all(aggPromises)
-    const aggJsons = await Promise.all(aggRes.map(r => r.ok ? r.json().catch(() => null) : null))
-    rows = aggJsons.map((j, i) => {
-      const day = j?.results?.[0]
-      if (!day) return null
-      const p = day.c
-      const o = day.o ?? p
-      const change_pct = p != null && o != null ? ((p - o) / o) * 100 : null
-      const updated_at = new Date(day.t).toISOString()
+    const openCloseRes = await Promise.all(openClosePromises)
+    const openCloseJsons = await Promise.all(
+      openCloseRes.map(r => (r.ok ? r.json().catch(() => null) : null))
+    )
+    rows = openCloseJsons.map((j, i) => {
+      if (!j || typeof j.close !== 'number' || typeof j.open !== 'number') return null
+      const p = j.close
+      const o = j.open
+      const change_pct = o !== 0 ? ((p - o) / o) * 100 : null
+      // Use date at market close as updated_at
+      const updated_at = new Date(Date.UTC(y.getFullYear(), y.getMonth(), y.getDate(), 21, 0, 0)).toISOString()
       return { symbol: TICKERS[i], price: p, change_pct, updated_at }
     }).filter(r => r !== null)
   }
