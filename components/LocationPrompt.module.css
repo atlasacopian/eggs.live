@@ -29,15 +29,14 @@
   height: 36px; /* keep constant height */
 }
 
-/* Unified hover and focus styling on .option, including focus-within when input is active */
+/* Override hover and focus styling on .option to remove black highlight for minimal prompt style */
 .option:hover,
 .option:focus-within,
 .option:active,
 .option:focus {
-  color: #ffffff;
-  background-color: #000000;
-  /* Switch border to white */
-  border-color: #ffffff;
+  background-color: transparent !important;
+  color: #000000 !important;
+  border-color: transparent !important;
 }
 
 /* Ensure ZIP input is clearly visible */
@@ -98,10 +97,10 @@
   border-radius: 4px;
 }
 
-/* restore zipInput focus */
+/* Underline zip input on focus for prompt style */
 .zipInput:focus {
   outline: none;
-  letter-spacing: 2px; /* maintain consistent spacing */
+  border-bottom: 1px solid var(--accent-color) !important;
 }
 
 .scanHeader {
