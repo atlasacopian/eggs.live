@@ -45,7 +45,7 @@ export default function EggNewsPanel({ fontSize = '0.8rem' }) {
           </li>
         ))}
       </ul>
-      <div style={{ fontSize: '0.6em', color: '#666', marginTop: 4 }}>Source: GNews (cached via Supabase)</div>
+      <div style={{ fontSize: '0.6em', color: '#666', marginTop: 4 }}>Source: GNews.io</div>
     </>
   );
 } 
