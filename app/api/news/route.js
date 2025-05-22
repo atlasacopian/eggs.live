@@ -7,19 +7,36 @@ const PRIORITY_SOURCES = [
 ];
 
 export async function GET() {
-  const { GNEWS_API_KEY } = process.env;
-  if (!GNEWS_API_KEY) {
-    return NextResponse.json({ error: 'Missing GNEWS_API_KEY env' }, { status: 500 });
-  }
+  const { SERPHOUSE_API_KEY, GNEWS_API_KEY } = process.env;
   try {
     const QUERIES = ['egg price','egg prices','egg price drop'];
-    const fetchPromises = QUERIES.map(q =>
-      fetch(`https://gnews.io/api/v4/search?q=${encodeURIComponent(q)}&lang=en&max=30&token=${GNEWS_API_KEY}`, {
-        next: { revalidate: 3600 }
-      })
-    );
+    let fetchPromises;
+    let parser;
+
+    if (SERPHOUSE_API_KEY) {
+      // Use SERPHouse Google News API
+      fetchPromises = QUERIES.map(q =>
+        fetch(`https://api.serphouse.com/google-news?q=${encodeURIComponent(q)}&num=100&api_key=${SERPHOUSE_API_KEY}`, { next: { revalidate: 3600 } })
+      );
+      parser = async (res)=>{
+        if (!res.ok) return { articles: [] };
+        const j = await res.json().catch(()=>({news:[]}));
+        const arr = j.news || [];
+        return { articles: arr.map(n=>({ title:n.title, url:n.url, publishedAt:n.time, source:n.channel||'Unknown' })) };
+      };
+    } else {
+      // Fallback to GNews
+      if (!GNEWS_API_KEY) {
+        return NextResponse.json({ error: 'Missing SERPHOUSE_API_KEY or GNEWS_API_KEY env' }, { status: 500 });
+      }
+      fetchPromises = QUERIES.map(q =>
+        fetch(`https://gnews.io/api/v4/search?q=${encodeURIComponent(q)}&lang=en&max=30&token=${GNEWS_API_KEY}`, { next: { revalidate: 3600 } })
+      );
+      parser = async (res)=> res.ok ? res.json().catch(()=>({articles:[]})) : {articles:[]};
+    }
+
     const responses = await Promise.all(fetchPromises);
-    const jsonArrays = await Promise.all(responses.map(r=> r.ok ? r.json().catch(()=>({articles:[]})) : {articles:[]}));
+    const jsonArrays = await Promise.all(responses.map(parser));
 
     // merge & dedupe by url
     const allArts = jsonArrays.flatMap(j=> j.articles || []);
