@@ -31,7 +31,7 @@ export default function EggNewsPanel({ fontSize = '0.8rem' }) {
   return (
     <>
       <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize, lineHeight: 1.4 }}>
-        {articles.map((a) => (
+        {articles.slice(0,15).map((a) => (
           <li key={a.url} style={{ marginBottom: 6 }}>
             <a href={a.url} target="_blank" rel="noopener noreferrer" style={{ color: '#00c800', textDecoration: 'none' }}>
               {a.title.length > 120 ? a.title.slice(0, 117) + '…' : a.title}

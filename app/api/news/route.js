@@ -25,18 +25,25 @@ export async function GET() {
       publishedAt: a.publishedAt,
       source: a.source?.name || 'Unknown'
     }));
-    // simple unwanted baking filter
+    // filter out baking/recipe stories
     const BAKING_REGEX = /(bake|baking|recipe|cookies?|cake|cakes|bread|brownies?|muffins?|cupcakes?)/i;
     articles = articles.filter(a => !BAKING_REGEX.test(a.title));
-    // prioritise sources
-    articles = articles.sort((a,b)=>{
+
+    // newest first
+    articles.sort((a,b)=> new Date(b.publishedAt) - new Date(a.publishedAt));
+
+    // prioritise sources within the same timestamp order (stable sort approximation)
+    articles.sort((a,b)=>{
       const ia = PRIORITY_SOURCES.findIndex(s=>a.source && a.source.toLowerCase().includes(s.toLowerCase()));
       const ib = PRIORITY_SOURCES.findIndex(s=>b.source && b.source.toLowerCase().includes(s.toLowerCase()));
       if (ia===-1 && ib===-1) return 0;
       if (ia===-1) return 1;
       if (ib===-1) return -1;
       return ia-ib;
-    }).slice(0,20);
+    });
+
+    // limit to 30 so payload small
+    articles = articles.slice(0,30);
 
     return NextResponse.json({ articles });
   } catch (e) {
