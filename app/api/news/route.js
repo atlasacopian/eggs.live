@@ -16,12 +16,12 @@ export async function GET() {
     if (SERPHOUSE_API_KEY) {
       // Use SERPHouse Google News API
       fetchPromises = QUERIES.map(q =>
-        fetch(`https://api.serphouse.com/serp/live?q=${encodeURIComponent(q)}&domain=google.com&location=United%20States&lang=en&device=desktop&serp_type=news&num=100&api_key=${SERPHOUSE_API_KEY}`, { next: { revalidate: 3600 } })
+        fetch(`https://api.serphouse.com/serp/live?engine=google_news&q=${encodeURIComponent(q)}&num=100&api_key=${SERPHOUSE_API_KEY}`, { next: { revalidate: 3600 } })
       );
       parser = async (res)=>{
         if (!res.ok) return { articles: [] };
         const j = await res.json().catch(()=>({}));
-        const arr = j?.news || j?.data?.news || [];
+        const arr = j?.data?.results?.news || j?.news || [];
         return { articles: arr.map(n=>({ title:n.title, url:n.url, publishedAt:n.time, source:n.channel||'Unknown' })) };
       };
     } else {
