@@ -14,15 +14,15 @@ export async function GET() {
     let parser;
 
     if (SERPHOUSE_API_KEY) {
-      // Use SERPHouse Google News API
+      // Use SERPHouse Google News API product
       fetchPromises = QUERIES.map(q =>
-        fetch(`https://api.serphouse.com/serp/live?engine=google_news&q=${encodeURIComponent(q)}&num=100&api_key=${SERPHOUSE_API_KEY}`, { next: { revalidate: 3600 } })
+        fetch(`https://api.serphouse.com/google-news?q=${encodeURIComponent(q)}&max=30&token=${SERPHOUSE_API_KEY}`, { next: { revalidate: 3600 } })
       );
-      parser = async (res)=>{
+      parser = async (res) => {
         if (!res.ok) return { articles: [] };
-        const j = await res.json().catch(()=>({}));
-        const arr = j?.data?.results?.news || j?.data?.news || j?.news || [];
-        return { articles: arr.map(n=>({ title:n.title, url:n.url, publishedAt:n.time, source:n.channel||'Unknown' })) };
+        const j = await res.json().catch(() => ({}));
+        const arr = j.news || [];
+        return { articles: arr.map(n => ({ title: n.title, url: n.url, publishedAt: n.time, source: n.channel || 'Unknown' })) };
       };
     } else {
       // Fallback to GNews
