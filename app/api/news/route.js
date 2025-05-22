@@ -21,7 +21,7 @@ export async function GET() {
       parser = async (res)=>{
         if (!res.ok) return { articles: [] };
         const j = await res.json().catch(()=>({}));
-        const arr = j?.data?.results?.news || j?.news || [];
+        const arr = j?.data?.results?.news || j?.data?.news || j?.news || [];
         return { articles: arr.map(n=>({ title:n.title, url:n.url, publishedAt:n.time, source:n.channel||'Unknown' })) };
       };
     } else {
