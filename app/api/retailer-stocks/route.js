@@ -29,7 +29,9 @@ export async function GET() {
     // Compute yesterday's date in America/New_York
     const nowNY = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }))
     const y = new Date(nowNY)
-    y.setDate(y.getDate() - 1)
+    do {
+      y.setDate(y.getDate() - 1)
+    } while (y.getDay() === 0 || y.getDay() === 6)
     const yyyy = y.getFullYear()
     const mm = String(y.getMonth() + 1).padStart(2, '0')
     const dd = String(y.getDate()).padStart(2, '0')
