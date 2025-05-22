@@ -12,19 +12,30 @@ export async function GET() {
     return NextResponse.json({ error: 'Missing GNEWS_API_KEY env' }, { status: 500 });
   }
   try {
-    const url = `https://gnews.io/api/v4/search?q=egg%20price&lang=en&max=30&token=${GNEWS_API_KEY}`;
-    const res = await fetch(url, { next: { revalidate: 3600 } });
-    if (!res.ok) {
-      const body = await res.text().catch(()=>'<no body>');
-      return NextResponse.json({ error: `GNews ${res.status}: ${body.slice(0,200)}` }, { status: 500 });
+    const QUERIES = ['egg price','egg prices','egg price drop'];
+    const fetchPromises = QUERIES.map(q =>
+      fetch(`https://gnews.io/api/v4/search?q=${encodeURIComponent(q)}&lang=en&max=30&token=${GNEWS_API_KEY}`, {
+        next: { revalidate: 3600 }
+      })
+    );
+    const responses = await Promise.all(fetchPromises);
+    const jsonArrays = await Promise.all(responses.map(r=> r.ok ? r.json().catch(()=>({articles:[]})) : {articles:[]}));
+
+    // merge & dedupe by url
+    const allArts = jsonArrays.flatMap(j=> j.articles || []);
+    const seen = new Set();
+    let articles = [];
+    for (const a of allArts) {
+      if (!a.url || seen.has(a.url)) continue;
+      seen.add(a.url);
+      articles.push({
+        title: a.title,
+        url: a.url,
+        publishedAt: a.publishedAt,
+        source: a.source?.name || 'Unknown'
+      });
     }
-    const json = await res.json();
-    let articles = (json.articles || []).map(a => ({
-      title: a.title,
-      url: a.url,
-      publishedAt: a.publishedAt,
-      source: a.source?.name || 'Unknown'
-    }));
+
     // filter out baking/recipe stories
     const BAKING_REGEX = /(bake|baking|recipe|cookies?|cake|cakes|bread|brownies?|muffins?|cupcakes?)/i;
     articles = articles.filter(a => !BAKING_REGEX.test(a.title));
@@ -42,8 +53,8 @@ export async function GET() {
       return ia-ib;
     });
 
-    // limit to 30 so payload small
-    articles = articles.slice(0,30);
+    // limit to 60 so payload small
+    articles = articles.slice(0,60);
 
     return NextResponse.json({ articles });
   } catch (e) {
