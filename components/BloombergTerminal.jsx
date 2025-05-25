@@ -289,9 +289,13 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
               <FredChart symbol="APU0000703111" start="1980-01-01" showTimestamp={true} />
             </TerminalTile>
 
-            <TerminalTile title="USDA National Egg Prices" span={getSpan(3)} style={{minHeight: isMobile ? '250px' : '300px', maxHeight: isMobile ? '250px' : '300px', overflow: 'hidden'}}>
+            <TerminalTile
+              title="USDA National Egg Prices"
+              span={getSpan(3)}
+              style={{ minHeight: isMobile ? '250px' : '300px', maxHeight: isMobile ? '250px' : '300px', overflow: 'visible' }}
+              bodyStyle={{ overflow: 'visible' }}
+            >
               <UsdaPriceChart />
-              <div style={{fontSize:'0.6em',color:'#666',marginTop:4}}>Source: USDA</div>
             </TerminalTile>
 
             {/* National View - Row 2: Market indices */}
@@ -348,17 +352,34 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
             </TerminalTile>
 
             {/* Bird-Flu Impact */}
-            <TerminalTile title="Bird-Flu Impact" span={getSpan(2)} style={{minHeight: isMobile ? '120px' : 'auto'}}>
-              <div style={{padding: 8, fontFamily: 'Menlo, monospace', fontSize: isMobile ? '0.75rem' : '0.85rem', color: '#ccc'}}>
+            <TerminalTile title="Bird-Flu Impact" span={getSpan(2)} style={{ minHeight: isMobile ? '120px' : 'auto' }}>
+              <div style={{ padding: 8, fontFamily: 'Menlo, monospace', fontSize: isMobile ? '0.75rem' : '0.85rem', lineHeight: 1.45 }}>
                 {fluStats ? (
                   <>
-                    Today: <span style={{color:'#ffeb3b'}}>{fluStats.todayOutbreaks}</span> / <span style={{color:'#ffeb3b'}}>{fluStats.todayBirds.toLocaleString()}</span> birds<br/>
-                    7-day: <span style={{color:'#ffeb3b'}}>{fluStats.weekOutbreaks}</span> / <span style={{color:'#ffeb3b'}}>{fluStats.weekBirds.toLocaleString()}</span><br/>
-                    YTD Culled: <span style={{color:'#f00'}}>{fluStats.birdsCulledYTD.toLocaleString()}</span><br/>
-                    Pending: <span style={{color:'#FFA500'}}>{fluStats.birdsPending.toLocaleString()}</span>
+                    <div>
+                      <span style={{ color: '#888' }}>Today Outbreaks:</span> <span style={{ color: '#ffeb3b' }}>{fluStats.todayOutbreaks}</span>
+                    </div>
+                    <div>
+                      <span style={{ color: '#888' }}>Today Birds:</span> <span style={{ color: '#ffeb3b' }}>{fluStats.todayBirds.toLocaleString()}</span>
+                    </div>
+                    <div style={{ marginTop: 4 }}>
+                      <span style={{ color: '#888' }}>7-Day Outbreaks:</span> <span style={{ color: '#ffeb3b' }}>{fluStats.weekOutbreaks}</span>
+                    </div>
+                    <div>
+                      <span style={{ color: '#888' }}>7-Day Birds:</span> <span style={{ color: '#ffeb3b' }}>{fluStats.weekBirds.toLocaleString()}</span>
+                    </div>
+                    <div style={{ marginTop: 4 }}>
+                      <span style={{ color: '#888' }}>YTD Outbreaks:</span> <span style={{ color: '#ffeb3b' }}>{fluStats.ytdOutbreaks}</span>
+                    </div>
+                    <div>
+                      <span style={{ color: '#888' }}>Birds Culled YTD:</span> <span style={{ color: '#f00' }}>{fluStats.birdsCulledYTD.toLocaleString()}</span>
+                    </div>
+                    <div>
+                      <span style={{ color: '#888' }}>Birds Pending:</span> <span style={{ color: '#FFA500' }}>{fluStats.birdsPending.toLocaleString()}</span>
+                    </div>
                   </>
-                ) : 'Loading...'}
-                <div style={{fontSize:'0.6em',color:'#666',marginTop:2}}>Source: USDA APHIS</div>
+                ) : 'Loading…'}
+                <div style={{ fontSize: '0.6em', color: '#666', marginTop: 4 }}>Source: USDA APHIS</div>
               </div>
             </TerminalTile>
 
