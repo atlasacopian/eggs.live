@@ -45,8 +45,8 @@ export default function FredChart({ symbol = 'APU0000703111', start = '1980-01-0
   return (
     <div style={{
       width: '100%',
-      height: '100%',
-      maxHeight: '250px',
+      height: showTimestamp ? 'calc(100% - 20px)' : '100%',
+      maxHeight: showTimestamp ? '230px' : '250px',
       pointerEvents: 'auto',
       overflow: 'hidden',
     }}>
@@ -78,7 +78,7 @@ export default function FredChart({ symbol = 'APU0000703111', start = '1980-01-0
       </ResponsiveContainer>
       {showTimestamp && lastUpdated && (
         <div style={{ fontSize: '0.6em', color: '#666', marginTop: 4 }}>
-          Last updated: {new Date(lastUpdated).toLocaleDateString('en-US', { 
+          Source: FRED • Last updated: {new Date(lastUpdated).toLocaleDateString('en-US', { 
             month: 'short', 
             day: 'numeric', 
             year: 'numeric' 
