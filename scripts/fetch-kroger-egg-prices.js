@@ -81,23 +81,41 @@ let loggedFullProductForNullPrice = false; // Flag to ensure we only log one ful
 
 // --- helper: fetch with retry & exponential backoff (for 429 rate-limits & 5xx) ---
 async function fetchWithRetry(url, options = {}, maxAttempts = 5) {
+  let lastRes;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     const res = await fetch(url, options);
+    lastRes = res;
+    // Log rate-limit headers
+    const remaining = res.headers.get('X-RateLimit-Remaining');
+    const limit = res.headers.get('X-RateLimit-Limit');
+    console.log(`fetchWithRetry: rate-limit ${remaining}/${limit}`);
     if (res.ok) return res; // success
 
-    // If rate-limited (429) or server error (5xx), wait and retry
-    if (res.status === 429 || (res.status >= 500 && res.status < 600)) {
-      const waitMs = 2000 * attempt; // exponential backoff: 2s, 4s, 6s, ...
-      console.warn(`fetchWithRetry: attempt ${attempt} received status ${res.status}. Retrying after ${waitMs} ms`);
+    if (res.status === 429) {
+      // Use Retry-After header if present
+      const retryAfterHeader = res.headers.get('Retry-After');
+      let retryAfterSec = parseInt(retryAfterHeader, 10);
+      if (isNaN(retryAfterSec) || retryAfterSec <= 0) {
+        // Fallback to exponential backoff capped at 60s
+        retryAfterSec = Math.min(60, 5 * attempt);
+      }
+      console.warn(`fetchWithRetry: rate limit hit (429). Retry after ${retryAfterSec}s`);
+      await new Promise(r => setTimeout(r, retryAfterSec * 1000));
+      continue;
+    }
+
+    // Server errors (5xx)
+    if (res.status >= 500 && res.status < 600) {
+      const waitMs = 2000 * attempt;
+      console.warn(`fetchWithRetry: server error ${res.status}. Retrying after ${waitMs}ms`);
       await new Promise(r => setTimeout(r, waitMs));
       continue;
     }
 
-    // For other non-OK statuses, return response for caller handling
-    return res;
+    // Other errors, break to return last response
+    break;
   }
-  // Final attempt after retries
-  return await fetch(url, options);
+  return lastRes;
 }
 
 // --- configurable delays (defaults keep previous behaviour) ---
