@@ -71,9 +71,9 @@ export default function Home() {
           src="/logo-test.png" 
           alt="eggs.live" 
           style={{ 
-            height: '160px',
+            height: '200px',
             objectFit: 'contain',
-            marginBottom: '-15px'
+            marginBottom: '-25px'
           }} 
         />
         <div style={{ 
