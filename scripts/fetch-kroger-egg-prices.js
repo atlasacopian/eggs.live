@@ -405,18 +405,8 @@ async function fetchStoreEggs (location_id_raw) {
         }
       }
     } catch (err) {
-      // ADDED LOGS START
-      const normalizedErrorStoreId = normalizeLocationId(s.location_id);
-      if (laStoreIdsToCheck.map(id => normalizeLocationId(id)).includes(normalizedErrorStoreId)) {
-        console.error(`DEBUG: FAILED to process LA store ${s.location_id} (Normalized: ${normalizedErrorStoreId}):`, err);
-      }
-      // ADDED LOGS END
-      console.warn('Store fail', s.location_id, err.message);
-      // If this was a rate-limit error, apply a longer global pause before continuing
-      if (err.message.includes('Status: 429')) {
-        console.log('Global rate-limit hit; pausing for 60 seconds before continuing...');
-        await new Promise(r => setTimeout(r, 60000));
-      }
+      console.error(`Error processing store ${s.location_id}:`, err);
+      throw err;
     }
     // Add a delay after processing each store (or its failure) to reduce overall request rate
     await new Promise(r => setTimeout(r, STORE_DELAY_MS));
