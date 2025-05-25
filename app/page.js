@@ -51,6 +51,27 @@ export default function Home() {
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}>
         <EggStockTicker />
       </div>
+      
+      {/* Logo in top left corner */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '20px',
+          left: '20px',
+          zIndex: 60,
+          pointerEvents: 'none',
+        }}
+        className="top-left-logo"
+      >
+        <img 
+          src="/logo_test2.png" 
+          alt="eggs.live" 
+          style={{ 
+            height: '60px',
+            objectFit: 'contain'
+          }} 
+        />
+      </div>
       {/* Large logo centered behind the egg */}
       <div
         style={{
