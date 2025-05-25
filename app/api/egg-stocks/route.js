@@ -21,7 +21,27 @@ export async function GET() {
       const p = t.lastTrade?.p ?? t.day?.c ?? null
       const o = t.day?.o ?? p
       const change_pct = p != null && o != null ? ((p - o) / o) * 100 : null
-      const updated_at = t.lastTrade?.t ? new Date(t.lastTrade.t).toISOString() : new Date().toISOString()
+      
+      // Use a more appropriate timestamp for market data display
+      let updated_at
+      if (t.lastTrade?.t) {
+        const tradeTime = new Date(t.lastTrade.t)
+        const tradeHour = tradeTime.getUTCHours() - 5 // Convert to ET (approximate)
+        
+        // If trade was during market hours (9:30 AM - 4:00 PM ET), use it
+        // Otherwise, use market close time (4:00 PM ET) for the trading day
+        if (tradeHour >= 9.5 && tradeHour <= 16) {
+          updated_at = tradeTime.toISOString()
+        } else {
+          // Use 4:00 PM ET of the most recent trading day
+          const marketClose = new Date(tradeTime)
+          marketClose.setUTCHours(21, 0, 0, 0) // 4:00 PM ET = 21:00 UTC
+          updated_at = marketClose.toISOString()
+        }
+      } else {
+        updated_at = new Date().toISOString()
+      }
+      
       return { symbol: t.ticker, price: p, change_pct, updated_at }
     })
   } else {
