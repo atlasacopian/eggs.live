@@ -319,7 +319,9 @@ async function fetchStoreEggs (location_id_raw) {
 
   console.log(`Processing ${storesToProcess.length} Kroger stores (indexes ${startIdx} – ${endIdxExclusive - 1})`);
 
-  const limit = pLimit(5); // 5 concurrent requests (≈ 1-2 req/sec after token func)
+  const concurrency = Number(process.env.CONCURRENCY ?? '1');
+  console.log(`Using concurrency limit: ${concurrency}`);
+  const limit = pLimit(concurrency);
   const now = new Date();
   const captured_date = now.toISOString().split('T')[0];
   const captured_at = now.toISOString();
