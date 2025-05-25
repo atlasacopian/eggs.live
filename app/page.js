@@ -68,7 +68,7 @@ export default function Home() {
         className="centered-logo-container"
       >
         <img 
-          src="/logo_test2.png" 
+          src="/logo-test.png" 
           alt="eggs.live" 
           style={{ 
             height: '120px',
