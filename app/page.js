@@ -75,23 +75,23 @@ export default function Home() {
         />
       </div>
       
-      {/* Header (subtitle) above the egg scene */}
+      {/* Subtitle at the bottom */}
       <div
         style={{
           position: 'absolute',
-          top: '64px',
+          bottom: '40px',
           left: 0,
           right: 0,
           zIndex: 50,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'flex-start',
+          justifyContent: 'center',
           pointerEvents: 'none',
         }}
-        className="header-container"
+        className="bottom-text-container"
       >
-        <div style={{ fontWeight: 400, letterSpacing: 2, fontFamily: 'Menlo, monospace', fontSize: '12px', opacity: 0.8, textAlign: 'center', marginTop: '20px' }}>
+        <div style={{ fontWeight: 400, letterSpacing: 2, fontFamily: 'Menlo, monospace', fontSize: '12px', opacity: 0.8, textAlign: 'center' }}>
           TRACKING THE EGG-CONOMY
         </div>
       </div>
