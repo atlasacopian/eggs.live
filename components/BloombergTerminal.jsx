@@ -13,6 +13,46 @@ const MOBILE_BREAKPOINT = 768;
 // Polygon egg-related tickers (Cal-Maine Foods etc.)
 const EGG_STOCK_TICKERS = ['CALM', 'POST', 'HRL', 'VITL'];
 
+// Helper function to format market timestamp
+const formatMarketTime = (timestamp) => {
+  if (!timestamp) return 'Unknown';
+  
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffHours / 24);
+  
+  // If it's from today, show time
+  if (diffDays === 0) {
+    return date.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      timeZone: 'America/New_York'
+    }) + ' ET';
+  }
+  
+  // If it's from yesterday or recent days, show relative
+  if (diffDays === 1) {
+    return 'Yesterday ' + date.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      timeZone: 'America/New_York'
+    }) + ' ET';
+  }
+  
+  if (diffDays <= 7) {
+    return `${diffDays} days ago`;
+  }
+  
+  // For older data, show date
+  return date.toLocaleDateString('en-US', { 
+    month: 'short', 
+    day: 'numeric',
+    timeZone: 'America/New_York'
+  });
+};
+
 export default function BloombergTerminal({ zipCode, localStores = [], nationalStats = {} }) {
   const [view, setView] = useState('local'); // local | national
   const [selectedStore, setSelectedStore] = useState(localStores[0] || null);
@@ -98,16 +138,16 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
   const lineData = randomSeries();
   const barData = localStores.slice(0, 12).map(s => ({ name: s.name?.slice(0, 8) || 'Store', price: s.regular_price || Math.random() * 5 + 5 }));
   const pieData = [
-    { name: 'Organic', value: Math.random() * 100 },
-    { name: 'Cage-Free', value: Math.random() * 100 },
-    { name: 'Conventional', value: Math.random() * 100 },
+    { name: 'Kroger', value: 30 },
+    { name: 'Target', value: 25 },
+    { name: 'Walmart', value: 20 },
+    { name: 'Other', value: 25 }
   ];
-  const COLORS = ['#00c800', '#fff', '#1e90ff'];
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
   const getGridCols = () => {
-    if (isMobile) return 'repeat(1, 1fr)';
-    // Use 6 columns for both views on desktop to keep height consistent
-    return 'repeat(6, 1fr)';
+    if (isMobile) return 1;
+    return view === 'local' ? 6 : 6;
   };
 
   const getSpan = (desktopSpan) => {
@@ -115,88 +155,46 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
   };
 
   return (
-    <div style={{ background: '#000', color: '#fff', width: '100%', height: '100vh', overflow: 'hidden', fontFamily: 'Menlo, monospace' }}>
-      <TerminalHeader view={view} zipCode={zipCode} onSetView={setView} isMobile={isMobile} />
+    <div style={{ padding: isMobile ? 8 : 16, background: '#000', color: '#fff', minHeight: '100vh' }}>
+      <TerminalHeader 
+        zipCode={zipCode} 
+        view={view} 
+        setView={setView} 
+        priceType={priceType} 
+        setPriceType={setPriceType}
+        isMobile={isMobile}
+      />
 
-      {/* main grid */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: getGridCols(),
-          gridAutoRows: 'auto',
-          gap: isMobile ? 4 : 6,
-          padding: isMobile ? 4 : 6,
-          height: 'calc(100vh - 34px)', // Header height might change for mobile
-          overflowY: 'auto',
-        }}
-      >
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: `repeat(${getGridCols()}, 1fr)`, 
+        gap: isMobile ? 8 : 16, 
+        marginTop: isMobile ? 8 : 16 
+      }}>
         {view === 'local' && (
           <>
-            {/* Local Stores & Store History Row */}
-            <TerminalTile
-              title="Local Stores"
-              span={getSpan(2)}
-              style={{ overflow: 'auto', minHeight: isMobile ? '200px' : `${Math.min(localStores.length * 50, 600)}px` }}
-              bodyStyle={{ overflowY: 'auto' }}
-            >
-              <StoreList
-                stores={localStores}
-                onSelect={setSelectedStore}
-                selectedStoreId={selectedStore?.store_identifier}
-                onHover={setHoveredStore}
-                hoveredStoreId={hoveredStore?.store_identifier}
+            {/* Local View */}
+            <TerminalTile title="Store List" span={getSpan(2)} style={{minHeight: isMobile ? '200px' : 'auto'}}>
+              <StoreList 
+                stores={localStores} 
+                selectedStore={selectedStore} 
+                setSelectedStore={setSelectedStore}
+                hoveredStore={hoveredStore}
+                setHoveredStore={setHoveredStore}
+                priceType={priceType}
+                isMobile={isMobile}
               />
             </TerminalTile>
-            <TerminalTile title="Store History" span={getSpan(4)} style={{minHeight: isMobile ? '300px' : 'auto', padding: '10px'}}>
-              {selectedStore ? (
-                <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                  <div style={{ fontSize: '0.8rem', color: '#fff', textAlign: 'center', fontStyle: 'normal', paddingBottom: 4 }}>
-                    SHOWING HISTORY FOR: <strong style={{ color: '#ffeb3b', fontWeight: 'bold' }}>{selectedStore.name.toUpperCase()}</strong>
-                  </div>
-                  <div style={{ display: 'flex', gap: 24, marginBottom: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
-                    <span
-                      onClick={() => setPriceType('regular')}
-                      style={{
-                        color: priceType === 'regular' ? '#ffeb3b' : '#666',
-                        cursor: 'pointer',
-                        fontWeight: priceType === 'regular' ? 'bold' : 'normal',
-                        textDecoration: priceType === 'regular' ? 'underline' : 'none',
-                      }}
-                    >
-                      REGULAR
-                    </span>
-                    <span
-                      onClick={() => setPriceType('organic')}
-                      style={{
-                        color: priceType === 'organic' ? '#ffeb3b' : '#666',
-                        cursor: 'pointer',
-                        fontWeight: priceType === 'organic' ? 'bold' : 'normal',
-                        textDecoration: priceType === 'organic' ? 'underline' : 'none',
-                      }}
-                    >
-                      ORGANIC
-                    </span>
-                  </div>
-                  <EggPriceChart
-                    store={selectedStore}
-                    priceType={priceType}
-                    style={{ flex: 1 }}
-                  />
-                </div>
-              ) : (
-                <div style={{ color: '#fff', textAlign: 'center', padding: '20px' }}>
-                  No store selected
-                </div>
-              )}
+            <TerminalTile title="Price Chart" span={getSpan(2)} style={{minHeight: isMobile ? '200px' : 'auto'}}>
+              <EggPriceChart selectedStore={selectedStore} isMobile={isMobile} />
             </TerminalTile>
-
-            {/* Row 1 (Local continued) */}
-            <TerminalTile title="Price Trend (Local)" span={getSpan(3)} style={{minHeight: isMobile ? '200px' : 'auto'}}>
+            <TerminalTile title="Price Trend (Local)" span={getSpan(2)} style={{minHeight: isMobile ? '200px' : 'auto'}}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={lineData}>
-                  <Line type="monotone" dataKey="value" stroke="#00ff00" dot={false} strokeWidth={2} />
+                  <Line type="monotone" dataKey="value" stroke="#00c800" dot={false} strokeWidth={2} />
                   <XAxis dataKey="idx" hide />
                   <YAxis hide />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#222" />
                 </LineChart>
               </ResponsiveContainer>
             </TerminalTile>
@@ -300,7 +298,10 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
                       </div>
                     ))}
                     <div style={{ color: '#666', fontSize: '0.7em', marginTop: 4 }}>
-                      Last update {(() => {const latest=eggStocks.reduce((a,b)=> new Date(a.updated_at)>new Date(b.updated_at)?a:b);const dt=new Date(latest.updated_at);return dt.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit'})})()}
+                      Market data: {(() => {
+                        const latest = eggStocks.reduce((a,b) => new Date(a.updated_at) > new Date(b.updated_at) ? a : b);
+                        return formatMarketTime(latest.updated_at);
+                      })()}
                     </div>
                   </>
                 )}
@@ -317,7 +318,10 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
                       {rs.symbol} {rs.price.toFixed(2)} {rs.change_pct>=0?'▲':'▼'} {Math.abs(rs.change_pct).toFixed(2)}%
                     </div>))}
                   <div style={{color:'#666',fontSize:'0.7em',marginTop:4}}>
-                     Last update {(() => {const latest = retailerStocks.reduce((a,b)=> new Date(a.updated_at)>new Date(b.updated_at)?a:b); const dt=new Date(latest.updated_at); return dt.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit'})})()}
+                    Market data: {(() => {
+                      const latest = retailerStocks.reduce((a,b) => new Date(a.updated_at) > new Date(b.updated_at) ? a : b);
+                      return formatMarketTime(latest.updated_at);
+                    })()}
                   </div>
                 </>)}
                 <div style={{fontSize:'0.6em',color:'#666',marginTop:2}}>Source: Polygon.io</div>
