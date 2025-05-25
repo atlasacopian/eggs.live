@@ -51,7 +51,32 @@ export default function Home() {
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}>
         <EggStockTicker />
       </div>
-      {/* Header (logo and subtitle) above the egg scene */}
+      {/* Large logo centered behind the egg */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 1,
+          pointerEvents: 'none',
+        }}
+        className="background-logo"
+      >
+        <img 
+          src="/logo_test2.png" 
+          alt="eggs.live" 
+          style={{ 
+            height: '80vh', 
+            maxHeight: '800px',
+            objectFit: 'contain',
+            opacity: 0.15,
+            filter: 'blur(1px)'
+          }} 
+        />
+      </div>
+      
+      {/* Header (subtitle) above the egg scene */}
       <div
         style={{
           position: 'absolute',
@@ -67,13 +92,14 @@ export default function Home() {
         }}
         className="header-container"
       >
-        <img src="/logo_test2.png" alt="eggs.live" style={{ height: '256px', objectFit: 'contain', marginBottom: '-64px' }} />
-        <div style={{ fontWeight: 400, letterSpacing: 2, fontFamily: 'Menlo, monospace', fontSize: '9px', opacity: 0.8, textAlign: 'center' }}>
+        <div style={{ fontWeight: 400, letterSpacing: 2, fontFamily: 'Menlo, monospace', fontSize: '12px', opacity: 0.8, textAlign: 'center', marginTop: '20px' }}>
           TRACKING THE EGG-CONOMY
         </div>
       </div>
-      {/* 3D Egg scene below the header */}
-      <EggCartonScene />
+      {/* 3D Egg scene above the background logo */}
+      <div style={{ position: 'relative', zIndex: 20 }}>
+        <EggCartonScene />
+      </div>
       <LocationPrompt 
         className="location-prompt-container"
         onUseLocation={handleUseLocation} 
