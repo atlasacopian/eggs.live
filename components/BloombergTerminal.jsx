@@ -23,18 +23,9 @@ const formatMarketTime = (timestamp) => {
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffHours / 24);
   
-  // Get the hour in ET to check if it's during market hours
-  const etHour = parseInt(date.toLocaleTimeString('en-US', { 
-    hour: '2-digit', 
-    hour12: false,
-    timeZone: 'America/New_York'
-  }));
-  
-  // Market hours are roughly 9:30 AM - 4:00 PM ET (9-16 in 24hr format)
-  const isDuringMarketHours = etHour >= 9 && etHour <= 16;
-  
-  // If it's from today and during reasonable market hours, show time
-  if (diffDays === 0 && isDuringMarketHours) {
+  // Always show the exact timestamp when the data was last updated
+  // If it's from today, show time
+  if (diffDays === 0) {
     return date.toLocaleTimeString('en-US', { 
       hour: '2-digit', 
       minute: '2-digit',
@@ -42,8 +33,8 @@ const formatMarketTime = (timestamp) => {
     }) + ' ET';
   }
   
-  // If it's from yesterday and during market hours, show yesterday + time
-  if (diffDays === 1 && isDuringMarketHours) {
+  // If it's from yesterday, show yesterday + time
+  if (diffDays === 1) {
     return 'Yesterday ' + date.toLocaleTimeString('en-US', { 
       hour: '2-digit', 
       minute: '2-digit',
@@ -51,17 +42,25 @@ const formatMarketTime = (timestamp) => {
     }) + ' ET';
   }
   
-  // For recent data (within a week), show relative days
+  // For recent data (within a week), show day and time
   if (diffDays <= 7) {
-    return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+    return `${diffDays} day${diffDays === 1 ? '' : 's'} ago at ` + date.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      timeZone: 'America/New_York'
+    }) + ' ET';
   }
   
-  // For older data, show date
+  // For older data, show date and time
   return date.toLocaleDateString('en-US', { 
     month: 'short', 
     day: 'numeric',
     timeZone: 'America/New_York'
-  });
+  }) + ' at ' + date.toLocaleTimeString('en-US', { 
+    hour: '2-digit', 
+    minute: '2-digit',
+    timeZone: 'America/New_York'
+  }) + ' ET';
 };
 
 export default function BloombergTerminal({ zipCode, localStores = [], nationalStats = {} }) {
