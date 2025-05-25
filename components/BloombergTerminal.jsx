@@ -23,8 +23,18 @@ const formatMarketTime = (timestamp) => {
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffHours / 24);
   
-  // If it's from today, show time
-  if (diffDays === 0) {
+  // Get the hour in ET to check if it's during market hours
+  const etHour = parseInt(date.toLocaleTimeString('en-US', { 
+    hour: '2-digit', 
+    hour12: false,
+    timeZone: 'America/New_York'
+  }));
+  
+  // Market hours are roughly 9:30 AM - 4:00 PM ET (9-16 in 24hr format)
+  const isDuringMarketHours = etHour >= 9 && etHour <= 16;
+  
+  // If it's from today and during reasonable market hours, show time
+  if (diffDays === 0 && isDuringMarketHours) {
     return date.toLocaleTimeString('en-US', { 
       hour: '2-digit', 
       minute: '2-digit',
@@ -32,8 +42,8 @@ const formatMarketTime = (timestamp) => {
     }) + ' ET';
   }
   
-  // If it's from yesterday or recent days, show relative
-  if (diffDays === 1) {
+  // If it's from yesterday and during market hours, show yesterday + time
+  if (diffDays === 1 && isDuringMarketHours) {
     return 'Yesterday ' + date.toLocaleTimeString('en-US', { 
       hour: '2-digit', 
       minute: '2-digit',
@@ -41,8 +51,9 @@ const formatMarketTime = (timestamp) => {
     }) + ' ET';
   }
   
+  // For recent data (within a week), show relative days
   if (diffDays <= 7) {
-    return `${diffDays} days ago`;
+    return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
   }
   
   // For older data, show date
