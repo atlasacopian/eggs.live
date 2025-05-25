@@ -16,15 +16,15 @@ jobs:
       matrix:
         include:
           - start_at: 0
-            max_stores: 1000
-          - start_at: 1000
-            max_stores: 1000
-          - start_at: 2000
-            max_stores: 1000
-          - start_at: 3000
-            max_stores: 1000
-          - start_at: 4000
-            max_stores: 1000
+            max_stores: 600
+          - start_at: 600
+            max_stores: 600
+          - start_at: 1200
+            max_stores: 600
+          - start_at: 1800
+            max_stores: 600
+          - start_at: 2400
+            max_stores: 600
     concurrency:
       group: kroger-prices-${{ matrix.start_at }}
       cancel-in-progress: false
