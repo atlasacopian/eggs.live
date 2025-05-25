@@ -153,6 +153,19 @@ async function fetchStoreEggs (location_id_raw) {
     });
     if (!res.ok) {
       const errorBodyText = await res.text().catch(() => `Failed to read error body for status ${res.status}`);
+      // If Kroger returns an internal server error with specific reason, skip this store
+      if (res.status >= 500 && res.status < 600) {
+        let reason;
+        try {
+          const errJson = JSON.parse(errorBodyText);
+          reason = errJson.errors?.reason;
+        } catch {}
+        if (reason === 'Unexpected error from internal server') {
+          console.warn(`fetchStoreEggs: Kroger internal server error for store ${location_id}, skipping store. Reason: ${reason}`);
+          return buckets;
+        }
+      }
+      // For all other errors, throw to abort the script
       throw new Error(`API call to ${currentUrl.toString()} failed for location ${location_id}. Status: ${res.status}. Response: ${errorBodyText.slice(0, 500)}`);
     }
     const json = await res.json();
