@@ -52,11 +52,11 @@ export default function Home() {
         <EggStockTicker />
       </div>
       
-      {/* Logo centered above the egg */}
+      {/* Logo and tagline centered above the egg */}
       <div
         style={{
           position: 'absolute',
-          top: '15%',
+          top: '10%',
           left: '50%',
           transform: 'translateX(-50%)',
           zIndex: 50,
@@ -73,7 +73,7 @@ export default function Home() {
           style={{ 
             height: '120px',
             objectFit: 'contain',
-            marginBottom: '20px'
+            marginBottom: '10px'
           }} 
         />
         <div style={{ 
