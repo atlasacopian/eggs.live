@@ -68,7 +68,7 @@ export default function EggNewsPanel({ fontSize = '0.8rem' }) {
       }
     }
     fetchNews();
-    const id = setInterval(fetchNews, 10 * 60 * 1000);
+    const id = setInterval(fetchNews, 60 * 60 * 1000);
     return () => clearInterval(id);
   }, []);
 

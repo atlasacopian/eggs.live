@@ -14,7 +14,7 @@ export async function GET() {
   let apiSource = 'Unknown';
   
   try {
-    const QUERIES = ['egg price','egg prices','egg price drop'];
+    const QUERIES = ['egg price']; // single query to reduce API calls
     let fetchPromises;
     let parser;
 
