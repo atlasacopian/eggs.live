@@ -65,8 +65,6 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
                 onChange={(e) => setZipCode(e.target.value)}
                 autoFocus
               />
-              {/* Press Enter to submit */}
-              <span style={{ marginLeft: '0.5ch', fontFamily: 'Roboto Mono, monospace', fontSize: '9px', opacity: 0.6 }}>↵</span>
               <span className={styles.bracket}>]</span>
             </form>
           )}

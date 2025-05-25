@@ -8,6 +8,8 @@
   border: 1px solid rgba(255, 255, 255, 0.8); /* White border to match theme */
   border-radius: 0;
   background-color: #000; /* Default black background, now overridable */
+  display: flex;
+  align-items: center;
   padding: 4px 8px;
   box-shadow: none; /* Removed glow effect */
   font-family: 'Roboto Mono', monospace;

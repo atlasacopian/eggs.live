@@ -7,6 +7,9 @@ const PRIORITY_SOURCES = [
 ];
 
 export async function GET() {
+  const startTime = Date.now();
+  console.log('Starting news fetch process');
+
   const { SERPHOUSE_API_KEY, GNEWS_API_KEY } = process.env;
   try {
     const QUERIES = ['egg price','egg prices','egg price drop'];
@@ -14,15 +17,33 @@ export async function GET() {
     let parser;
 
     if (SERPHOUSE_API_KEY) {
-      // Use SERPHouse Google News API product
-      fetchPromises = QUERIES.map(q =>
-        fetch(`https://api.serphouse.com/google-news?q=${encodeURIComponent(q)}&max=30&token=${SERPHOUSE_API_KEY}`, { next: { revalidate: 3600 } })
-      );
+      // Use SERPHouse Live endpoint for Google News results
+      fetchPromises = QUERIES.map(q => {
+        const url = new URL('https://api.serphouse.com/serp/live');
+        url.searchParams.set('q', q);
+        url.searchParams.set('serp_type', 'news');
+        url.searchParams.set('domain', 'google.com');
+        url.searchParams.set('lang', 'en');
+        url.searchParams.set('device', 'desktop');
+        url.searchParams.set('num_result', '30');
+        const headers = { 'Authorization': `Bearer ${SERPHOUSE_API_KEY}` };
+        return fetch(url.toString(), { headers, next: { revalidate: 3600 } });
+      });
       parser = async (res) => {
-        if (!res.ok) return { articles: [] };
+        if (!res.ok) {
+          console.error('SerpHouse response not ok', res.status, await res.text().catch(()=>''));
+          return { articles: [] };
+        }
         const j = await res.json().catch(() => ({}));
-        const arr = j.news || [];
-        return { articles: arr.map(n => ({ title: n.title, url: n.url, publishedAt: n.time, source: n.channel || 'Unknown' })) };
+        const arr = j.results?.results?.news || [];
+        return {
+          articles: arr.map(n => ({
+            title: n.title,
+            url: n.url,
+            publishedAt: n.time || new Date().toISOString(),
+            source: n.channel || 'Unknown'
+          }))
+        };
       };
     } else {
       // Fallback to GNews
@@ -36,10 +57,13 @@ export async function GET() {
     }
 
     const responses = await Promise.all(fetchPromises);
+    console.log(`Fetched all responses in ${Date.now() - startTime}ms`);
+
     const jsonArrays = await Promise.all(responses.map(parser));
+    console.log(`Parsed all responses in ${Date.now() - startTime}ms`);
 
     // merge & dedupe by url
-    const allArts = jsonArrays.flatMap(j=> j.articles || []);
+    const allArts = jsonArrays.flatMap(j => j.articles || []);
     const seen = new Set();
     let articles = [];
     for (const a of allArts) {
@@ -49,7 +73,7 @@ export async function GET() {
         title: a.title,
         url: a.url,
         publishedAt: a.publishedAt,
-        source: a.source?.name || 'Unknown'
+        source: a.source?.name || a.source || 'Unknown'
       });
     }
 
@@ -62,8 +86,8 @@ export async function GET() {
 
     // prioritise sources within the same timestamp order (stable sort approximation)
     articles.sort((a,b)=>{
-      const ia = PRIORITY_SOURCES.findIndex(s=>a.source && a.source.toLowerCase().includes(s.toLowerCase()));
-      const ib = PRIORITY_SOURCES.findIndex(s=>b.source && b.source.toLowerCase().includes(s.toLowerCase()));
+      const ia = PRIORITY_SOURCES.findIndex(s => a.source && a.source.toLowerCase().includes(s.toLowerCase()));
+      const ib = PRIORITY_SOURCES.findIndex(s => b.source && b.source.toLowerCase().includes(s.toLowerCase()));
       if (ia===-1 && ib===-1) return 0;
       if (ia===-1) return 1;
       if (ib===-1) return -1;
@@ -72,6 +96,8 @@ export async function GET() {
 
     // limit to 60 so payload small
     articles = articles.slice(0,60);
+
+    console.log(`Processed articles in ${Date.now() - startTime}ms`);
 
     return NextResponse.json({ articles });
   } catch (e) {
