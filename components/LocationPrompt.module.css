@@ -8,58 +8,52 @@
 }
 
 .option {
-  font-family: 'Menlo', 'Monaco', 'Courier New', monospace; /* chunky terminal font */
+  font-family: 'Roboto Mono', monospace; /* ensure consistent monospace width */
   position: relative; 
   cursor: pointer; 
   text-transform: uppercase;
-  letter-spacing: 3px; 
-  font-size: 14px; /* Bigger, chunkier size */
-  font-weight: bold; /* Make it chunky */
-  color: #00ff00; /* Classic terminal green */
-  background-color: #000000; /* Black terminal background */
-  padding: 12px 20px; /* Much chunkier padding */
-  border-radius: 0; /* Sharp, retro corners */
-  border: 2px solid #00ff00; /* Chunky green border */
-  transition: all 0.1s ease-out; /* Snappy transitions */
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  letter-spacing: 2px; 
+  font-size: 9px; /* Default desktop size */
+  color: #000000;
+  background-color: transparent;
+  padding: 0 0.5rem; /* consistent spacing */
+  border-radius: 4px; 
+  transition: color 0.2s ease-out, background-color 0.2s ease-out;
+  display: inline-flex; /* Use flex for alignment */
+  align-items: center; /* Center text vertically */
+  justify-content: center; /* Center text horizontally */
   white-space: nowrap;
+  /* No border by default */
+  border: 1px solid transparent;
   width: auto;
-  height: auto; /* Let padding determine height */
-  box-shadow: 0 0 10px rgba(0, 255, 0, 0.3); /* Terminal glow effect */
-  text-shadow: 0 0 5px rgba(0, 255, 0, 0.5); /* Text glow */
+  height: 36px; /* keep constant height */
 }
 
-/* Retro terminal hover effects */
+/* Override hover and focus styling on .option to remove black highlight for minimal prompt style */
 .option:hover,
 .option:focus-within,
 .option:active,
 .option:focus {
-  background-color: #00ff00 !important; /* Invert colors on hover */
-  color: #000000 !important; /* Black text on green background */
-  border-color: #00ff00 !important;
-  box-shadow: 0 0 20px rgba(0, 255, 0, 0.6) !important; /* Stronger glow */
-  text-shadow: none !important; /* Remove text glow when inverted */
-  transform: scale(1.05); /* Slight grow effect */
+  background-color: transparent !important;
+  color: #000000 !important;
+  border-color: transparent !important;
 }
 
-/* Terminal-style ZIP input */
+/* Ensure ZIP input is clearly visible */
 .zipInput {
-  color: #00ff00 !important; /* Terminal green */
-  background: transparent !important;
-  border: none !important;
-  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
-  font-size: 14px; /* Match option font size */
-  font-weight: bold;
-  letter-spacing: 3px;
-  width: 100%;
+  color: var(--accent-color) !important; /* match accent */
+  background: transparent !important;    /* no white box */
+  border: none !important;               /* remove default input border */
+  font-family: 'Roboto Mono', monospace;
+  font-size: 9px; /* Match option font size */
+  letter-spacing: 2px;
+  width: 100%;              /* fill parent zipForm width */
   box-sizing: border-box;
   text-align: center;
   height: 100%;
-  padding-right: 5ch;
-  caret-color: #00ff00 !important; /* Green cursor */
-  text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+  line-height: 36px;
+  padding-right: 5ch;       /* leave space for arrow */
+  caret-color: #000 !important;
 }
 
 /* New style for valid input */
@@ -177,13 +171,10 @@
 }
 
 .orText {
-  color: #00ff00;
+  color: #000000;
   cursor: default;
-  font-size: 14px;
-  font-weight: bold;
-  letter-spacing: 3px;
-  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
-  text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+  font-size: 9px;
+  letter-spacing: 2px;
 }
 
 /* Flex container for the zip form to center input and button */
@@ -205,12 +196,8 @@
 }
 
 .option.zipActive {
-  border-color: #00ff00;
-  background-color: #000000;
-  box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+  border-color: var(--accent-color);
+  background-color: rgba(255, 193, 7, 0.15);
 }
 
-/* Hide original arrow button styling */
-.enterHint {
-  display: none;
-} 
+ 
