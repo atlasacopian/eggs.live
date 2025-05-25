@@ -337,8 +337,10 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
             </TerminalTile>
 
             {/* Egg Price News */}
-            <TerminalTile title="Egg Price News" span={getSpan(2)} style={{ minHeight: isMobile ? '160px' : 'auto' }}>
-              <EggNewsPanel fontSize={isMobile ? '0.75rem' : '0.85rem'} />
+            <TerminalTile title="Egg Price News" span={getSpan(2)} style={{ minHeight: isMobile ? '120px' : '150px', maxHeight: isMobile ? '120px' : '150px' }}>
+              <div style={{ height: '100%', overflowY: 'auto', paddingRight: '4px' }}>
+                <EggNewsPanel fontSize={isMobile ? '0.75rem' : '0.85rem'} />
+              </div>
             </TerminalTile>
 
             {/* Bird-Flu Impact */}
