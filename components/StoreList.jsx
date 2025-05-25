@@ -1,6 +1,14 @@
 import React from 'react'
 
-export default function StoreList({ stores = [], onSelect = () => {}, selectedStoreId = null, onHover = () => {}, hoveredStoreId = null }) {
+export default function StoreList({ 
+  stores = [], 
+  selectedStore = null, 
+  setSelectedStore = () => {}, 
+  hoveredStore = null, 
+  setHoveredStore = () => {}, 
+  priceType = 'regular',
+  isMobile = false 
+}) {
   if (!stores.length) return <div>No stores found in this area</div>
 
   const storeLineStyle = {
@@ -46,20 +54,20 @@ export default function StoreList({ stores = [], onSelect = () => {}, selectedSt
   return (
     <div
       style={{ display: 'flex', flexDirection: 'column', gap: 4, overflowY: 'auto' }}
-      onMouseLeave={() => onHover(null)}
+      onMouseLeave={() => setHoveredStore(null)}
     >
       {stores.map(s => (
         <div
           key={s.store_identifier}
-          onClick={() => onSelect(s)}
-          onMouseEnter={() => onHover(s)}
+          onClick={() => setSelectedStore(s)}
+          onMouseEnter={() => setHoveredStore(s)}
           style={{
             ...storeLineStyle,
-            cursor: onSelect ? 'pointer' : 'default',
+            cursor: 'pointer',
             background:
-              s.store_identifier === hoveredStoreId
+              hoveredStore?.store_identifier === s.store_identifier
                 ? '#222'
-                : s.store_identifier === selectedStoreId
+                : selectedStore?.store_identifier === s.store_identifier
                 ? '#333'
                 : 'inherit',
           }}

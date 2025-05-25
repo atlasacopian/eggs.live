@@ -18,7 +18,9 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
-export default function EggPriceChart({ store, highlight = false, preview = false, priceType = 'regular' }) {
+export default function EggPriceChart({ selectedStore, store, highlight = false, preview = false, priceType = 'regular', isMobile = false }) {
+  // Use selectedStore if provided, otherwise fall back to store prop
+  const currentStore = selectedStore || store;
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -26,10 +28,11 @@ export default function EggPriceChart({ store, highlight = false, preview = fals
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const id = store?.store_identifier;
+        const id = currentStore?.store_identifier;
         if (!id) {
           // No store identifier: do not load history
           setHistory([]);
+          setLoading(false);
           return;
         }
         setLoading(true);
@@ -44,7 +47,7 @@ export default function EggPriceChart({ store, highlight = false, preview = fals
       }
     };
     fetchHistory();
-  }, [store?.store_identifier]);
+  }, [currentStore?.store_identifier]);
 
   const strokeColor = highlight ? '#ffc107' : '#ffffff';
   const dataKey = priceType;
