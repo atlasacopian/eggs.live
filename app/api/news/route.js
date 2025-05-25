@@ -11,12 +11,15 @@ export async function GET() {
   console.log('Starting news fetch process');
 
   const { SERPHOUSE_API_KEY, GNEWS_API_KEY } = process.env;
+  let apiSource = 'Unknown';
+  
   try {
     const QUERIES = ['egg price','egg prices','egg price drop'];
     let fetchPromises;
     let parser;
 
     if (SERPHOUSE_API_KEY) {
+      apiSource = 'SERPHouse';
       // Use SERPHouse Live endpoint for Google News results
       fetchPromises = QUERIES.map(q => {
         const url = new URL('https://api.serphouse.com/serp/live');
@@ -50,6 +53,7 @@ export async function GET() {
       if (!GNEWS_API_KEY) {
         return NextResponse.json({ error: 'Missing SERPHOUSE_API_KEY or GNEWS_API_KEY env' }, { status: 500 });
       }
+      apiSource = 'GNews';
       fetchPromises = QUERIES.map(q =>
         fetch(`https://gnews.io/api/v4/search?q=${encodeURIComponent(q)}&lang=en&max=30&token=${GNEWS_API_KEY}`, { next: { revalidate: 3600 } })
       );
@@ -99,8 +103,17 @@ export async function GET() {
 
     console.log(`Processed articles in ${Date.now() - startTime}ms`);
 
-    return NextResponse.json({ articles });
+    return NextResponse.json({ 
+      articles,
+      source: apiSource,
+      lastFetched: new Date().toISOString(),
+      count: articles.length
+    });
   } catch (e) {
-    return NextResponse.json({ error: 'GNews fetch failed' }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'News fetch failed',
+      source: apiSource,
+      lastFetched: new Date().toISOString()
+    }, { status: 500 });
   }
 } 

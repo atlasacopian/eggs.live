@@ -47,16 +47,24 @@ function parseRelativeDate(dateStr) {
 
 export default function EggNewsPanel({ fontSize = '0.8rem' }) {
   const [articles, setArticles] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [source, setSource] = useState('News API');
 
   useEffect(() => {
     async function fetchNews() {
       try {
         const res = await fetch('/api/news');
         if (!res.ok) throw new Error('Bad resp');
-        const { articles } = await res.json();
-        setArticles(articles || []);
+        const data = await res.json();
+        setArticles(data.articles || []);
+        setLastUpdated(new Date());
+        
+        // Determine the source based on response or check for API keys
+        // We can infer from the data structure or add a source field to the API response
+        setSource(data.source || 'SERPHouse/GNews');
       } catch (e) {
         setArticles([]);
+        setLastUpdated(new Date());
       }
     }
     fetchNews();
@@ -89,6 +97,16 @@ export default function EggNewsPanel({ fontSize = '0.8rem' }) {
     return 0;
   });
 
+  // Format last updated time
+  const formatLastUpdated = (date) => {
+    if (!date) return '';
+    return date.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: true 
+    });
+  };
+
   return (
     <>
       <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize, lineHeight: 1.4 }}>
@@ -113,7 +131,14 @@ export default function EggNewsPanel({ fontSize = '0.8rem' }) {
           );
         })}
       </ul>
-      <div style={{ fontSize: '0.6em', color: '#666', marginTop: 4 }}>Source: GNews.io</div>
+      <div style={{ fontSize: '0.6em', color: '#666', marginTop: 4 }}>
+        Source: {source}
+        {lastUpdated && (
+          <span style={{ marginLeft: 8 }}>
+            • Last updated: {formatLastUpdated(lastUpdated)}
+          </span>
+        )}
+      </div>
     </>
   );
 } 
