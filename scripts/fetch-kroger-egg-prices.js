@@ -139,6 +139,13 @@ function rateLimitedFetch (url, opts) {
 const STORE_DELAY_MS = Number(process.env.STORE_DELAY_MS ?? '0');
 const PAGE_DELAY_MS  = Number(process.env.PAGE_DELAY_MS  ?? '0');
 
+class NonFatalSkipError extends Error {
+  constructor(msg) {
+    super(msg);
+    this.name = 'NonFatalSkipError';
+  }
+}
+
 async function fetchStoreEggs (location_id_raw) {
   const location_id = normalizeLocationId(location_id_raw);
   const token = await getToken();
@@ -187,7 +194,7 @@ async function fetchStoreEggs (location_id_raw) {
       // Skip store on persistent 429 rate-limit (after retries already attempted)
       if (res.status === 429) {
         console.warn(`fetchStoreEggs: persistent rate-limit 429 for store ${location_id}. Skipping store.`);
-        return buckets; // continue with next store
+        throw new NonFatalSkipError(`Persistent 429 for store ${location_id}`);
       }
       // Skip store on any 5xx after retries – treat as transient backend issue
       if (res.status >= 500 && res.status < 600) {
@@ -197,7 +204,7 @@ async function fetchStoreEggs (location_id_raw) {
           reason = errJson.errors?.reason;
         } catch {}
         console.warn(`fetchStoreEggs: server error ${res.status} for store ${location_id}. Reason: ${reason || 'N/A'}. Skipping store.`);
-        return buckets; // continue with next store
+        throw new NonFatalSkipError(`Server error ${res.status} for store ${location_id}`);
       }
       // For all other errors, throw to abort the script
       throw new Error(`API call to ${currentUrl.toString()} failed for location ${location_id}. Status: ${res.status}. Response: ${errorBodyText.slice(0, 500)}`);
@@ -395,6 +402,8 @@ async function fetchStoreEggs (location_id_raw) {
   const rows = [];
   const BATCH_SIZE = 20; // Upsert to Supabase in batches of this many stores
 
+  let consecutiveSkipCount = 0;
+
   await Promise.all(storesToProcess.map(async (s, idx) => limit(async () => {
     const index = startIdx + idx; // original index for logging
     const normalizedCurrentStoreId = normalizeLocationId(s.location_id);
@@ -473,13 +482,26 @@ async function fetchStoreEggs (location_id_raw) {
           rows.length = 0; // Clear the rows array for the next batch
         }
       }
+
+      // success resets skip streak
+      consecutiveSkipCount = 0;
+
+      // Add a delay after processing each store (or its failure) to reduce overall request rate
+      if (STORE_DELAY_MS > 0) {
+        await new Promise(r => setTimeout(r, STORE_DELAY_MS));
+      }
     } catch (err) {
+      if (err instanceof NonFatalSkipError) {
+        consecutiveSkipCount++;
+        console.warn(`Non-fatal skip (${consecutiveSkipCount} in a row): ${err.message}`);
+        if (consecutiveSkipCount >= 10) {
+          console.error(`❌ Reached ${consecutiveSkipCount} consecutive skipped stores. Aborting run.`);
+          throw err; // escalate to abort
+        }
+        return; // skip without failing
+      }
       console.error(`Error processing store ${s.location_id}:`, err);
       throw err;
-    }
-    // Add a delay after processing each store (or its failure) to reduce overall request rate
-    if (STORE_DELAY_MS > 0) {
-      await new Promise(r => setTimeout(r, STORE_DELAY_MS));
     }
   })));
 
