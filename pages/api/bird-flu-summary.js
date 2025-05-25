@@ -28,27 +28,32 @@ export default async function handler(req, res) {
     };
 
     data.forEach(row => {
-      const isoDate = (() => {
-        const d = new Date(row['Confirmed']);
-        if (isNaN(d)) return null;
-        return d.toISOString().slice(0, 10);
-      })();
-      if (!isoDate) return;
+      // Parse the confirmed date to ISO string
+      const dateStr = row['Confirmed'];
+      const d = new Date(dateStr);
+      if (isNaN(d)) return;
+      const isoDate = d.toISOString().slice(0, 10);
 
+      // Birds affected count
       const birds = Number(String(row['Birds Affected'] || '0').replace(/,/g, ''));
-      const culled = row['Control Area Released']?.toLowerCase().includes('dep comp');
+      // Control Area Released indicates culled if non-empty
+      const released = String(row['Control Area Released'] || '').trim();
+      const culled = released !== '';
       const pending = !culled;
 
+      // Year-to-date counts
       if (isoDate >= ytdStartStr) {
         stats.ytdOutbreaks++;
         stats.ytdBirds += birds;
         if (culled) stats.birdsCulledYTD += birds;
-        if (pending) stats.birdsPending += birds;
+        else stats.birdsPending += birds;
       }
+      // 7-day counts
       if (isoDate >= weekAgoStr) {
         stats.weekOutbreaks++;
         stats.weekBirds += birds;
       }
+      // Today counts
       if (isoDate === todayStr) {
         stats.todayOutbreaks++;
         stats.todayBirds += birds;
