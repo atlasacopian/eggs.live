@@ -56,7 +56,7 @@ export default function Home() {
       <div
         style={{
           position: 'absolute',
-          top: '10%',
+          top: '8%',
           left: '50%',
           transform: 'translateX(-50%)',
           zIndex: 50,
@@ -87,8 +87,8 @@ export default function Home() {
           TRACKING THE EGG-CONOMY
         </div>
       </div>
-      {/* 3D Egg scene above the background logo */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 30 }}>
+      {/* 3D Egg scene positioned below logo */}
+      <div style={{ position: 'absolute', top: '40%', left: 0, right: 0, bottom: 0, zIndex: 30 }}>
         <EggCartonScene />
       </div>
       <div style={{ position: 'relative', zIndex: 70 }}>

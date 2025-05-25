@@ -280,7 +280,12 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
         {view === 'national' && (
           <>
             {/* National View - Row 1 (5 columns total) */}
-            <TerminalTile title="Retail Egg CPI" span={getSpan(3)} style={{minHeight: isMobile ? '250px' : '300px', maxHeight: isMobile ? '250px' : '300px', overflow: 'auto'}}>
+            <TerminalTile
+              title="Retail Egg CPI"
+              span={getSpan(3)}
+              style={{ minHeight: isMobile ? '250px' : '300px', maxHeight: isMobile ? '250px' : '300px', overflow: 'visible' }}
+              bodyStyle={{ overflow: 'visible' }}
+            >
               <FredChart symbol="APU0000703111" start="1980-01-01" showTimestamp={true} />
             </TerminalTile>
 

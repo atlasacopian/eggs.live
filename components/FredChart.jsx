@@ -45,10 +45,10 @@ export default function FredChart({ symbol = 'APU0000703111', start = '1980-01-0
   return (
     <div style={{
       width: '100%',
-      height: showTimestamp ? 'calc(100% - 20px)' : '100%',
-      maxHeight: showTimestamp ? '230px' : '250px',
+      height: showTimestamp ? 'calc(100% - 25px)' : '100%',
+      maxHeight: showTimestamp ? '225px' : '250px',
       pointerEvents: 'auto',
-      overflow: 'hidden',
+      overflow: 'visible',
     }}>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 20, right: 20, bottom: 0, left: 0 }}>
