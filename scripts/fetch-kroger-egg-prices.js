@@ -3,6 +3,7 @@ loadEnv({ path: '.env.local' });
 import fetch from 'node-fetch';
 import pLimit from 'p-limit';
 import { createClient } from '@supabase/supabase-js';
+import Bottleneck from 'bottleneck';
 
 // --- env ---
 const {
@@ -118,9 +119,25 @@ async function fetchWithRetry(url, options = {}, maxAttempts = 5) {
   return lastRes;
 }
 
-// --- configurable delays (defaults keep previous behaviour) ---
-const STORE_DELAY_MS = Number(process.env.STORE_DELAY_MS ?? '2000');
-const PAGE_DELAY_MS  = Number(process.env.PAGE_DELAY_MS  ?? '2000');
+// --- rate-limit configuration ---
+// Requests-per-second and concurrency can be tuned via env. Defaults are safe for Kroger API.
+const RATE_LIMIT_RPS = Number(process.env.RATE_LIMIT_RPS ?? '8'); // 8 requests per second
+const MAX_CONCURRENT_REQUESTS = Number(process.env.MAX_CONCURRENT_REQUESTS ?? '6');
+
+// Token-bucket / leaky-bucket limiter
+const limiter = new Bottleneck({
+  minTime: Math.ceil(1000 / RATE_LIMIT_RPS), // spacing between slots
+  maxConcurrent: MAX_CONCURRENT_REQUESTS
+});
+
+// Helper to wrap fetchWithRetry in the limiter
+function rateLimitedFetch (url, opts) {
+  return limiter.schedule(() => fetchWithRetry(url, opts));
+}
+
+// Artificial delays are now optional and default to 0 (disabled)
+const STORE_DELAY_MS = Number(process.env.STORE_DELAY_MS ?? '0');
+const PAGE_DELAY_MS  = Number(process.env.PAGE_DELAY_MS  ?? '0');
 
 async function fetchStoreEggs (location_id_raw) {
   const location_id = normalizeLocationId(location_id_raw);
@@ -145,7 +162,7 @@ async function fetchStoreEggs (location_id_raw) {
 
     console.log(`fetchStoreEggs: Attempting to fetch URL: ${currentUrl.toString()}`); // Log the exact URL
 
-    const res = await fetchWithRetry(currentUrl.toString(), {
+    const res = await rateLimitedFetch(currentUrl.toString(), {
       headers: {
         authorization: `Bearer ${token}`,
         accept: 'application/json'
@@ -264,7 +281,9 @@ async function fetchStoreEggs (location_id_raw) {
     offset += 50;
     // Kroger API limit: The 'filter.offset' parameter must be less than 250.
     if (offset >= 250) break;
-    await new Promise(r => setTimeout(r, PAGE_DELAY_MS));
+    if (PAGE_DELAY_MS > 0) {
+      await new Promise(r => setTimeout(r, PAGE_DELAY_MS));
+    }
   }
   return buckets;
 }
@@ -456,7 +475,9 @@ async function fetchStoreEggs (location_id_raw) {
       throw err;
     }
     // Add a delay after processing each store (or its failure) to reduce overall request rate
-    await new Promise(r => setTimeout(r, STORE_DELAY_MS));
+    if (STORE_DELAY_MS > 0) {
+      await new Promise(r => setTimeout(r, STORE_DELAY_MS));
+    }
   })));
 
   console.log('✅ All stores processed.');
