@@ -39,7 +39,7 @@ const ModelPrimitive = forwardRef((props, ref) => {
     return cloned
   }, [gltf])
 
-  return <primitive ref={ref} object={model} scale={8} {...props} />
+  return <primitive ref={ref} object={model} scale={7} {...props} />
 })
 ModelPrimitive.displayName = 'ModelPrimitive'
 
@@ -123,7 +123,7 @@ export default function EggCartonScene({ onInteractionStart }) {
     <>
       <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none' }}>
         <Canvas
-          camera={{ position: [0, 0, 12], fov: 35 }}
+          camera={{ position: [0, 0, 10], fov: 35 }}
           onCreated={({ scene, camera, gl }) => {
             // Ensure transparent background behind the egg
             scene.background = null;
