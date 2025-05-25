@@ -327,7 +327,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
             </TerminalTile>
 
             {/* Egg Price News */}
-            <TerminalTile title="Egg Price News" span={getSpan(3)} style={{ minHeight: isMobile ? '160px' : 'auto' }}>
+            <TerminalTile title="Egg Price News" span={getSpan(2)} style={{ minHeight: isMobile ? '160px' : 'auto' }}>
               <EggNewsPanel fontSize={isMobile ? '0.75rem' : '0.85rem'} />
             </TerminalTile>
 

@@ -110,7 +110,7 @@ export default function EggNewsPanel({ fontSize = '0.8rem' }) {
   return (
     <>
       <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize, lineHeight: 1.4 }}>
-        {sortedArticles.slice(0,15).map((a) => {
+        {sortedArticles.slice(0,8).map((a) => {
           const parsedDate = parseRelativeDate(a.publishedAt);
           const dateDisplay = parsedDate 
             ? parsedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
