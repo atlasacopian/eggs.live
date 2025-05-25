@@ -120,11 +120,13 @@ export default function Home() {
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 30 }}>
         <EggCartonScene />
       </div>
-      <LocationPrompt 
-        className="location-prompt-container"
-        onUseLocation={handleUseLocation} 
-        onEnterZip={handleEnterZip} 
-      />
+      <div style={{ position: 'relative', zIndex: 70 }}>
+        <LocationPrompt 
+          className="location-prompt-container"
+          onUseLocation={handleUseLocation} 
+          onEnterZip={handleEnterZip} 
+        />
+      </div>
     </main>
     </>
   )
