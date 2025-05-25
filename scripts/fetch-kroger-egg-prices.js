@@ -80,28 +80,24 @@ function normalizeLocationId(id) {
 let loggedFullProductForNullPrice = false; // Flag to ensure we only log one full product object
 
 // --- helper: fetch with retry & exponential backoff (for 429 rate-limits & 5xx) ---
-async function fetchWithRetry(url, options = {}, maxAttempts = 3) {
+async function fetchWithRetry(url, options = {}, maxAttempts = 5) {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     const res = await fetch(url, options);
     if (res.ok) return res; // success
 
-    // If first response is 429, skip further retries to avoid long waits on permanently rate-limited stores
-    if (res.status === 429 && attempt === 1) {
-      return res; // caller will handle as failure and move on quickly
-    }
-
-    // For 5xx or subsequent 429s, wait and retry
+    // If rate-limited (429) or server error (5xx), wait and retry
     if (res.status === 429 || (res.status >= 500 && res.status < 600)) {
-      const waitMs = 2000 * attempt; // 2s, 4s, 6s
-      console.warn(`fetchWithRetry: attempt ${attempt} failed (${res.status}). Retrying after ${waitMs} ms`);
+      const waitMs = 2000 * attempt; // exponential backoff: 2s, 4s, 6s, ...
+      console.warn(`fetchWithRetry: attempt ${attempt} received status ${res.status}. Retrying after ${waitMs} ms`);
       await new Promise(r => setTimeout(r, waitMs));
       continue;
     }
 
-    // For other errors, break immediately so caller can handle
+    // For other non-OK statuses, return response for caller handling
     return res;
   }
-  return await fetch(url, options); // final attempt (returns whatever response we get)
+  // Final attempt after retries
+  return await fetch(url, options);
 }
 
 // --- configurable delays (defaults keep previous behaviour) ---
@@ -323,7 +319,7 @@ async function fetchStoreEggs (location_id_raw) {
 
   console.log(`Processing ${storesToProcess.length} Kroger stores (indexes ${startIdx} – ${endIdxExclusive - 1})`);
 
-  const limit = pLimit(1); // 1 concurrent request (≈ 1-2 req/sec after token func)
+  const limit = pLimit(5); // 5 concurrent requests (≈ 1-2 req/sec after token func)
   const now = new Date();
   const captured_date = now.toISOString().split('T')[0];
   const captured_at = now.toISOString();

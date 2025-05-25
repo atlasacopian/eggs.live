@@ -13,6 +13,7 @@ jobs:
     timeout-minutes: 360 # Set a reasonable timeout for the job
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         include:
           - start_at: 0
