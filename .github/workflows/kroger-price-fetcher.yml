@@ -2,13 +2,40 @@ name: Kroger Egg Prices
 
 on:
   schedule:
-    # Runs every day at midnight UTC (00:00 UTC)
-    - cron: '0 0 * * *'
+    # Midnight Los Angeles time. Because GitHub cron is in UTC, schedule both 07:00 (PDT) and 08:00 (PST) UTC to always cover midnight.
+    - cron: '0 7 * * *'
+    - cron: '0 8 * * *'
   workflow_dispatch: # Allows manual triggering from the Actions tab
 
 jobs:
   fetch_prices:
     runs-on: ubuntu-latest
+    timeout-minutes: 360 # Set a reasonable timeout for the job
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - start_at: 0
+            max_stores: 1000
+          - start_at: 1000
+            max_stores: 1000
+          - start_at: 2000
+            max_stores: 1000
+          - start_at: 3000
+            max_stores: 1000
+          - start_at: 4000
+            max_stores: 1000
+    concurrency:
+      group: kroger-prices-${{ matrix.start_at }}
+      cancel-in-progress: false
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      KROGER_CLIENT_ID: ${{ secrets.KROGER_CLIENT_ID }}
+      KROGER_CLIENT_SECRET: ${{ secrets.KROGER_CLIENT_SECRET }}
+      START_AT: ${{ matrix.start_at }}
+      MAX_STORES_PER_RUN: ${{ matrix.max_stores }}
+      NODE_ENV: production # Optional: good practice for scripts
 
     steps:
       - name: Checkout repository
@@ -23,11 +50,5 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run price fetching script
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-          KROGER_CLIENT_ID: ${{ secrets.KROGER_CLIENT_ID }}
-          KROGER_CLIENT_SECRET: ${{ secrets.KROGER_CLIENT_SECRET }}
-          NODE_ENV: production # Optional: good practice for scripts
+      - name: Run price fetching script (partition starting at ${{ matrix.start_at }})
         run: node scripts/fetch-kroger-egg-prices.js 
