@@ -6,7 +6,7 @@ export default function Header() {
 
   return (
     <header style={baseHeaderStyle}>
-      <img src="/logo-test.png" alt="eggs.live" style={{ height: '256px', objectFit: 'contain' }} />
+      <img src="/logo_test2.png" alt="eggs.live" style={{ height: '256px', objectFit: 'contain' }} />
       <h3 style={baseH3Style}>TRACKING THE EGG-CONOMY</h3>
     </header>
   )
