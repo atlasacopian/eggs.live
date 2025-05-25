@@ -159,9 +159,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
       <TerminalHeader 
         zipCode={zipCode} 
         view={view} 
-        setView={setView} 
-        priceType={priceType} 
-        setPriceType={setPriceType}
+        onSetView={setView} 
         isMobile={isMobile}
       />
 
