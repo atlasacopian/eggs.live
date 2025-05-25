@@ -153,6 +153,20 @@ async function fetchStoreEggs (location_id_raw) {
     });
     if (!res.ok) {
       const errorBodyText = await res.text().catch(() => `Failed to read error body for status ${res.status}`);
+      // If Kroger returns an explicit "invalid parameters" error (store no longer valid)
+      if (res.status === 400) {
+        let errCode, errReason;
+        try {
+          const errJson = JSON.parse(errorBodyText);
+          errCode = errJson?.errors?.code;
+          errReason = errJson?.errors?.reason;
+        } catch {}
+
+        if (errCode === 'PRODUCT-4105-400' || /invalid parameters/i.test(errReason ?? '')) {
+          console.warn(`fetchStoreEggs: Invalid parameters for store ${location_id} (code: ${errCode || 'N/A'}). Skipping store.`);
+          return buckets; // Skip this store but do NOT abort entire run
+        }
+      }
       // If Kroger returns an internal server error with specific reason, skip this store
       if (res.status >= 500 && res.status < 600) {
         let reason;
