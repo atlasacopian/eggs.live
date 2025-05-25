@@ -184,6 +184,11 @@ async function fetchStoreEggs (location_id_raw) {
           return buckets; // Skip this store but do NOT abort entire run
         }
       }
+      // Skip store on persistent 429 rate-limit (after retries already attempted)
+      if (res.status === 429) {
+        console.warn(`fetchStoreEggs: persistent rate-limit 429 for store ${location_id}. Skipping store.`);
+        return buckets; // continue with next store
+      }
       // Skip store on any 5xx after retries – treat as transient backend issue
       if (res.status >= 500 && res.status < 600) {
         let reason;
