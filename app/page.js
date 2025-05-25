@@ -52,67 +52,38 @@ export default function Home() {
         <EggStockTicker />
       </div>
       
-      {/* Logo in top left corner */}
+      {/* Logo centered above the egg */}
       <div
         style={{
           position: 'absolute',
-          top: '20px',
-          left: '20px',
-          zIndex: 60,
-          pointerEvents: 'none',
-        }}
-        className="top-left-logo"
-      >
-        <img 
-          src="/logo_test2.png" 
-          alt="eggs.live" 
-          style={{ 
-            height: '60px',
-            objectFit: 'contain'
-          }} 
-        />
-      </div>
-      {/* Large logo centered behind the egg */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '50%',
+          top: '15%',
           left: '50%',
-          transform: 'translate(-50%, -50%)',
-          zIndex: 5,
-          pointerEvents: 'none',
-        }}
-        className="background-logo"
-      >
-        <img 
-          src="/logo_test2.png" 
-          alt="eggs.live" 
-          style={{ 
-            height: '60vh', 
-            maxHeight: '600px',
-            objectFit: 'contain',
-            opacity: 1.0
-          }} 
-        />
-      </div>
-      
-      {/* Subtitle at the bottom */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: '40px',
-          left: 0,
-          right: 0,
+          transform: 'translateX(-50%)',
           zIndex: 50,
+          pointerEvents: 'none',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center',
-          pointerEvents: 'none',
         }}
-        className="bottom-text-container"
+        className="centered-logo-container"
       >
-        <div style={{ fontWeight: 400, letterSpacing: 2, fontFamily: 'Menlo, monospace', fontSize: '12px', opacity: 0.8, textAlign: 'center' }}>
+        <img 
+          src="/logo_test2.png" 
+          alt="eggs.live" 
+          style={{ 
+            height: '120px',
+            objectFit: 'contain',
+            marginBottom: '20px'
+          }} 
+        />
+        <div style={{ 
+          fontWeight: 400, 
+          letterSpacing: 2, 
+          fontFamily: 'Menlo, monospace', 
+          fontSize: '12px', 
+          opacity: 0.8, 
+          textAlign: 'center' 
+        }}>
           TRACKING THE EGG-CONOMY
         </div>
       </div>
