@@ -9,8 +9,9 @@ import {
   Tooltip,
 } from 'recharts'
 
-export default function FredChart({ symbol = 'APU0000703111', start = '1980-01-01', end = '2025-12-31' }) {
+export default function FredChart({ symbol = 'APU0000703111', start = '1980-01-01', end = '2025-12-31', showTimestamp = false }) {
   const [data, setData] = useState([])
+  const [lastUpdated, setLastUpdated] = useState(null)
 
   useEffect(() => {
     async function fetchData() {
@@ -25,6 +26,12 @@ export default function FredChart({ symbol = 'APU0000703111', start = '1980-01-0
               value: parseFloat(obs.value),
             }))
           setData(formatted)
+          
+          // Find the most recent data point
+          if (formatted.length > 0) {
+            const mostRecent = formatted[formatted.length - 1]
+            setLastUpdated(mostRecent.date)
+          }
         }
       } catch (e) {
         console.error('Error fetching FRED data', e)
@@ -69,6 +76,15 @@ export default function FredChart({ symbol = 'APU0000703111', start = '1980-01-0
           />
         </LineChart>
       </ResponsiveContainer>
+      {showTimestamp && lastUpdated && (
+        <div style={{ fontSize: '0.6em', color: '#666', marginTop: 4 }}>
+          Last updated: {new Date(lastUpdated).toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric', 
+            year: 'numeric' 
+          })}
+        </div>
+      )}
     </div>
   )
 } 
