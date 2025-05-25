@@ -73,7 +73,7 @@ export default function Home() {
           style={{ 
             height: '120px',
             objectFit: 'contain',
-            marginBottom: '10px'
+            marginBottom: '2px'
           }} 
         />
         <div style={{ 
