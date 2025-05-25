@@ -184,17 +184,15 @@ async function fetchStoreEggs (location_id_raw) {
           return buckets; // Skip this store but do NOT abort entire run
         }
       }
-      // If Kroger returns an internal server error with specific reason, skip this store
+      // Skip store on any 5xx after retries – treat as transient backend issue
       if (res.status >= 500 && res.status < 600) {
         let reason;
         try {
           const errJson = JSON.parse(errorBodyText);
           reason = errJson.errors?.reason;
         } catch {}
-        if (reason === 'Unexpected error from internal server') {
-          console.warn(`fetchStoreEggs: Kroger internal server error for store ${location_id}, skipping store. Reason: ${reason}`);
-          return buckets;
-        }
+        console.warn(`fetchStoreEggs: server error ${res.status} for store ${location_id}. Reason: ${reason || 'N/A'}. Skipping store.`);
+        return buckets; // continue with next store
       }
       // For all other errors, throw to abort the script
       throw new Error(`API call to ${currentUrl.toString()} failed for location ${location_id}. Status: ${res.status}. Response: ${errorBodyText.slice(0, 500)}`);
