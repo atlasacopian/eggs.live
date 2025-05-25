@@ -13,6 +13,7 @@ jobs:
     timeout-minutes: 360 # Set a reasonable timeout for the job
     strategy:
       fail-fast: true
+      max-parallel: 1
       matrix:
         include:
           - start_at: 0
@@ -36,11 +37,11 @@ jobs:
       START_AT: ${{ matrix.start_at }}
       MAX_STORES_PER_RUN: ${{ matrix.max_stores }}
       NODE_ENV: production # Optional: good practice for scripts
-      MAX_CONCURRENT_REQUESTS: '6'
-      RATE_LIMIT_RPS: '8'
+      MAX_CONCURRENT_REQUESTS: '2'
+      RATE_LIMIT_RPS: '4'
       STORE_DELAY_MS: '0'
       PAGE_DELAY_MS: '0'
-      CONCURRENCY: '6'
+      CONCURRENCY: '2'
 
     steps:
       - name: Checkout repository
