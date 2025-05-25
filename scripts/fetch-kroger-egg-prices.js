@@ -153,12 +153,6 @@ async function fetchStoreEggs (location_id_raw) {
     });
     if (!res.ok) {
       const errorBodyText = await res.text().catch(() => `Failed to read error body for status ${res.status}`);
-      // Skip on server errors (5xx) to avoid action failing on internal API issues
-      if (res.status >= 500 && res.status < 600) {
-        console.warn(`fetchStoreEggs: server error ${res.status} for store ${location_id}. Skipping store.`);
-        return buckets;
-      }
-      // For other errors, throw to be handled by caller
       throw new Error(`API call to ${currentUrl.toString()} failed for location ${location_id}. Status: ${res.status}. Response: ${errorBodyText.slice(0, 500)}`);
     }
     const json = await res.json();
