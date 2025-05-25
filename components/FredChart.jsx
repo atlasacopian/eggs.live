@@ -39,7 +39,9 @@ export default function FredChart({ symbol = 'APU0000703111', start = '1980-01-0
     <div style={{
       width: '100%',
       height: '100%',
+      maxHeight: '250px',
       pointerEvents: 'auto',
+      overflow: 'hidden',
     }}>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 20, right: 20, bottom: 0, left: 0 }}>
