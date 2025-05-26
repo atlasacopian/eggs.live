@@ -36,9 +36,39 @@ const CSV_URL = 'https://publicdashboards.dl.usda.gov/t/MRP_PUB/views/VS_Avian_H
         depop_status: row['Control Area Released']
       }));
 
-    const { error } = await sb.from('bird_flu_outbreaks').upsert(rows, { onConflict: 'report_date,state,county,flock_type' });
-    if (error) throw error;
-    console.log(`✅ Upserted ${rows.length} bird flu rows`);
+    // Deduplicate rows on primary-key fields to avoid ON CONFLICT errors
+    const uniq = new Map();
+    for (const r of rows) {
+      const key = [
+        String(r.report_date).slice(0, 10), // YYYY-MM-DD
+        String(r.state).trim().toUpperCase(),
+        String(r.county).trim().toUpperCase(),
+        String(r.flock_type || '').trim().toUpperCase()
+      ].join('|');
+      if (!uniq.has(key)) uniq.set(key, r);
+    }
+    const dedupedRows = Array.from(uniq.values());
+
+    const pLimit = (n)=>{
+      const q=[];let a=0;
+      const run=()=>{
+        if(!q.length||a>=n) return;
+        const {fn,res}=q.shift();a++;fn().then(res).finally(()=>{a--;run()});run()}
+      ;return (fn)=>new Promise(r=>{q.push({fn,res:r});run()})};
+
+    const limit = pLimit(10);
+    let success = 0;
+    for (const row of dedupedRows) {
+      await limit(async () => {
+        // insert with DO NOTHING on conflicts
+        const { error } = await sb
+          .from('bird_flu_outbreaks')
+          .insert([row], { ignoreDuplicates: true });
+        if (!error) success++; else console.warn('row err', error.message);
+      });
+    }
+
+    console.log(`✅ Upserted ${success}/${dedupedRows.length} bird flu rows (deduped from ${rows.length})`);
   } catch (e) {
     console.error('Bird flu ingest error', e);
     process.exit(1);
