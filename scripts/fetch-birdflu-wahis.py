@@ -6,6 +6,7 @@ import datetime
 import subprocess
 from dotenv import load_dotenv
 from supabase import create_client
+import report_retriever
 
 # Load environment
 load_dotenv('.env.local')
@@ -25,37 +26,34 @@ yesterday = (datetime.date.today() - datetime.timedelta(days=1)).isoformat()
 os.makedirs('data', exist_ok=True)
 out_file = 'data/wahis_birdflu.json'
 
-# Run WAHIS retriever CLI (adjust flags if needed)
-cmd = [
-    'python', 'wahis-retriever/report_retriever.py',
-    '-c', 'United States',
-    '-d', 'Avian influenza',
-    '-sd', yesterday,
-    '-ed', today,
-    '--format', 'json',
-    '-o', out_file
-]
-print('Running WAHIS retriever:', ' '.join(cmd))
-res = subprocess.run(cmd, capture_output=True, text=True)
-if res.returncode != 0:
-    print('Error running retriever:', res.stderr)
-    sys.exit(1)
+print('Fetching WAHIS reports via Python module...')
+reports_json = report_retriever.get_report_list(
+    country=['United States'],
+    region=[],
+    disease=['Avian influenza'],
+    start_date=yesterday,
+    end_date=today
+)
+reports_for_disease = reports_json.get('homePageDto', [])
+print(f'Found {len(reports_for_disease)} reports.')
 
-# Load JSON records
-with open(out_file) as f:
-    records = json.load(f)
-
-# Map and upsert
 mapped = []
-for r in records:
-    mapped.append({
-        'report_date': r.get('report_date') or r.get('startDate') or r.get('confirmation_date'),
-        'state': r.get('province') or r.get('state'),
-        'county': r.get('subRegion') or r.get('county'),
-        'flock_type': r.get('hostCategory') or r.get('production_type'),
-        'birds_affected': r.get('casesConfirmed') or r.get('birds_affected'),
-        'depop_status': r.get('controlMeasure') or r.get('depopulation_status')
-    })
+for rep in reports_for_disease:
+    rid = rep.get('reportInfoId')
+    if rid is None:
+        continue
+    contents = report_retriever.get_report_contents(rid)
+    outbreaks = report_retriever.make_list_of_outbreaks_in_report(contents)
+    outbreaks = report_retriever.append_report_data_to_outbreak(outbreaks, contents)
+    for r in outbreaks:
+        mapped.append({
+            'report_date': r.get('report_date') or r.get('startDate') or r.get('confirmation_date'),
+            'state': r.get('province') or r.get('state'),
+            'county': r.get('subRegion') or r.get('county'),
+            'flock_type': r.get('hostCategory') or r.get('production_type'),
+            'birds_affected': r.get('casesConfirmed') or r.get('birds_affected'),
+            'depop_status': r.get('controlMeasure') or r.get('depopulation_status')
+        })
 
 print(f"Upserting {len(mapped)} records to Supabase...")
 response = sb.from_('bird_flu_outbreaks').upsert(mapped, on_conflict=['report_date','state','county','flock_type']).execute()
