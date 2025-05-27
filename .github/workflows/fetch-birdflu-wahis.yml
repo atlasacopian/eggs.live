@@ -1,0 +1,27 @@
+name: Fetch Bird Flu Data (WAHIS)
+
+on:
+  schedule:
+    - cron: '0 8 * * *'  # daily at 08:00 UTC
+  workflow_dispatch:
+
+jobs:
+  fetch-birdflu-wahis:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: bird-flu-wahis
+      cancel-in-progress: false
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install git+https://github.com/loicleray/WOAH_WAHIS.ReportRetriever.git supabase
+      - name: Fetch & upsert WAHIS HPAI data
+        run: python scripts/fetch-birdflu-wahis.py 

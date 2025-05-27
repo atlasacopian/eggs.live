@@ -352,34 +352,28 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
             </TerminalTile>
 
             {/* Bird-Flu Impact */}
-            <TerminalTile title="Bird-Flu Impact" span={getSpan(2)} style={{ minHeight: isMobile ? '120px' : 'auto' }}>
+            <TerminalTile title="Bird Flu" span={getSpan(2)} style={{ minHeight: isMobile ? '120px' : 'auto' }}>
               <div style={{ padding: 8, fontFamily: 'Menlo, monospace', fontSize: isMobile ? '0.75rem' : '0.85rem', lineHeight: 1.45 }}>
                 {fluStats ? (
                   <>
                     <div>
-                      <span style={{ color: '#888' }}>Today Outbreaks:</span> <span style={{ color: '#ffeb3b' }}>{fluStats.todayOutbreaks}</span>
+                      <span style={{ color: '#888' }}>Outbreaks Today:</span> <span style={{ color: '#ffeb3b' }}>{fluStats.todayOutbreaks}</span>
                     </div>
                     <div>
-                      <span style={{ color: '#888' }}>Today Birds:</span> <span style={{ color: '#ffeb3b' }}>{fluStats.todayBirds.toLocaleString()}</span>
-                    </div>
-                    <div style={{ marginTop: 4 }}>
-                      <span style={{ color: '#888' }}>7-Day Outbreaks:</span> <span style={{ color: '#ffeb3b' }}>{fluStats.weekOutbreaks}</span>
+                      <span style={{ color: '#888' }}>Outbreaks This Month:</span> <span style={{ color: '#ffeb3b' }}>{fluStats.monthOutbreaks}</span>
                     </div>
                     <div>
-                      <span style={{ color: '#888' }}>7-Day Birds:</span> <span style={{ color: '#ffeb3b' }}>{fluStats.weekBirds.toLocaleString()}</span>
-                    </div>
-                    <div style={{ marginTop: 4 }}>
-                      <span style={{ color: '#888' }}>YTD Outbreaks:</span> <span style={{ color: '#ffeb3b' }}>{fluStats.ytdOutbreaks}</span>
+                      <span style={{ color: '#888' }}>Outbreaks This Year:</span> <span style={{ color: '#ffeb3b' }}>{fluStats.ytdOutbreaks}</span>
                     </div>
                     <div>
-                      <span style={{ color: '#888' }}>Birds Culled YTD:</span> <span style={{ color: '#f00' }}>{fluStats.birdsCulledYTD.toLocaleString()}</span>
+                      <span style={{ color: '#888' }}>Birds Culled:</span> <span style={{ color: '#f00' }}>{fluStats.birdsCulledYTD.toLocaleString()}</span>
                     </div>
                     <div>
-                      <span style={{ color: '#888' }}>Birds Pending:</span> <span style={{ color: '#FFA500' }}>{fluStats.birdsPending.toLocaleString()}</span>
+                      <span style={{ color: '#888' }}>Birds Pending Cull:</span> <span style={{ color: '#FFA500' }}>{fluStats.birdsPending.toLocaleString()}</span>
                     </div>
                   </>
                 ) : 'Loading…'}
-                <div style={{ fontSize: '0.6em', color: '#666', marginTop: 4 }}>Source: USDA APHIS</div>
+                <div style={{ fontSize: '0.6em', color: '#666', marginTop: 4 }}>Source: Supabase</div>
               </div>
             </TerminalTile>
 
