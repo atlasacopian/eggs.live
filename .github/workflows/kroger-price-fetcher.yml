@@ -37,11 +37,11 @@ jobs:
       START_AT: ${{ matrix.start_at }}
       MAX_STORES_PER_RUN: ${{ matrix.max_stores }}
       NODE_ENV: production # Optional: good practice for scripts
-      MAX_CONCURRENT_REQUESTS: '2'
-      RATE_LIMIT_RPS: '4'
+      MAX_CONCURRENT_REQUESTS: '1'
+      RATE_LIMIT_RPS: '1'
       STORE_DELAY_MS: '0'
       PAGE_DELAY_MS: '0'
-      CONCURRENCY: '2'
+      CONCURRENCY: '1'
       MAX_CONSECUTIVE_SKIPS: '100'
       SHUFFLE_STORES: '1'
 
