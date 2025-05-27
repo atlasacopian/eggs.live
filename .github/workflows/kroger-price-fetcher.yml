@@ -2,61 +2,86 @@ name: Kroger Egg Prices
 
 on:
   schedule:
-    # Midnight Los Angeles time. Because GitHub cron is in UTC, schedule both 07:00 (PDT) and 08:00 (PST) UTC to always cover midnight.
+    # Midnight Los Angeles time. 07:00 UTC (PDT) and 08:00 UTC (PST)
     - cron: '0 7 * * *'
     - cron: '0 8 * * *'
-  workflow_dispatch: # Allows manual triggering from the Actions tab
+  workflow_dispatch:
 
 jobs:
-  fetch_prices:
+  fetch_A:
+    name: Fetch prices (Key A)
     runs-on: ubuntu-latest
-    timeout-minutes: 360 # Set a reasonable timeout for the job
+    timeout-minutes: 360
     strategy:
       fail-fast: true
-      max-parallel: 1
+      max-parallel: 1        # run the two partitions sequentially for this key
       matrix:
         include:
           - start_at: 0
-            max_stores: 600
-          - start_at: 600
-            max_stores: 600
-          - start_at: 1200
-            max_stores: 600
-          - start_at: 1800
-            max_stores: 600
-          - start_at: 2400
-            max_stores: 600
+            max_stores: 725
+          - start_at: 725
+            max_stores: 725
     concurrency:
-      group: kroger-prices-${{ matrix.start_at }}
+      group: kroger-prices-A-${{ matrix.start_at }}
       cancel-in-progress: false
     env:
-      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-      KROGER_CLIENT_ID: ${{ secrets.KROGER_CLIENT_ID }}
-      KROGER_CLIENT_SECRET: ${{ secrets.KROGER_CLIENT_SECRET }}
-      START_AT: ${{ matrix.start_at }}
-      MAX_STORES_PER_RUN: ${{ matrix.max_stores }}
-      NODE_ENV: production # Optional: good practice for scripts
+      SUPABASE_URL:          ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_KEY:  ${{ secrets.SUPABASE_SERVICE_KEY }}
+      KROGER_CLIENT_ID:      ${{ secrets.KROGER_CLIENT_ID_A }}
+      KROGER_CLIENT_SECRET:  ${{ secrets.KROGER_CLIENT_SECRET_A }}
+      START_AT:              ${{ matrix.start_at }}
+      MAX_STORES_PER_RUN:    ${{ matrix.max_stores }}
+      NODE_ENV:              production
+      RATE_LIMIT_RPS:        '1'
       MAX_CONCURRENT_REQUESTS: '1'
-      RATE_LIMIT_RPS: '1'
-      STORE_DELAY_MS: '0'
-      PAGE_DELAY_MS: '0'
-      CONCURRENCY: '1'
+      CONCURRENCY:           '1'
       MAX_CONSECUTIVE_SKIPS: '100'
-      SHUFFLE_STORES: '1'
+      SHUFFLE_STORES:        '1'
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '20.x' # Specify your Node.js version
+          node-version: '20.x'
           cache: 'npm'
+      - run: npm ci
+      - run: node scripts/fetch-kroger-egg-prices.js
 
-      - name: Install dependencies
-        run: npm ci
+  fetch_B:
+    name: Fetch prices (Key B)
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    strategy:
+      fail-fast: true
+      max-parallel: 1        # sequential partitions for key B
+      matrix:
+        include:
+          - start_at: 1450
+            max_stores: 725
+          - start_at: 2175
+            max_stores: 725   # last slice will process fewer (≈718) but that is fine
+    concurrency:
+      group: kroger-prices-B-${{ matrix.start_at }}
+      cancel-in-progress: false
+    env:
+      SUPABASE_URL:          ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_KEY:  ${{ secrets.SUPABASE_SERVICE_KEY }}
+      KROGER_CLIENT_ID:      ${{ secrets.KROGER_CLIENT_ID_B }}
+      KROGER_CLIENT_SECRET:  ${{ secrets.KROGER_CLIENT_SECRET_B }}
+      START_AT:              ${{ matrix.start_at }}
+      MAX_STORES_PER_RUN:    ${{ matrix.max_stores }}
+      NODE_ENV:              production
+      RATE_LIMIT_RPS:        '1'
+      MAX_CONCURRENT_REQUESTS: '1'
+      CONCURRENCY:           '1'
+      MAX_CONSECUTIVE_SKIPS: '100'
+      SHUFFLE_STORES:        '1'
 
-      - name: Run price fetching script (partition starting at ${{ matrix.start_at }})
-        run: node scripts/fetch-kroger-egg-prices.js 
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+      - run: npm ci
+      - run: node scripts/fetch-kroger-egg-prices.js 
