@@ -1,4 +1,4 @@
-name: Fetch Bird Flu Data (WAHIS)
+name: Bird Flu Data (WAHIS)
 
 on:
   schedule:
