@@ -23,7 +23,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip uninstall -y WOAH_WAHIS.ReportRetriever || true
-          pip install --no-cache-dir supabase python-dotenv
+          pip install --no-cache-dir supabase python-dotenv requests numpy pandas tqdm
       - name: Clone WAHIS retriever
         run: git clone https://github.com/loicleray/WOAH_WAHIS.ReportRetriever.git wahis-retriever
       - name: List cloned repository
