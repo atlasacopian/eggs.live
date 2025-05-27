@@ -27,7 +27,7 @@ out_file = 'data/wahis_birdflu.json'
 
 # Run WAHIS retriever CLI (adjust flags if needed)
 cmd = [
-    'report_retriever',
+    'python', 'wahis-retriever/report_retriever.py',
     '-c', 'United States',
     '-d', 'Avian influenza',
     '-sd', yesterday,
