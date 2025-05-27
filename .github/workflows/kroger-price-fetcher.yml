@@ -42,6 +42,8 @@ jobs:
       STORE_DELAY_MS: '0'
       PAGE_DELAY_MS: '0'
       CONCURRENCY: '2'
+      MAX_CONSECUTIVE_SKIPS: '100'
+      SHUFFLE_STORES: '1'
 
     steps:
       - name: Checkout repository

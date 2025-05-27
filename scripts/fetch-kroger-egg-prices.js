@@ -123,6 +123,11 @@ async function fetchWithRetry(url, options = {}, maxAttempts = 5) {
 // Requests-per-second and concurrency can be tuned via env. Defaults are safe for Kroger API.
 const RATE_LIMIT_RPS = Number(process.env.RATE_LIMIT_RPS ?? '8'); // 8 requests per second
 const MAX_CONCURRENT_REQUESTS = Number(process.env.MAX_CONCURRENT_REQUESTS ?? '6');
+// Whether to randomize store processing order (helps avoid regional clusters of server errors)
+const SHOULD_SHUFFLE_STORES = process.env.SHUFFLE_STORES === '1';
+// Maximum number of consecutive stores that can be skipped (due to 5xx/429 errors)
+// before aborting the entire run. Can be overridden via env MAX_CONSECUTIVE_SKIPS.
+const MAX_CONSECUTIVE_SKIPS = Number(process.env.MAX_CONSECUTIVE_SKIPS ?? '100');
 
 // Token-bucket / leaky-bucket limiter
 const limiter = new Bottleneck({
@@ -292,7 +297,7 @@ async function fetchStoreEggs (location_id_raw) {
     // Kroger API limit: The 'filter.offset' parameter must be less than 250.
     if (offset >= 250) break;
     if (PAGE_DELAY_MS > 0) {
-      await new Promise(r => setTimeout(r, PAGE_DELAY_MS));
+    await new Promise(r => setTimeout(r, PAGE_DELAY_MS));
     }
   }
   return buckets;
@@ -390,6 +395,15 @@ async function fetchStoreEggs (location_id_raw) {
   }
 
   const storesToProcess = stores.slice(startIdx, endIdxExclusive);
+
+  // If enabled, shuffle store order to reduce the chance of hitting many failing stores back-to-back
+  if (SHOULD_SHUFFLE_STORES) {
+    console.log('Shuffling store order before processing to avoid regional error clusters.');
+    for (let i = storesToProcess.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [storesToProcess[i], storesToProcess[j]] = [storesToProcess[j], storesToProcess[i]];
+    }
+  }
 
   console.log(`Processing ${storesToProcess.length} Kroger stores (indexes ${startIdx} – ${endIdxExclusive - 1})`);
 
@@ -494,8 +508,8 @@ async function fetchStoreEggs (location_id_raw) {
       if (err instanceof NonFatalSkipError) {
         consecutiveSkipCount++;
         console.warn(`Non-fatal skip (${consecutiveSkipCount} in a row): ${err.message}`);
-        if (consecutiveSkipCount >= 10) {
-          console.error(`❌ Reached ${consecutiveSkipCount} consecutive skipped stores. Aborting run.`);
+        if (consecutiveSkipCount >= MAX_CONSECUTIVE_SKIPS) {
+          console.error(`❌ Reached ${consecutiveSkipCount} consecutive skipped stores (limit: ${MAX_CONSECUTIVE_SKIPS}). Aborting run.`);
           throw err; // escalate to abort
         }
         return; // skip without failing
