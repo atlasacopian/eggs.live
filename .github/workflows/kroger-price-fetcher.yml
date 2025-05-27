@@ -66,8 +66,8 @@ jobs:
     env:
       SUPABASE_URL:          ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_KEY:  ${{ secrets.SUPABASE_SERVICE_KEY }}
-      KROGER_CLIENT_ID:      ${{ secrets.KROGER_CLIENT_ID_B }}
-      KROGER_CLIENT_SECRET:  ${{ secrets.KROGER_CLIENT_SECRET_B }}
+      KROGER_CLIENT_ID:      ${{ secrets.KROGER_CLIENT_ID }}
+      KROGER_CLIENT_SECRET:  ${{ secrets.KROGER_CLIENT_SECRET }}
       START_AT:              ${{ matrix.start_at }}
       MAX_STORES_PER_RUN:    ${{ matrix.max_stores }}
       NODE_ENV:              production
