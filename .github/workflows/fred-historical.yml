@@ -1,4 +1,4 @@
-name: FRED Egg Prices (daily)
+name: National Historical (FRED)
 
 on:
   schedule:

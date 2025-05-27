@@ -1,4 +1,4 @@
-name: USDA Egg Prices (daily)
+name: National Daily (USDA)
 
 on:
   # Runs daily at midnight Los Angeles Time (approx. 07:00 UTC during PDT)
