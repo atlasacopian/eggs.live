@@ -22,6 +22,13 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install git+https://github.com/loicleray/WOAH_WAHIS.ReportRetriever.git supabase
+          pip uninstall -y WOAH_WAHIS.ReportRetriever || true
+          pip install --no-cache-dir supabase python-dotenv
+      - name: Clone WAHIS retriever
+        run: git clone https://github.com/loicleray/WOAH_WAHIS.ReportRetriever.git wahis-retriever
+      - name: List cloned repository
+        run: ls -la wahis-retriever
       - name: Fetch & upsert WAHIS HPAI data
-        run: python scripts/fetch-birdflu-wahis.py 
+        run: |
+          export PYTHONPATH=$PYTHONPATH:$(pwd)/wahis-retriever
+          python scripts/fetch-birdflu-wahis.py 
