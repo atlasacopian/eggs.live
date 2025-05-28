@@ -27,13 +27,17 @@ os.makedirs('data', exist_ok=True)
 out_file = 'data/wahis_birdflu.json'
 
 print('Fetching WAHIS reports via Python module...')
-reports_json = report_retriever.get_report_list(
-    country=['United States'],
-    region=[],
-    disease=['Avian influenza'],
-    start_date=yesterday,
-    end_date=today
-)
+try:
+    reports_json = report_retriever.get_report_list(
+        country=['United States'],
+        region=[],
+        disease=['Avian influenza'],
+        start_date=yesterday,
+        end_date=today
+    )
+except Exception as e:
+    print(f'⚠️ Warning: failed to fetch or parse reports JSON: {e}')
+    reports_json = {}
 reports_for_disease = reports_json.get('homePageDto', [])
 print(f'Found {len(reports_for_disease)} reports.')
 
