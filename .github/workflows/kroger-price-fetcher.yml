@@ -37,6 +37,7 @@ jobs:
       CONCURRENCY:           '1'
       MAX_CONSECUTIVE_SKIPS: '100'
       SHUFFLE_STORES:        '1'
+      KROGER_STORES_TABLE:   kroger_stores_1999
 
     steps:
       - uses: actions/checkout@v4
@@ -76,6 +77,7 @@ jobs:
       CONCURRENCY:           '1'
       MAX_CONSECUTIVE_SKIPS: '100'
       SHUFFLE_STORES:        '1'
+      KROGER_STORES_TABLE:   kroger_stores_1999
 
     steps:
       - uses: actions/checkout@v4

@@ -13,6 +13,9 @@ const {
   KROGER_CLIENT_SECRET
 } = process.env;
 
+// Add STORE_TABLE constant to allow using a reduced-size table
+const STORE_TABLE = process.env.KROGER_STORES_TABLE || 'kroger_stores';
+
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
   console.error('❌ Set SUPABASE_URL & SUPABASE_SERVICE_KEY');
   process.exit(1);
@@ -117,7 +120,7 @@ async function fetchWithRetry(url, options = {}, maxAttempts = 5) {
     break;
   }
   return lastRes;
-}
+  }
 
 // --- rate-limit configuration ---
 // Requests-per-second and concurrency can be tuned via env. Defaults are safe for Kroger API.
@@ -317,7 +320,7 @@ async function fetchStoreEggs (location_id_raw) {
     pageNumber++;
     console.log(`Fetching page ${pageNumber} of stores (from: ${from}, to: ${from + pageSize - 1})...`);
     const { data: storePage, error, count } = await sb
-      .from('kroger_stores')
+      .from(STORE_TABLE)
       .select('location_id', { count: 'exact' }) 
       .order('location_id', { ascending: true })
       .range(from, from + pageSize - 1);
@@ -329,7 +332,7 @@ async function fetchStoreEggs (location_id_raw) {
 
     if (count !== null && totalCount === null) { // Set totalCount from the first successful query
       totalCount = count;
-      console.log(`Total potential stores in kroger_stores table: ${totalCount}`);
+      console.log(`Total potential stores in ${STORE_TABLE} table: ${totalCount}`);
     }
 
     if (!storePage || storePage.length === 0) {
