@@ -60,6 +60,9 @@ for rep in reports_for_disease:
         })
 
 print(f"Upserting {len(mapped)} records to Supabase...")
+if not mapped:
+    print("No records to upsert; exiting.")
+    sys.exit(0)
 response = sb.from_('bird_flu_outbreaks').upsert(mapped, on_conflict=['report_date','state','county','flock_type']).execute()
 if response.error:
     print('Upsert error:', response.error)
