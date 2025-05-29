@@ -27,6 +27,9 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
 }
 
 const API_BASE_URL = KROGER_API_URL
+const STORE_TABLE = process.env.KROGER_STORES_TABLE || 'kroger_stores'
+const STATE_FILTER = process.env.KROGER_STATE_FILTER ? process.env.KROGER_STATE_FILTER.split(',').map(s => s.trim().toUpperCase()) : null
+const CITY_FILTER = process.env.KROGER_CITY_FILTER ? process.env.KROGER_CITY_FILTER.split(',').map(s => s.trim().toUpperCase()) : null
 
 // Remove direct ENV reuse; we'll init properly
 let accessToken
@@ -87,7 +90,7 @@ async function upsert(locations) {
     zip: l.address?.zipCode ?? null,
     raw_json: l,
   }))
-  const { error } = await sb.from('kroger_stores').upsert(rows, {
+  const { error } = await sb.from(STORE_TABLE).upsert(rows, {
     onConflict: ['location_id'],
   })
   if (error) {
@@ -134,7 +137,16 @@ async function fetchPagedLocations() {
       const locations = json.data || json.locations || []
       console.log(`   → received ${locations.length}`)
 
-      const newOnes = locations.filter(loc => {
+      let filtered = locations
+      if (STATE_FILTER) {
+        filtered = filtered.filter(loc => loc.address?.state && STATE_FILTER.includes(loc.address.state.toUpperCase()))
+        console.log(`   → filtered by state, remaining ${filtered.length}`)
+      }
+      if (CITY_FILTER) {
+        filtered = filtered.filter(loc => loc.address?.city && CITY_FILTER.includes(loc.address.city.toUpperCase()))
+        console.log(`   → filtered by city, remaining ${filtered.length}`)
+      }
+      const newOnes = filtered.filter(loc => {
         if (seenLocationIds.has(loc.locationId)) return false
         seenLocationIds.add(loc.locationId)
         return true

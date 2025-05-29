@@ -67,7 +67,7 @@ jobs:
     concurrency:
       group: kroger-prices-B-${{ matrix.start_at }}
       cancel-in-progress: false
-    env:
+        env:
       SUPABASE_URL:          ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_KEY:  ${{ secrets.SUPABASE_SERVICE_KEY }}
       KROGER_CLIENT_ID:      ${{ secrets.KROGER_CLIENT_ID }}

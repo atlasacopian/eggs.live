@@ -71,7 +71,6 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
   const [isMobile, setIsMobile] = useState(false);
   const [eggStocks, setEggStocks] = useState(null);
   const [retailerStocks, setRetailerStocks] = useState(null);
-  const [fluStats, setFluStats] = useState(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -124,21 +123,6 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
     }
     fetchRetailers();
     const id = setInterval(fetchRetailers, 60_000); return () => clearInterval(id);
-  }, []);
-
-  useEffect(() => {
-    async function f() {
-      try {
-        const r = await fetch('/api/bird-flu-summary');
-        const j = await r.json();
-        setFluStats(j);
-      } catch (e) {
-        console.error('flu', e);
-      }
-    }
-    f();
-    const id = setInterval(f, 60_000 * 30);
-    return () => clearInterval(id);
   }, []);
 
   // Fake helper data --------------------------------------------------
@@ -348,32 +332,6 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
             <TerminalTile title="Egg Price News" span={getSpan(2)} style={{ minHeight: isMobile ? '120px' : '150px', maxHeight: isMobile ? '120px' : '150px' }}>
               <div style={{ height: '100%', overflowY: 'auto', paddingRight: '4px' }}>
                 <EggNewsPanel fontSize={isMobile ? '0.75rem' : '0.85rem'} />
-              </div>
-            </TerminalTile>
-
-            {/* Bird-Flu Impact */}
-            <TerminalTile title="Bird Flu" span={getSpan(2)} style={{ minHeight: isMobile ? '120px' : 'auto' }}>
-              <div style={{ padding: 8, fontFamily: 'Menlo, monospace', fontSize: isMobile ? '0.75rem' : '0.85rem', lineHeight: 1.45 }}>
-                {fluStats ? (
-                  <>
-                    <div>
-                      <span style={{ color: '#888' }}>Outbreaks Today:</span> <span style={{ color: '#ffeb3b' }}>{fluStats.outbreaksToday ?? 'N/A'}</span>
-                    </div>
-                    <div>
-                      <span style={{ color: '#888' }}>Outbreaks This Month:</span> <span style={{ color: '#ffeb3b' }}>{fluStats.outbreaksThisMonth ?? 'N/A'}</span>
-                    </div>
-                    <div>
-                      <span style={{ color: '#888' }}>Outbreaks This Year:</span> <span style={{ color: '#ffeb3b' }}>{fluStats.outbreaksThisYear ?? 'N/A'}</span>
-                    </div>
-                    <div>
-                      <span style={{ color: '#888' }}>Birds Culled (YTD):</span> <span style={{ color: '#f00' }}>{typeof fluStats.birdsCulledYTD === 'number' ? fluStats.birdsCulledYTD.toLocaleString() : 'N/A'}</span>
-                    </div>
-                    <div>
-                      <span style={{ color: '#888' }}>Birds Pending Cull:</span> <span style={{ color: '#FFA500' }}>{typeof fluStats.birdsPendingCull === 'number' ? fluStats.birdsPendingCull.toLocaleString() : 'N/A'}</span>
-                    </div>
-                  </>
-                ) : 'Loading…'}
-                <div style={{ fontSize: '0.6em', color: '#666', marginTop: 4 }}>Source: Supabase</div>
               </div>
             </TerminalTile>
 

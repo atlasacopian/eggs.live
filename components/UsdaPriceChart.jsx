@@ -26,6 +26,7 @@ const formatDataForChart = (regularData, organicData) => {
 
 export default function UsdaPriceChart() {
   const [chartData, setChartData] = useState([]);
+  const [lastUpdated, setLastUpdated] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -75,6 +76,9 @@ export default function UsdaPriceChart() {
         const formattedData = formatDataForChart(regularData || [], organicData || []);
         console.log('Formatted Chart Data:', formattedData);
         setChartData(formattedData);
+        if (formattedData.length) {
+          setLastUpdated(formattedData[formattedData.length - 1].date);
+        }
 
       } catch (err) {
         console.error('Error fetching USDA price data:', err);
@@ -100,7 +104,7 @@ export default function UsdaPriceChart() {
   }
 
   return (
-    // <ResponsiveContainer width="100%" height="100%">
+    <div style={{ width: '100%', height: '100%' }}>
       <LineChart width={700} height={300} data={chartData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#333" />
         <XAxis 
@@ -126,6 +130,9 @@ export default function UsdaPriceChart() {
             <Line type="monotone" dataKey="Organic" stroke="#fd7e14" dot={false} strokeWidth={2} name="Organic (Natl Avg)" connectNulls={true} />
         )}
       </LineChart>
-    // </ResponsiveContainer>
+      <div style={{ fontSize: '0.6em', color: '#666', marginTop: 4, textAlign: 'right' }}>
+        Source: USDA{lastUpdated ? ` • Last updated: ${new Date(lastUpdated).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : ''}
+      </div>
+    </div>
   );
 } 
