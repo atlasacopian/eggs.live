@@ -24,5 +24,8 @@ jobs:
           cache: 'npm'
       - name: Install dependencies
         run: npm ci
-      - name: Fetch & upsert bird flu data
-        run: node scripts/fetch-birdflu-us.js 
+      - name: Fetch USDA bird flu outbreak data
+        run: node scripts/fetch-birdflu-us.js
+
+      - name: Fetch CDC bird flu exposure & summary data
+        run: node scripts/fetch-birdflu-cdc.js 
