@@ -27,13 +27,24 @@ const CSV_URL = 'https://data.aphis.usda.gov/resource/y7g5-8w6x.csv?$limit=50000
       console.error('Error fetching latest report_date:', latestError);
       process.exit(1);
     }
-    // Build fetch URL: only grab records on or after the last stored date
-    let fetchUrl = CSV_URL;
+    // Build fetch URL:
+    //   1. Always grab any flocks whose depopulation_status is still "Pending" so we can
+    //      update them when they are eventually culled.
+    //   2. In addition, grab NEW confirmations on or after the most recent date we have.
+
+    let whereClauses = ["depopulation_status='Pending'"]; // always include pending rows
+
+    let lastDate;
     if (latest && latest.length > 0) {
-      const lastDate = String(latest[0].report_date).slice(0, 10); // YYYY-MM-DD
-      console.log(`🐦 Fetching bird flu records on or after ${lastDate}`);
-      fetchUrl = `${CSV_URL}&$where=confirmation_date>='${lastDate}'`;
+      lastDate = String(latest[0].report_date).slice(0, 10); // YYYY-MM-DD
+      whereClauses.push(`confirmation_date>='${lastDate}'`);
+      console.log(`🐦 Fetching bird flu rows with (confirmation_date >= ${lastDate}) OR depop_status Pending`);
+    } else {
+      console.log('🐦 Fetching bird flu rows with depop_status Pending (first run)');
     }
+
+    const whereStr = encodeURIComponent(whereClauses.join(' OR '));
+    const fetchUrl = `${CSV_URL}&$where=${whereStr}`;
     let res;
     try {
       res = await fetch(fetchUrl);
