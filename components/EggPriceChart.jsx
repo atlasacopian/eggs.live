@@ -82,10 +82,6 @@ export default function EggPriceChart({ selectedStore, store, highlight = false,
           >
             {/* Render subtle grid only in full view */}
             {!preview && <CartesianGrid vertical={false} stroke="#444" strokeOpacity={0.1} />}
-            {/* Reference lines only in full view */}
-            {!preview && <ReferenceLine y={7} stroke="#555" strokeDasharray="3 3" />}
-            {!preview && <ReferenceLine y={8.5} stroke="#555" strokeDasharray="3 3" />}
-            {!preview && <ReferenceLine y={10} stroke="#555" strokeDasharray="3 3" />}
             <XAxis
               dataKey="date"
               type="category"
