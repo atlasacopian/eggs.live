@@ -432,6 +432,7 @@ async function fetchStoreEggs (location_id_raw) {
   const BATCH_SIZE = 20; // Upsert to Supabase in batches of this many stores
 
   let consecutiveSkipCount = 0;
+  const skippedStores = [];
 
   await Promise.all(storesToProcess.map(async (s, idx) => limit(async () => {
     const index = startIdx + idx; // original index for logging
@@ -522,12 +523,13 @@ async function fetchStoreEggs (location_id_raw) {
     } catch (err) {
       if (err instanceof NonFatalSkipError) {
         consecutiveSkipCount++;
+        skippedStores.push({ id: s.location_id, reason: err.message });
         console.warn(`Non-fatal skip (${consecutiveSkipCount} in a row): ${err.message}`);
         if (consecutiveSkipCount >= MAX_CONSECUTIVE_SKIPS) {
           console.error(`❌ Reached ${consecutiveSkipCount} consecutive skipped stores (limit: ${MAX_CONSECUTIVE_SKIPS}). Aborting run.`);
           throw err; // escalate to abort
         }
-        return; // skip without failing
+        return; // skip processing but continue
       }
       console.error(`Error processing store ${s.location_id}:`, err);
       throw err;
@@ -535,6 +537,29 @@ async function fetchStoreEggs (location_id_raw) {
   })));
 
   console.log('✅ All stores processed.');
+
+  // Upsert placeholder rows for skipped stores so charts still have 1 row per store
+  if (skippedStores.length) {
+    console.log(`Inserting placeholder rows for ${skippedStores.length} skipped stores…`);
+    const placeholderRows = skippedStores.map(s => ({
+      location_id: (String(s.id)).trim().padStart(8,'0').slice(-8),
+      captured_date,
+      captured_at,
+      status: 'SKIPPED',
+      regular_min: null,
+      regular_avg: null,
+      regular_max: null,
+      organic_min: null,
+      organic_avg: null,
+      organic_max: null,
+    }));
+    try {
+      const { error: skipUpErr } = await sb
+        .from('kroger_egg_prices_new')
+        .upsert(placeholderRows, { onConflict: 'location_id,captured_date' });
+      if (skipUpErr) console.error('Upsert skipped placeholder rows error:', skipUpErr);
+    } catch(e) { console.error('Crash upserting skipped placeholders', e);}    
+  }
 
   // (Retention cleanup removed – we keep historical rows for charts)
   process.exit(0);

@@ -18,7 +18,9 @@ jobs:
       matrix:
         include:
           - start_at: 0
-            max_stores: 500
+            max_stores: 750
+          - start_at: 750
+            max_stores: 750
     concurrency:
       group: kroger-prices-A-${{ matrix.start_at }}
       cancel-in-progress: false
@@ -28,7 +30,7 @@ jobs:
       KROGER_CLIENT_ID:      ${{ secrets.KROGER_CLIENT_ID }}
       KROGER_CLIENT_SECRET:  ${{ secrets.KROGER_CLIENT_SECRET }}
       START_AT:              ${{ matrix.start_at }}
-      MAX_STORES_PER_RUN:    '500'
+      MAX_STORES_PER_RUN:    ${{ matrix.max_stores }}
       NODE_ENV:              production
       RATE_LIMIT_RPS:        '1'
       MAX_CONCURRENT_REQUESTS: '3'
@@ -37,7 +39,7 @@ jobs:
       SHUFFLE_STORES:        '1'
       PAGE_DELAY_MS:         '500'
       STORE_DELAY_MS:        '250'
-      KROGER_STORES_TABLE:   kroger_stores_500
+      KROGER_STORES_TABLE:   kroger_stores_1500
 
     steps:
       - uses: actions/checkout@v4
@@ -59,7 +61,9 @@ jobs:
       matrix:
         include:
           - start_at: 0
-            max_stores: 500
+            max_stores: 750
+          - start_at: 750
+            max_stores: 750
     concurrency:
       group: kroger-prices-B-${{ matrix.start_at }}
       cancel-in-progress: false
@@ -69,7 +73,7 @@ jobs:
       KROGER_CLIENT_ID:      ${{ secrets.KROGER_CLIENT_ID }}
       KROGER_CLIENT_SECRET:  ${{ secrets.KROGER_CLIENT_SECRET }}
       START_AT:              ${{ matrix.start_at }}
-      MAX_STORES_PER_RUN:    '500'
+      MAX_STORES_PER_RUN:    ${{ matrix.max_stores }}
       NODE_ENV:              production
       RATE_LIMIT_RPS:        '1'
       MAX_CONCURRENT_REQUESTS: '3'
@@ -78,7 +82,7 @@ jobs:
       SHUFFLE_STORES:        '1'
       PAGE_DELAY_MS:         '500'
       STORE_DELAY_MS:        '250'
-      KROGER_STORES_TABLE:   kroger_stores_500
+      KROGER_STORES_TABLE:   kroger_stores_1500
 
     steps:
       - uses: actions/checkout@v4
