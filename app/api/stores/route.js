@@ -110,19 +110,43 @@ export async function GET(req) {
           console.log(`API_TEMP_DEBUG: nearby_kroger_stores RPC SUCCESS. Count: ${nearbyKrogerStores?.length}`);
           if (nearbyKrogerStores && nearbyKrogerStores.length > 0) {
               console.log('API_TEMP_DEBUG: First store from RPC:', JSON.stringify(nearbyKrogerStores[0], null, 2));
-              // Directly try to add these to allStores with minimal processing for now
+              // ---- Fetch latest Kroger price stats ----
+              // 1) Determine latest captured_date in table
+              const { data: latestRow, error: latestRowErr } = await sb
+                .from('kroger_egg_prices_new')
+                .select('captured_date')
+                .order('captured_date', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+              const latestDate = latestRow?.captured_date;
+
+              let priceRows = [];
+              if (latestDate) {
+                const paddedIds = nearbyKrogerStores.map(s => String(s.store_id).trim().padStart(8,'0').slice(-8));
+                const { data: priceData, error: priceErr } = await sb
+                  .from('kroger_egg_prices_new')
+                  .select('location_id, regular_avg, organic_avg, captured_at, status')
+                  .eq('captured_date', latestDate)
+                  .in('location_id', paddedIds);
+                if (priceErr) console.error('Error fetching Kroger prices', priceErr);
+                else priceRows = priceData;
+              }
+
+              const priceMap = Object.fromEntries(priceRows.map(r => [r.location_id, r]));
+
               const mappedKrogerStores = nearbyKrogerStores.map(store => {
                   const rawName = store.name || store.store_id;
                   let formattedName = rawName;
-                  // If name contains " - " (e.g., "Ralphs - Wiltern"), convert to "Ralphs (Wiltern)"
                   if (rawName.includes(' - ')) {
                     const [brand, branch] = rawName.split(' - ', 2);
                     formattedName = `${brand} (${branch})`;
                   } else if (/^Kroger - /.test(rawName)) {
-                    // Fallback: remove leading "Kroger - " and wrap remainder in parentheses
                     const branch = rawName.replace(/^Kroger - /, '');
                     formattedName = `Kroger (${branch})`;
                   }
+
+                  const locIdPadded = String(store.store_id).trim().padStart(8,'0').slice(-8);
+                  const priceRec = priceMap[locIdPadded] || {};
 
                   return {
                       name: formattedName,
@@ -130,13 +154,13 @@ export async function GET(req) {
                       city: store.city,
                       state: store.state,
                       zip: store.zip,
-                      regular_price: null, // Forcing null for now
-                      organic_price: null, // Forcing null for now
-                      distance: store.distance_miles, // Assuming RPC returns distance_miles
-                      updated_at: new Date().toISOString(), // Placeholder
+                      regular_price: priceRec.regular_avg,
+                      organic_price: priceRec.organic_avg,
+                      distance: store.distance_miles,
+                      updated_at: priceRec.captured_at,
                       brand: 'Kroger/Affiliate',
                       store_identifier: `K${store.store_id}`,
-                      status: 'NO_DATA_FOUND' // Forcing this for now
+                      status: priceRec.status || 'NO_DATA_FOUND'
                   };
               });
               allStores.push(...mappedKrogerStores);
