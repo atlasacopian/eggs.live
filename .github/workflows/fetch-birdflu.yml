@@ -29,4 +29,4 @@ jobs:
       - name: Fetch USDA bird flu outbreak data (fallback for depop status)
         run: node scripts/fetch-birdflu-us.js
       - name: Fetch CDC bird flu exposure & summary data
-        run: node scripts/fetch-birdflu-cdc.js 
+        run: "node scripts/fetch-birdflu-cdc.js" 
