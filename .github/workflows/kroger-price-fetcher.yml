@@ -18,9 +18,9 @@ jobs:
       matrix:
         include:
           - start_at: 0
-            max_stores: 725
-          - start_at: 725
-            max_stores: 725
+            max_stores: 750
+          - start_at: 750
+            max_stores: 750
     concurrency:
       group: kroger-prices-A-${{ matrix.start_at }}
       cancel-in-progress: false
@@ -39,7 +39,7 @@ jobs:
       SHUFFLE_STORES:        '1'
       PAGE_DELAY_MS:         '1000'
       STORE_DELAY_MS:        '1000'
-      KROGER_STORES_TABLE:   kroger_stores_1999
+      KROGER_STORES_TABLE:   kroger_stores_1500
 
     steps:
       - uses: actions/checkout@v4
@@ -60,10 +60,10 @@ jobs:
       max-parallel: 1        # sequential partitions for key B
       matrix:
         include:
-          - start_at: 1450
-            max_stores: 725
-          - start_at: 2175
-            max_stores: 725   # last slice will process fewer (≈718) but that is fine
+          - start_at: 0
+            max_stores: 750
+          - start_at: 750
+            max_stores: 750
     concurrency:
       group: kroger-prices-B-${{ matrix.start_at }}
       cancel-in-progress: false
@@ -82,7 +82,7 @@ jobs:
       SHUFFLE_STORES:        '1'
       PAGE_DELAY_MS:         '1000'
       STORE_DELAY_MS:        '1000'
-      KROGER_STORES_TABLE:   kroger_stores_1999
+      KROGER_STORES_TABLE:   kroger_stores_1500
 
     steps:
       - uses: actions/checkout@v4
