@@ -184,6 +184,10 @@ async function fetchStoreEggs (location_id_raw) {
       }
     });
     if (!res.ok) {
+      if (res.status === 404) {
+        console.warn(`fetchStoreEggs: page not found (404) for store ${location_id} at offset ${offset}. Ending pagination.`);
+        break;
+      }
       const errorBodyText = await res.text().catch(() => `Failed to read error body for status ${res.status}`);
       // If Kroger returns an explicit "invalid parameters" error (store no longer valid)
       if (res.status === 400) {
