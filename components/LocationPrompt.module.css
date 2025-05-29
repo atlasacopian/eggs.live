@@ -35,7 +35,7 @@
 .option:active,
 .option:focus {
   background-color: transparent !important;
-  color: #000000 !important;
+  color: var(--accent-color) !important;
   border-color: transparent !important;
 }
 
@@ -114,7 +114,7 @@
 .option:focus-within .bracket,
 .option:active .bracket,
 .option:focus .bracket {
-  color: #ffffff;
+  color: var(--accent-color);
 }
 
 .promptWrapper {
