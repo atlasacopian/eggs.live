@@ -141,7 +141,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
 
   const getGridCols = () => {
     if (isMobile) return 1;
-    return view === 'local' ? 6 : 6;
+    return view === 'local' ? 5 : 6;
   };
 
   const getSpan = (desktopSpan) => {
@@ -180,7 +180,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
             <TerminalTile title="Price Chart" span={getSpan(2)} style={{minHeight: isMobile ? '200px' : 'auto'}}>
               <EggPriceChart selectedStore={selectedStore} isMobile={isMobile} />
             </TerminalTile>
-            <TerminalTile title="Price Trend (Local)" span={getSpan(2)} style={{minHeight: isMobile ? '200px' : 'auto'}}>
+            <TerminalTile title="Price Trend (Local)" span={getSpan(1)} style={{minHeight: isMobile ? '200px' : 'auto'}}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={lineData}>
                   <Line type="monotone" dataKey="value" stroke="#00c800" dot={false} strokeWidth={2} />
