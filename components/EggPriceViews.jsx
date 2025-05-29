@@ -106,8 +106,8 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
     status: s.status
   }));
 
-  // Show all stores, not just those with prices
-  const availableStores = dataset;
+  // Exclude stores that have neither regular nor organic prices
+  const availableStores = dataset.filter(s => s.regular != null || s.organic != null);
 
   /* ---------- Sorting ---------- */
   const toggleSort = key => {
