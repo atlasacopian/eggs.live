@@ -1,8 +1,8 @@
 import { supabaseServer } from '../../lib/supabase';
 
 export default async function handler(req, res) {
-  try {
-    const sb = supabaseServer();
+    try {
+      const sb = supabaseServer();
 
     const today = new Date();
     const todayStr = today.toISOString().slice(0, 10);
@@ -28,6 +28,7 @@ export default async function handler(req, res) {
     let monthOutbreaks = 0;
     let ytdOutbreaks = 0;
     let birdsPending = 0;
+    let birdsCulledYTD = 0;
     if (aggErr || !aggRows || aggRows.length === 0) {
       const { data: raw, error: rawErr } = await sb
         .from('bird_flu_daily_stats')
@@ -39,6 +40,17 @@ export default async function handler(req, res) {
         birdsPending += r.birds_pending_cull;
         if (r.day >= monthStartStr) monthOutbreaks += r.outbreaks;
       });
+      // Compute birds culled YTD directly from outbreaks table (fallback)
+      const { data: culledRows, error: culledErr } = await sb
+        .from('bird_flu_outbreaks')
+        .select('birds_affected,depop_status')
+        .gte('report_date', ytdStartStr)
+        .lte('report_date', todayStr);
+      if (!culledErr && culledRows) {
+        birdsCulledYTD = culledRows
+          .filter(r => (r.depop_status || '').toLowerCase().startsWith('complete'))
+          .reduce((sum, r) => sum + (r.birds_affected || 0), 0);
+      }
     } else {
       // RPC result has pre-computed sums
       const m = aggRows.find(r => r.label === 'month');
@@ -46,6 +58,17 @@ export default async function handler(req, res) {
       monthOutbreaks = m ? m.outbreaks : 0;
       ytdOutbreaks = y ? y.outbreaks : 0;
       birdsPending = y ? y.birds_pending_cull : 0;
+      // birds culled: sum of birds_affected where depop_status Complete in YTD
+      const { data: culledRows, error: culledErr } = await sb
+        .from('bird_flu_outbreaks')
+        .select('birds_affected,depop_status')
+        .gte('report_date', ytdStartStr)
+        .lte('report_date', todayStr);
+      if (!culledErr && culledRows) {
+        birdsCulledYTD = culledRows
+          .filter(r => (r.depop_status || '').toLowerCase().startsWith('complete'))
+          .reduce((sum, r) => sum + (r.birds_affected || 0), 0);
+      }
     }
 
     const response = {
@@ -53,6 +76,7 @@ export default async function handler(req, res) {
       outbreaksThisMonth: monthOutbreaks,
       outbreaksThisYear: ytdOutbreaks,
       birdsPendingCull: birdsPending,
+      birdsCulledYTD,
       lastUpdated: todayStr
     };
 
