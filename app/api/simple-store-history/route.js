@@ -54,7 +54,10 @@ export async function GET(req) {
       if (!byDate[item.captured_date]) byDate[item.captured_date] = { date: item.captured_date };
       byDate[item.captured_date][item.product_type] = item.avg_price;
     }
-    historyData = Object.values(byDate);
+    historyData = Object.values(byDate).map(item => ({
+      ...item,
+      date: item.date + 'T12:00:00Z'
+    }));
   } else if (/^K\d+$/.test(storeIdentifier)) {
     // Kroger: try both 'K12345' and '12345'
     let data, error;
@@ -92,7 +95,7 @@ export async function GET(req) {
       console.warn(`[simple-store-history] No data found for Kroger storeIdentifier: ${storeIdentifier}`);
     }
     historyData = (data || []).map(item => ({
-      date: item.captured_date,
+      date: item.captured_date + 'T12:00:00Z',
       regular: item.regular_avg,
       organic: item.organic_avg,
     }));
@@ -108,7 +111,7 @@ export async function GET(req) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
     historyData = data.map(item => ({
-      date: item.date,
+      date: item.date + 'T12:00:00Z',
       regular: item.avg_regular_dozen_price,
       organic: item.avg_organic_dozen_price,
     }));
