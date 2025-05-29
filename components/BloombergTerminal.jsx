@@ -357,19 +357,19 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
                 {fluStats ? (
                   <>
                     <div>
-                      <span style={{ color: '#888' }}>Outbreaks Today:</span> <span style={{ color: '#ffeb3b' }}>{fluStats.todayOutbreaks}</span>
+                      <span style={{ color: '#888' }}>Outbreaks Today:</span> <span style={{ color: '#ffeb3b' }}>{fluStats.outbreaksToday ?? 'N/A'}</span>
                     </div>
                     <div>
-                      <span style={{ color: '#888' }}>Outbreaks This Month:</span> <span style={{ color: '#ffeb3b' }}>{fluStats.monthOutbreaks}</span>
+                      <span style={{ color: '#888' }}>Outbreaks This Month:</span> <span style={{ color: '#ffeb3b' }}>{fluStats.outbreaksThisMonth ?? 'N/A'}</span>
                     </div>
                     <div>
-                      <span style={{ color: '#888' }}>Outbreaks This Year:</span> <span style={{ color: '#ffeb3b' }}>{fluStats.ytdOutbreaks}</span>
+                      <span style={{ color: '#888' }}>Outbreaks This Year:</span> <span style={{ color: '#ffeb3b' }}>{fluStats.outbreaksThisYear ?? 'N/A'}</span>
                     </div>
                     <div>
-                      <span style={{ color: '#888' }}>Birds Culled:</span> <span style={{ color: '#f00' }}>{fluStats.birdsCulledYTD.toLocaleString()}</span>
+                      <span style={{ color: '#888' }}>Birds Culled (YTD):</span> <span style={{ color: '#f00' }}>{typeof fluStats.birdsCulledYTD === 'number' ? fluStats.birdsCulledYTD.toLocaleString() : 'N/A'}</span>
                     </div>
                     <div>
-                      <span style={{ color: '#888' }}>Birds Pending Cull:</span> <span style={{ color: '#FFA500' }}>{fluStats.birdsPending.toLocaleString()}</span>
+                      <span style={{ color: '#888' }}>Birds Pending Cull:</span> <span style={{ color: '#FFA500' }}>{typeof fluStats.birdsPendingCull === 'number' ? fluStats.birdsPendingCull.toLocaleString() : 'N/A'}</span>
                     </div>
                   </>
                 ) : 'Loading…'}
