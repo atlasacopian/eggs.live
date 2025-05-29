@@ -418,8 +418,16 @@ async function fetchStoreEggs (location_id_raw) {
   console.log(`Using concurrency limit: ${concurrency}`);
   const limit = pLimit(concurrency);
   const now = new Date();
-  const captured_date = now.toISOString().split('T')[0];
-  const captured_at = now.toISOString();
+  // Use Los Angeles (America/Los_Angeles) timezone for daily grouping so
+  // each LA calendar day produces its own captured_date, independent of UTC.
+  const laNow = new Date(new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Los_Angeles',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit'
+  }).formatToParts().reduce((s, p) => {
+    if (p.type !== 'literal') s[p.type] = p.value; return s; }, {}));
+  const captured_date = laNow.toISOString().split('T')[0];
+  const captured_at = now.toISOString(); // keep actual UTC timestamp for captured_at
   const rows = [];
   const BATCH_SIZE = 20; // Upsert to Supabase in batches of this many stores
 
@@ -527,5 +535,21 @@ async function fetchStoreEggs (location_id_raw) {
   })));
 
   console.log('✅ All stores processed.');
+
+  // --- Retention: keep only today\'s rows to cap table size ---
+  try {
+    console.log(`Cleaning up old rows in kroger_egg_prices_new (keeping captured_date = ${captured_date})…`);
+    const { error: delErr, count: delCount } = await sb
+      .from('kroger_egg_prices_new')
+      .delete({ count: 'exact' })
+      .neq('captured_date', captured_date);
+    if (delErr) {
+      console.error('Error deleting old rows:', delErr);
+    } else {
+      console.log(`Cleanup complete. Removed ${delCount ?? 'unknown'} old rows.`);
+    }
+  } catch (e) {
+    console.error('Cleanup crash:', e);
+  }
   process.exit(0);
 })(); 
