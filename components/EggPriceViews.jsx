@@ -333,14 +333,14 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
           <div key={s.store + idx} className={`store-item${expandedIndex === idx ? ' active' : ''}`}>  
             <div className="ticker-row store-row" onClick={() => setExpandedIndex(expandedIndex === idx ? null : idx)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', padding: '8px' }}>  
               {/* Left: store & address */}  
-              <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>  
+              <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>  
                 <span style={{ fontSize: '1rem', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>🥚 {s.store}</span>  
                 <span style={{ fontSize: '0.75rem', color: '#aaa', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>  
                   {s.distance?.toFixed(1)} MI - <a href={formatAddress(s.address).link} target="_blank" rel="noopener noreferrer" className="address-link">{formatAddress(s.address).display}</a>  
                 </span>  
               </div>  
               {/* Right: prices, sparkline & toggle */}  
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>  
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexShrink: 0 }}>  
                 <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', width: 90, minWidth: 90 }}>  
                   <div style={{ fontSize: '0.75rem', color: '#aaa', textTransform: 'uppercase' }}>Reg</div>  
                   <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#fff', lineHeight: '1' }}>
