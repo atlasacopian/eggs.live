@@ -418,15 +418,8 @@ async function fetchStoreEggs (location_id_raw) {
   console.log(`Using concurrency limit: ${concurrency}`);
   const limit = pLimit(concurrency);
   const now = new Date();
-  // Use Los Angeles (America/Los_Angeles) timezone for daily grouping so
-  // each LA calendar day produces its own captured_date, independent of UTC.
-  const laNow = new Date(new Intl.DateTimeFormat('en-US', {
-    timeZone: 'America/Los_Angeles',
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit', second: '2-digit'
-  }).formatToParts().reduce((s, p) => {
-    if (p.type !== 'literal') s[p.type] = p.value; return s; }, {}));
-  const captured_date = laNow.toISOString().split('T')[0];
+  // Derive the current calendar date in Los Angeles without complex Date reconstruction
+  const captured_date = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
   const captured_at = now.toISOString(); // keep actual UTC timestamp for captured_at
   const rows = [];
   const BATCH_SIZE = 20; // Upsert to Supabase in batches of this many stores
