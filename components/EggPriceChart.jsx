@@ -129,6 +129,7 @@ export default function EggPriceChart({ selectedStore, store, highlight = false,
               isAnimationActive={true}
               animationDuration={preview ? 800 : 1500}
               animationEasing="ease-in-out"
+              connectNulls={true}
             />
           </LineChart>
         </ResponsiveContainer>
