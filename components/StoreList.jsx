@@ -53,10 +53,10 @@ export default function StoreList({
 
   return (
     <div
-      style={{ display: 'flex', flexDirection: 'column', gap: 4, overflowY: 'auto' }}
+      style={{ display: 'flex', flexDirection: 'column', gap: 4, overflowY: 'auto', maxHeight: '400px' }}
       onMouseLeave={() => setHoveredStore(null)}
     >
-      {stores.map(s => (
+      {stores.slice(0, 10).map(s => (
         <div
           key={s.store_identifier}
           onClick={() => setSelectedStore(s)}
