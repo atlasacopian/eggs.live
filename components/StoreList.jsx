@@ -78,8 +78,8 @@ export default function StoreList({
           </div>
           <div style={{ textAlign: 'right', minWidth: 260 }}>
             <div style={{ fontSize: '0.72rem', color: '#aaa', display:'flex', gap: 0, letterSpacing: 1, marginBottom: 4 }}>
-              <span style={{ flex: 1, textAlign: 'center' }}>REG</span>
-              <span style={{ flex: 1, textAlign: 'center' }}>ORG</span>
+              <span style={{ flex: 1, textAlign: 'center' }}>LOWEST REGULAR</span>
+              <span style={{ flex: 1, textAlign: 'center' }}>LOWEST ORGANIC</span>
             </div>
             <div style={{ display:'flex' }}>
               {/* Regular Column */}
