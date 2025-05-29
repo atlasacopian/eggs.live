@@ -186,7 +186,7 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
   // Render
   return (
     <div className="egg-price-views-wrapper" style={{ 
-      maxWidth: 960, 
+      maxWidth: 1200, 
       width: '100%', 
       margin: '80px auto 0', 
       fontFamily: 'Roboto Mono, monospace', 
@@ -341,7 +341,7 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
               </div>  
               {/* Right: prices, sparkline & toggle */}  
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>  
-                <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>  
+                <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', width: 90, minWidth: 90 }}>  
                   <div style={{ fontSize: '0.75rem', color: '#aaa', textTransform: 'uppercase' }}>Reg</div>  
                   <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#fff', lineHeight: '1' }}>
                     {s.regular != null
@@ -360,7 +360,7 @@ export default function EggPriceViews({ zipCode: initialZipCode = '90026', store
                     <span style={{ display: 'block', marginTop: 4, color: '#888', fontWeight: 600, fontSize: '0.75rem' }}>→0.0%</span>
                   )}  
                 </div>  
-                <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginRight: '16px' }}>  
+                <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginRight: '16px', width: 90, minWidth: 90 }}>  
                   <div style={{ fontSize: '0.75rem', color: '#aaa', textTransform: 'uppercase' }}>Org</div>  
                   <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#fff', lineHeight: '1' }}>
                     {s.organic != null
