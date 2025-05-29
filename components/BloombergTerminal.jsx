@@ -297,10 +297,22 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
                         {stk.symbol} {stk.price.toFixed(2)} {stk.change_pct >= 0 ? '▲' : '▼'} {Math.abs(stk.change_pct).toFixed(2)}%
                       </div>
                     ))}
-                    <div style={{ color: '#666', fontSize: '0.7em', marginTop: 4 }}>
-                      Market data: {(() => {
-                        const latest = eggStocks.reduce((a,b) => new Date(a.updated_at) > new Date(b.updated_at) ? a : b);
-                        return formatMarketTime(latest.updated_at);
+                    <div style={{ color: '#666', fontSize: '0.7em', marginTop: 4, whiteSpace: 'nowrap' }}>
+                      Last Update: {(() => {
+                        const latest = eggStocks.reduce((a, b) => new Date(a.updated_at) > new Date(b.updated_at) ? a : b);
+                        const marketCloseTime = new Date(latest.updated_at);
+                        marketCloseTime.setHours(16, 0, 0, 0); // Set to 4:00 PM local time
+                        return new Date().getHours() < 9 || new Date().getHours() > 16 ?
+                          marketCloseTime.toLocaleTimeString(undefined, {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            timeZoneName: 'short'
+                          }) :
+                          new Date(latest.updated_at).toLocaleTimeString(undefined, {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            timeZoneName: 'short'
+                          });
                       })()}
                     </div>
                   </>
