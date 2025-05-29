@@ -34,7 +34,13 @@ const CSV_URL = 'https://data.aphis.usda.gov/resource/y7g5-8w6x.csv?$limit=50000
       console.log(`🐦 Fetching bird flu records on or after ${lastDate}`);
       fetchUrl = `${CSV_URL}&$where=confirmation_date>='${lastDate}'`;
     }
-    const res = await fetch(fetchUrl);
+    let res;
+    try {
+      res = await fetch(fetchUrl);
+    } catch (e) {
+      console.warn(`Bird flu ingestion skipped: network error fetching ${fetchUrl}: ${e.message}`);
+      process.exit(0);
+    }
     if (res.status === 404) {
       console.warn(`Bird flu ingestion skipped: CSV not found (404): ${CSV_URL}`);
       process.exit(0);
