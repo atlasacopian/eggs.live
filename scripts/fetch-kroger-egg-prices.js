@@ -536,20 +536,6 @@ async function fetchStoreEggs (location_id_raw) {
 
   console.log('✅ All stores processed.');
 
-  // --- Retention: keep only today\'s rows to cap table size ---
-  try {
-    console.log(`Cleaning up old rows in kroger_egg_prices_new (keeping captured_date = ${captured_date})…`);
-    const { error: delErr, count: delCount } = await sb
-      .from('kroger_egg_prices_new')
-      .delete({ count: 'exact' })
-      .neq('captured_date', captured_date);
-    if (delErr) {
-      console.error('Error deleting old rows:', delErr);
-    } else {
-      console.log(`Cleanup complete. Removed ${delCount ?? 'unknown'} old rows.`);
-    }
-  } catch (e) {
-    console.error('Cleanup crash:', e);
-  }
+  // (Retention cleanup removed – we keep historical rows for charts)
   process.exit(0);
 })(); 
