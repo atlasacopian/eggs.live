@@ -32,13 +32,13 @@ jobs:
       START_AT:              ${{ matrix.start_at }}
       MAX_STORES_PER_RUN:    ${{ matrix.max_stores }}
       NODE_ENV:              production
-      RATE_LIMIT_RPS:        '0.5'
-      MAX_CONCURRENT_REQUESTS: '1'
+      RATE_LIMIT_RPS:        '1'
+      MAX_CONCURRENT_REQUESTS: '3'
       CONCURRENCY:           '1'
       MAX_CONSECUTIVE_SKIPS: '100'
       SHUFFLE_STORES:        '1'
-      PAGE_DELAY_MS:         '1000'
-      STORE_DELAY_MS:        '1000'
+      PAGE_DELAY_MS:         '500'
+      STORE_DELAY_MS:        '250'
       KROGER_STORES_TABLE:   kroger_stores_1500
 
     steps:
@@ -75,13 +75,13 @@ jobs:
       START_AT:              ${{ matrix.start_at }}
       MAX_STORES_PER_RUN:    ${{ matrix.max_stores }}
       NODE_ENV:              production
-      RATE_LIMIT_RPS:        '0.5'
-      MAX_CONCURRENT_REQUESTS: '1'
+      RATE_LIMIT_RPS:        '1'
+      MAX_CONCURRENT_REQUESTS: '3'
       CONCURRENCY:           '1'
       MAX_CONSECUTIVE_SKIPS: '100'
       SHUFFLE_STORES:        '1'
-      PAGE_DELAY_MS:         '1000'
-      STORE_DELAY_MS:        '1000'
+      PAGE_DELAY_MS:         '500'
+      STORE_DELAY_MS:        '250'
       KROGER_STORES_TABLE:   kroger_stores_1500
 
     steps:
