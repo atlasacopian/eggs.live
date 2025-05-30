@@ -1,0 +1,24 @@
+name: HPAI State Fetcher
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: '10 7 * * *'  # every day at 07:10 UTC
+
+jobs:
+  run-fetcher:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install deps
+        run: npm ci --omit=dev
+      - name: Run APHIS HPAI state ingest
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          NODE_OPTIONS: '--no-warnings'
+        run: node scripts/fetch-hpai-aphis-state.js 
