@@ -14,10 +14,9 @@ export default function StoreList({
   const storeLineStyle = {
     display: 'flex',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '6px 10px',
+    alignItems: 'flex-start',
+    padding: '8px 10px',
     borderBottom: '1px solid #222',
-    minHeight: '40px',
     backgroundColor: '#000',
     transition: 'background-color 0.3s',
   };
@@ -75,6 +74,11 @@ export default function StoreList({
           <div>
             <div style={storeNameStyle}>{s.name}</div>
             <div style={addressStyle}>{s.address}</div>
+            {typeof s.distance === 'number' && (
+              <div style={{ ...addressStyle, fontStyle: 'italic' }}>
+                {s.distance.toFixed(1)} mi away
+              </div>
+            )}
           </div>
           <div style={{ textAlign: 'right', minWidth: 260 }}>
             <div style={{ fontSize: '0.72rem', color: '#aaa', display:'flex', gap: 0, letterSpacing: 1, marginBottom: 4 }}>
