@@ -37,33 +37,21 @@ export default function UsdaPriceChart() {
       const sb = supabaseBrowser();
 
       try {
-        // Attempt to fetch conventional (regular) prices. USDA table may store under different labels,
-        // so try a primary label ("grd a lrg") and if no rows, fall back to "regular".
-        let { data: regularData, error: regularError } = await sb
-          .from('usda_weekly_egg_prices')
-          .select('report_start_date, price')
-          .eq('product_type', 'grd a lrg')
-          .order('report_start_date', { ascending: true });
-
-        if (regularError) throw regularError;
-
-        // Fallback query if no records found with first label
-        if (!regularData || regularData.length === 0) {
-          const { data: fallbackReg, error: fallbackErr } = await sb
+        // Fetch regular (covering both 'grd a lrg' and 'regular') and organic prices in parallel
+        const [{ data: regularData, error: regularError }, { data: organicData, error: organicError }] = await Promise.all([
+          sb
             .from('usda_weekly_egg_prices')
             .select('report_start_date, price')
-            .eq('product_type', 'regular')
-            .order('report_start_date', { ascending: true });
-          if (fallbackErr) throw fallbackErr;
-          regularData = fallbackReg;
-        }
+            .in('product_type', ['grd a lrg', 'regular'])
+            .order('report_start_date', { ascending: true }),
+          sb
+            .from('usda_weekly_egg_prices')
+            .select('report_start_date, price')
+            .eq('product_type', 'organic')
+            .order('report_start_date', { ascending: true })
+        ]);
 
-        const { data: organicData, error: organicError } = await sb
-          .from('usda_weekly_egg_prices')
-          .select('report_start_date, price')
-          .eq('product_type', 'organic') // Target 'organic'
-          .order('report_start_date', { ascending: true });
-
+        if (regularError) throw regularError;
         if (organicError) throw organicError;
         
         console.log('Fetched Regular USDA Data:', regularData);
