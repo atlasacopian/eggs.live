@@ -120,7 +120,22 @@ export async function GET(req) {
                 .maybeSingle();
               const latestDate = latestRow?.captured_date;
 
+              // Determine previous captured_date (for change % calculations)
+              let prevDate = null;
+              if (latestDate) {
+                const { data: prevRow, error: prevRowErr } = await sb
+                  .from('kroger_egg_prices_new')
+                  .select('captured_date')
+                  .lt('captured_date', latestDate)
+                  .order('captured_date', { ascending: false })
+                  .limit(1)
+                  .maybeSingle();
+                if (prevRowErr) console.error('Error fetching previous Kroger captured_date', prevRowErr);
+                prevDate = prevRow?.captured_date;
+              }
+
               let priceRows = [];
+              let prevPriceMap = {};
               if (latestDate) {
                 const paddedIds = nearbyKrogerStores.map(s => String(s.store_id).trim().padStart(8,'0').slice(-8));
                 const { data: priceData, error: priceErr } = await sb
@@ -130,10 +145,24 @@ export async function GET(req) {
                   .in('location_id', paddedIds);
                 if (priceErr) console.error('Error fetching Kroger prices', priceErr);
                 else priceRows = priceData;
+
+                // Fetch previous day prices for change calculation
+                if (prevDate) {
+                  const { data: prevPriceData, error: prevPriceErr } = await sb
+                    .from('kroger_egg_prices_new')
+                    .select('location_id, regular_avg, organic_avg')
+                    .eq('captured_date', prevDate)
+                    .in('location_id', paddedIds);
+                  if (prevPriceErr) console.error('Error fetching previous Kroger prices', prevPriceErr);
+                  else {
+                    // Merge into a map for quick look-up
+                    prevPriceMap = Object.fromEntries(prevPriceData.map(r => [r.location_id, r]));
+                  }
+                }
               }
 
               const priceMap = Object.fromEntries(priceRows.map(r => [r.location_id, r]));
-
+              
               const mappedKrogerStores = nearbyKrogerStores.map(store => {
                   const rawName = store.name || store.store_id;
                   let formattedName = rawName;
@@ -147,6 +176,16 @@ export async function GET(req) {
 
                   const locIdPadded = String(store.store_id).trim().padStart(8,'0').slice(-8);
                   const priceRec = priceMap[locIdPadded] || {};
+                  const prevRec = prevPriceMap[locIdPadded] || {};
+
+                  // Calculate percentage changes if previous record exists and has non-null prices
+                  let regular_change = null, organic_change = null;
+                  if (priceRec.regular_avg != null && prevRec.regular_avg != null && prevRec.regular_avg > 0) {
+                    regular_change = ((priceRec.regular_avg - prevRec.regular_avg) / prevRec.regular_avg) * 100;
+                  }
+                  if (priceRec.organic_avg != null && prevRec.organic_avg != null && prevRec.organic_avg > 0) {
+                    organic_change = ((priceRec.organic_avg - prevRec.organic_avg) / prevRec.organic_avg) * 100;
+                  }
 
                   return {
                       name: formattedName,
@@ -156,6 +195,8 @@ export async function GET(req) {
                       zip: store.zip,
                       regular_price: priceRec.regular_avg,
                       organic_price: priceRec.organic_avg,
+                      regular_change,
+                      organic_change,
                       distance: store.distance_miles,
                       updated_at: priceRec.captured_at,
                       brand: 'Kroger/Affiliate',
