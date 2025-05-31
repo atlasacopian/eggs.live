@@ -74,10 +74,12 @@ export default function UsdaPriceChart() {
         }
         
         const formattedData = formatDataForChart(regularData || [], organicData || []);
-        console.log('Formatted Chart Data:', formattedData);
-        setChartData(formattedData);
-        if (formattedData.length) {
-          setLastUpdated(formattedData[formattedData.length - 1].date);
+        const currentYear = new Date().getFullYear();
+        const filteredData = formattedData.filter(item => new Date(item.date).getFullYear() === currentYear);
+        console.log(`Filtered Chart Data for ${currentYear}:`, filteredData);
+        setChartData(filteredData);
+        if (filteredData.length) {
+          setLastUpdated(filteredData[filteredData.length - 1].date);
         }
 
       } catch (err) {
