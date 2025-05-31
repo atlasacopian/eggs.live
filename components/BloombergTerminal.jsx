@@ -267,8 +267,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
             <TerminalTile
               title="Historical National Prices"
               span={getSpan(3)}
-              style={{ minHeight: isMobile ? '250px' : '300px', maxHeight: isMobile ? '250px' : '300px', overflow: 'visible' }}
-              bodyStyle={{ overflow: 'visible' }}
+              style={{ minHeight: isMobile ? '250px' : '300px', maxHeight: isMobile ? '250px' : '300px' }}
             >
               <FredChart symbol="APU0000703111" start="1980-01-01" showTimestamp={true} />
             </TerminalTile>
@@ -276,8 +275,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
             <TerminalTile
               title="Current National Prices"
               span={getSpan(3)}
-              style={{ minHeight: isMobile ? '250px' : '300px', maxHeight: isMobile ? '250px' : '300px', overflow: 'visible' }}
-              bodyStyle={{ overflow: 'visible' }}
+              style={{ minHeight: isMobile ? '250px' : '300px', maxHeight: isMobile ? '250px' : '300px' }}
             >
               <UsdaPriceChart />
             </TerminalTile>
