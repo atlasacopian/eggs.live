@@ -31,11 +31,13 @@ export default function UsdaPriceChart() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Initialize Supabase client
+    const sb = supabaseBrowser();
+    // Function to fetch and update chart data
     const fetchData = async () => {
       setLoading(true);
       setError(null);
-      const sb = supabaseBrowser();
-
+      
       try {
         // Fetch regular (covering both 'grd a lrg' and 'regular') and organic prices in parallel
         const [{ data: regularData, error: regularError }, { data: organicData, error: organicError }] = await Promise.all([
@@ -78,7 +80,22 @@ export default function UsdaPriceChart() {
       }
     };
 
+    // Initial fetch
     fetchData();
+
+    // Subscribe to new USDA data inserts and refresh chart when data changes
+    const channel = sb
+      .channel('usda-updates')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'usda_weekly_egg_prices' }, () => {
+        console.log('Real-time USDA update received, refreshing data');
+        fetchData();
+      })
+      .subscribe();
+
+    // Clean up subscription on unmount
+    return () => {
+      sb.removeChannel(channel);
+    };
   }, []);
 
   if (loading) {
