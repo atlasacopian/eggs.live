@@ -1,9 +1,9 @@
 name: National Daily (USDA)
 
 on:
-  # Runs daily at midnight Los Angeles Time (approx. 07:00 UTC during PDT)
+  # Runs daily at 16:00 UTC (8 AM PST / 9 AM PDT / 12 PM ET) to catch the latest USDA weekly report
   schedule:
-    - cron: '0 7 * * *' # Midnight PDT (UTC-7)
+    - cron: '0 16 * * *'
   # Allow a manual run from the Actions tab
   workflow_dispatch:
 
