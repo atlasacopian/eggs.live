@@ -265,7 +265,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
           <>
             {/* National View - Row 1 (5 columns total) */}
             <TerminalTile
-              title="Retail Egg CPI"
+              title="Historical National Prices"
               span={getSpan(3)}
               style={{ minHeight: isMobile ? '250px' : '300px', maxHeight: isMobile ? '250px' : '300px', overflow: 'visible' }}
               bodyStyle={{ overflow: 'visible' }}
@@ -274,7 +274,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
             </TerminalTile>
 
             <TerminalTile
-              title="USDA National Egg Prices"
+              title="Current National Prices"
               span={getSpan(3)}
               style={{ minHeight: isMobile ? '250px' : '300px', maxHeight: isMobile ? '250px' : '300px', overflow: 'visible' }}
               bodyStyle={{ overflow: 'visible' }}
@@ -284,7 +284,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
 
             {/* National View - Row 2: Market indices */}
             {/* Shell Market Index */}
-            <TerminalTile title="Shell Market Index" span={getSpan(2)} style={{minHeight: isMobile ? '120px' : 'auto'}}>
+            <TerminalTile title="Egg Stocks" span={getSpan(2)} style={{minHeight: isMobile ? '120px' : 'auto'}}>
               <div style={{ padding: 8, fontFamily: 'Menlo, monospace', fontSize: isMobile ? '0.75rem' : '0.85rem' }}>
                 {eggStocks === null ? (
                   <div style={{ color: '#666' }}>Loading...</div>
@@ -322,7 +322,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
             </TerminalTile>
 
             {/* Retailer Stocks */}
-            <TerminalTile title="Retailer Stocks" span={getSpan(2)} style={{minHeight: isMobile ? '120px' : 'auto'}}>
+            <TerminalTile title="Grocery Store Stocks" span={getSpan(2)} style={{minHeight: isMobile ? '120px' : 'auto'}}>
               <div style={{ padding: 8, fontFamily: 'Menlo, monospace', fontSize: isMobile ? '0.75rem' : '0.85rem' }}>
                 {retailerStocks === null ? (<div style={{color:'#666'}}>Loading...</div>) : retailerStocks.length===0 ? (<div style={{color:'#666'}}>No data</div>) : (<>
                   {retailerStocks.map(rs=> (
@@ -341,14 +341,14 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
             </TerminalTile>
 
             {/* Egg Price News */}
-            <TerminalTile title="Egg Price News" span={getSpan(2)} style={{ minHeight: isMobile ? '120px' : '150px', maxHeight: isMobile ? '120px' : '150px' }}>
+            <TerminalTile title="News" span={getSpan(2)} style={{ minHeight: isMobile ? '120px' : '150px', maxHeight: isMobile ? '120px' : '150px' }}>
               <div style={{ height: '100%', overflowY: 'auto', paddingRight: '4px' }}>
                 <EggNewsPanel fontSize={isMobile ? '0.75rem' : '0.85rem'} />
               </div>
             </TerminalTile>
 
             {/* National Supply Index */}
-            <TerminalTile title="National Supply Index" span={getSpan(3)} style={{minHeight: isMobile ? '200px' : 'auto'}}>
+            <TerminalTile title="Bird Flu Cases" span={getSpan(3)} style={{minHeight: isMobile ? '200px' : 'auto'}}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={[{name: 'Supply/Demand', supply: 78, demand: 65}]} layout="vertical" margin={{ top: 20, right: 20, bottom: 0, left: isMobile ? 5 : 20 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#222" />
