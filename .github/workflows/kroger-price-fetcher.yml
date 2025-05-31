@@ -8,13 +8,13 @@ on:
   workflow_dispatch:
 
 jobs:
-  fetch_A:
-    name: Fetch prices (Key A)
+  fetch:
+    name: Fetch prices
     runs-on: ubuntu-latest
     timeout-minutes: 360
     strategy:
       fail-fast: true
-      max-parallel: 1        # run the two partitions sequentially for this key
+      max-parallel: 1        # run the two partitions sequentially
       matrix:
         include:
           - start_at: 0
@@ -22,50 +22,7 @@ jobs:
           - start_at: 750
             max_stores: 750
     concurrency:
-      group: kroger-prices-A-${{ matrix.start_at }}
-      cancel-in-progress: false
-    env:
-      SUPABASE_URL:          ${{ secrets.SUPABASE_URL }}
-      SUPABASE_SERVICE_KEY:  ${{ secrets.SUPABASE_SERVICE_KEY }}
-      KROGER_CLIENT_ID:      ${{ secrets.KROGER_CLIENT_ID }}
-      KROGER_CLIENT_SECRET:  ${{ secrets.KROGER_CLIENT_SECRET }}
-      START_AT:              ${{ matrix.start_at }}
-      MAX_STORES_PER_RUN:    ${{ matrix.max_stores }}
-      NODE_ENV:              production
-      RATE_LIMIT_RPS:        '1'
-      MAX_CONCURRENT_REQUESTS: '3'
-      CONCURRENCY:           '1'
-      MAX_CONSECUTIVE_SKIPS: '100'
-      SHUFFLE_STORES:        '1'
-      PAGE_DELAY_MS:         '500'
-      STORE_DELAY_MS:        '250'
-      KROGER_STORES_TABLE:   kroger_stores_1500
-
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20.x'
-          cache: 'npm'
-      - run: npm ci
-      - run: node scripts/fetch-kroger-egg-prices.js
-
-  fetch_B:
-    name: Fetch prices (Key B)
-    needs: fetch_A
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    strategy:
-      fail-fast: true
-      max-parallel: 1        # sequential partitions for key B
-      matrix:
-        include:
-          - start_at: 0
-            max_stores: 750
-          - start_at: 750
-            max_stores: 750
-    concurrency:
-      group: kroger-prices-B-${{ matrix.start_at }}
+      group: kroger-prices-${{ matrix.start_at }}
       cancel-in-progress: false
     env:
       SUPABASE_URL:          ${{ secrets.SUPABASE_URL }}
