@@ -275,7 +275,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
             <TerminalTile
               title="Current National Prices"
               span={getSpan(3)}
-              style={{ minHeight: isMobile ? '250px' : '300px', maxHeight: isMobile ? '250px' : '300px' }}
+              style={{ minHeight: isMobile ? '200px' : '250px', maxHeight: isMobile ? '200px' : '250px' }}
             >
               <UsdaPriceChart />
             </TerminalTile>

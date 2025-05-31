@@ -106,32 +106,34 @@ export default function UsdaPriceChart() {
   }
 
   return (
-    <div style={{ width: '100%', height: '100%' }}>
-      <LineChart width={700} height={300} data={chartData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-        <XAxis 
-          dataKey="date" 
-          stroke="#ccc"
-          tickFormatter={(tick) => new Date(tick).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}
-          minTickGap={30} // Adjust to show fewer labels if crowded
-        />
-        <YAxis stroke="#ccc" domain={['auto', 'auto']}>
-        </YAxis>
-        <Tooltip 
-            wrapperStyle={{ backgroundColor: '#222', border: '1px solid #555' }}
-            contentStyle={{ backgroundColor: '#222', color: '#fff' }}
-            itemStyle={{ color: '#fff' }}
-            formatter={(value) => typeof value === 'number' ? `$${value.toFixed(2)}` : value}
-        />
-        <Legend wrapperStyle={{ color: '#fff' }} />
-        {/* Render Regular only if at least one data point exists */}
-        {chartData.some(d => d.Regular !== undefined) && (
-          <Line type="monotone" dataKey="Regular" stroke="#00b7ff" dot={false} strokeWidth={2} name="Regular (Natl Avg)" connectNulls={true} />
-        )}
-        {chartData.some(d => d.Organic !== undefined) && ( // Only render Organic line if data exists
-            <Line type="monotone" dataKey="Organic" stroke="#fd7e14" dot={false} strokeWidth={2} name="Organic (Natl Avg)" connectNulls={true} />
-        )}
-      </LineChart>
+    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <ResponsiveContainer width="100%" height="85%">
+        <LineChart data={chartData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+          <XAxis  
+            dataKey="date"  
+            stroke="#ccc"
+            tickFormatter={(tick) => new Date(tick).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}
+            minTickGap={30} // Adjust to show fewer labels if crowded
+          />
+          <YAxis stroke="#ccc" domain={[ 'auto', 'auto' ]}>
+          </YAxis>
+          <Tooltip  
+              wrapperStyle={{ backgroundColor: '#222', border: '1px solid #555' }}
+              contentStyle={{ backgroundColor: '#222', color: '#fff' }}
+              itemStyle={{ color: '#fff' }}
+              formatter={(value) => typeof value === 'number' ? `$${value.toFixed(2)}` : value}
+          />
+          <Legend wrapperStyle={{ color: '#fff' }} />
+          {/* Render Regular only if at least one data point exists */}
+          {chartData.some(d => d.Regular !== undefined) && (
+            <Line type="monotone" dataKey="Regular" stroke="#00b7ff" dot={false} strokeWidth={2} name="Regular (Natl Avg)" connectNulls={true} />
+          )}
+          {chartData.some(d => d.Organic !== undefined) && ( // Only render Organic line if data exists
+              <Line type="monotone" dataKey="Organic" stroke="#fd7e14" dot={false} strokeWidth={2} name="Organic (Natl Avg)" connectNulls={true} />
+          )}
+        </LineChart>
+      </ResponsiveContainer>
       <div style={{ fontSize: '0.6em', color: '#666', marginTop: 4, textAlign: 'right' }}>
         Source: USDA{lastUpdated ? ` • Last updated: ${new Date(lastUpdated).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : ''}
       </div>
