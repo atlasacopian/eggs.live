@@ -123,9 +123,10 @@ async function fetchWithRetry(url, options = {}, maxAttempts = 5) {
   }
 
 // --- rate-limit configuration ---
-// Requests-per-second and concurrency can be tuned via env. Defaults are safe for Kroger API.
-const RATE_LIMIT_RPS = Number(process.env.RATE_LIMIT_RPS ?? '0.5'); // default to 0.5 requests per second
-const MAX_CONCURRENT_REQUESTS = Number(process.env.MAX_CONCURRENT_REQUESTS ?? '6');
+// Default to a conservative but faster 1 request/second. Override with RATE_LIMIT_RPS env if needed.
+const RATE_LIMIT_RPS = Number(process.env.RATE_LIMIT_RPS ?? '1'); // 1 rps
+// Allow up to 8 concurrent in-flight requests by default (tuned for 1 rps bucket).
+const MAX_CONCURRENT_REQUESTS = Number(process.env.MAX_CONCURRENT_REQUESTS ?? '8');
 // Whether to randomize store processing order (helps avoid regional clusters of server errors)
 const SHOULD_SHUFFLE_STORES = process.env.SHUFFLE_STORES === '1';
 // Maximum number of consecutive stores that can be skipped (due to 5xx/429 errors)
@@ -143,9 +144,9 @@ function rateLimitedFetch (url, opts) {
   return limiter.schedule(() => fetchWithRetry(url, opts));
 }
 
-// Artificial delays are now optional and default to 0 (disabled)
-const STORE_DELAY_MS = Number(process.env.STORE_DELAY_MS ?? '1000'); // default 1s
-const PAGE_DELAY_MS  = Number(process.env.PAGE_DELAY_MS  ?? '1000'); // default 1s
+// Shorten default inter-store/page delays (override via env to tune further)
+const STORE_DELAY_MS = Number(process.env.STORE_DELAY_MS ?? '200'); // default 0.2s
+const PAGE_DELAY_MS  = Number(process.env.PAGE_DELAY_MS  ?? '200'); // default 0.2s
 
 class NonFatalSkipError extends Error {
   constructor(msg) {
