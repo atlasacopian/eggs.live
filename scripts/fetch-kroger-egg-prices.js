@@ -255,35 +255,31 @@ async function fetchStoreEggs (location_id_raw) {
 
       const type = /organic/i.test(combinedName) ? 'organic' : 'regular'; // Organic check remains on mainDesc
       
-      // Prefer the item entry that matches our current store/location ID
-      let item = {};
-      if (Array.isArray(p.items) && p.items.length) {
-        // Attempt exact match on locationId (string comparison to be safe)
-        item = p.items.find(it => String(it.locationId || '').padStart(8,'0').slice(-8) === location_id) || p.items[0];
-      }
+      // ---- NEW: iterate over *all* item records (different fulfillment channels) ----
+      const allItems = Array.isArray(p.items) ? p.items : [];
+      // Prefer items whose locationId matches this store; if none match, fall back to allItems
+      const matchingItems = allItems.filter(it => String(it.locationId || '').padStart(8,'0').slice(-8) === location_id);
+      const itemsToCheck = matchingItems.length ? matchingItems : allItems;
 
-      // REVISED PRICE LOGIC:
-      // Prioritize a positive promo price. If not available or zero, use a positive regular price.
-      // If item.price.current exists, it could be considered, but typically regular/promo are key.
       let price = null;
-      const regularPrice = item.price?.regular;
-      const promoPrice = item.price?.promo;
-
-      if (promoPrice && promoPrice > 0) {
-        price = promoPrice;
-      } else if (regularPrice && regularPrice > 0) {
-        price = regularPrice;
+      for (const it of itemsToCheck) {
+        const promo = it.price?.promo;
+        const regular = it.price?.regular;
+        let candidate = null;
+        if (promo && promo > 0) candidate = promo; else if (regular && regular > 0) candidate = regular;
+        if (candidate != null) {
+          // push every valid candidate price
+          buckets[type].push(candidate);
+          price = price ?? candidate; // just for logging later
+        }
       }
-      // If a price was found (either promo or regular and > 0), it's now in 'price'.
-      // If 'price' is still null here, it means neither positive promo nor positive regular price was found.
-      // (No need for the extra price < 0.01 check here if we only assign positive prices above)
 
       // Determine price status for logging
       let priceStatusString;
       if (price !== null) {
         priceStatusString = String(price);
       } else {
-        const stockLevel = item?.inventory?.stockLevel?.toUpperCase();
+        const stockLevel = itemsToCheck[0]?.inventory?.stockLevel?.toUpperCase();
         if (stockLevel === 'OUT_OF_STOCK' || stockLevel === 'NONE') {
           priceStatusString = 'OUT_OF_STOCK';
         } else if (stockLevel === 'LOW') {
@@ -300,7 +296,6 @@ async function fetchStoreEggs (location_id_raw) {
       const displayDesc = combinedName.trim(); // Use the new combinedName
       console.log(`fetchStoreEggs: MATCHED (Store: ${location_id}, Type: ${type}, PriceInfo: ${priceStatusString}, Size: ${itemSize}): ${displayDesc.toLowerCase() || p.productId.toLowerCase() || '[no desc/id]'}`);
 
-      if (price) buckets[type].push(price); // Only add to buckets if price is a valid number
       buckets._allMatched.push(p);
     }
 
