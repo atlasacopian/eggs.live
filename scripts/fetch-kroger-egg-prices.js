@@ -255,7 +255,13 @@ async function fetchStoreEggs (location_id_raw) {
 
       const type = /organic/i.test(combinedName) ? 'organic' : 'regular'; // Organic check remains on mainDesc
       
-      const item = p.items?.[0] || {};
+      // Prefer the item entry that matches our current store/location ID
+      let item = {};
+      if (Array.isArray(p.items) && p.items.length) {
+        // Attempt exact match on locationId (string comparison to be safe)
+        item = p.items.find(it => String(it.locationId || '').padStart(8,'0').slice(-8) === location_id) || p.items[0];
+      }
+
       // REVISED PRICE LOGIC:
       // Prioritize a positive promo price. If not available or zero, use a positive regular price.
       // If item.price.current exists, it could be considered, but typically regular/promo are key.
@@ -277,7 +283,7 @@ async function fetchStoreEggs (location_id_raw) {
       if (price !== null) {
         priceStatusString = String(price);
       } else {
-        const stockLevel = p.items?.[0]?.inventory?.stockLevel?.toUpperCase();
+        const stockLevel = item?.inventory?.stockLevel?.toUpperCase();
         if (stockLevel === 'OUT_OF_STOCK' || stockLevel === 'NONE') {
           priceStatusString = 'OUT_OF_STOCK';
         } else if (stockLevel === 'LOW') {
