@@ -339,27 +339,24 @@ export async function GET(req) {
     else { console.warn("FRED_API_KEY missing"); }
   } catch(err) { console.error("FRED Error", err); }
    
-  // Simplified USDA fetch logic
+  // Simplified USDA fetch logic - use existing usda_weekly_egg_prices table
   try {
     const usdaKey = process.env.USDA_API_KEY;
     if (usdaKey) { 
-      // Placeholder: Add actual USDA MARS API logic here if needed, 
-      // similar to the previous version, finding the Retail Egg report
-      // and fetching the organic average.
-      // For now, let's assume your scheduled script updates a 'national_averages' table
+      // Get the latest organic price from the existing USDA table
       const { data: usdaData, error: usdaError } = await sb
-        .from('national_averages')
-        .select('organic_price, date')
-        .eq('source', 'USDA') // Assuming a 'source' column
-        .order('date', { ascending: false })
+        .from('usda_weekly_egg_prices')
+        .select('price, report_end_date')
+        .eq('product_type', 'organic')
+        .order('report_end_date', { ascending: false })
         .limit(1)
         .maybeSingle();
 
       if (usdaError) {
         console.error('Error fetching USDA average:', usdaError);
       } else if (usdaData) {
-        avgOrgNat = usdaData.organic_price;
-        avgOrgNatDate = usdaData.date;
+        avgOrgNat = usdaData.price;
+        avgOrgNatDate = usdaData.report_end_date;
       }
     }
     else { console.warn("USDA_API_KEY missing"); }

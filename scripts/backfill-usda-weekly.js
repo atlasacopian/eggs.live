@@ -266,7 +266,6 @@ async function flush(map) {
         price: avgPrice,
         price_min: minPrice,
         price_max: maxPrice,
-        updated_at: now,
       });
     }
   }

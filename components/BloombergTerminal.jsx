@@ -63,7 +63,7 @@ const formatMarketTime = (timestamp) => {
   }) + ' ET';
 };
 
-export default function BloombergTerminal({ zipCode, localStores = [], nationalStats = {} }) {
+export default function BloombergTerminal({ zipCode, localStores = [], nationalStats = {}, showOnlyStoresAndHistory = false }) {
   const [view, setView] = useState('local'); // local | national
   const [selectedStore, setSelectedStore] = useState(localStores[0] || null);
   const [hoveredStore, setHoveredStore] = useState(null);
@@ -180,6 +180,9 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
             <TerminalTile title="Store Price History" span={getSpan(2)} style={{minHeight: isMobile ? '200px' : 'auto'}}>
               <EggPriceChart selectedStore={selectedStore} isMobile={isMobile} />
             </TerminalTile>
+            
+            {!showOnlyStoresAndHistory && (
+              <>
             <TerminalTile title={`Price Trends for ${zipCode}`} span={getSpan(1)} style={{minHeight: isMobile ? '200px' : 'auto'}}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={lineData}>
@@ -258,6 +261,8 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
             <TerminalTile title="Commodity News (Local)" span={getSpan(2)} style={{minHeight: isMobile ? '120px' : 'auto'}}>
                 <div style={{padding: 8, fontSize: isMobile ? '0.7rem' : '0.8em', color: '#ccc'}}>Feed prices impacting egg costs... USDA report highlights... Avian flu concerns subsiding...</div>
             </TerminalTile>
+              </>
+            )}
           </>
         )}
 
@@ -269,7 +274,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
               span={getSpan(3)}
               style={{ minHeight: isMobile ? '250px' : '300px', maxHeight: isMobile ? '250px' : '300px' }}
             >
-              <FredChart symbol="APU0000703111" start="1980-01-01" showTimestamp={true} />
+                  <FredChart symbol="APU0000703111" start="1980-01-01" showTimestamp={true} />
             </TerminalTile>
 
             <TerminalTile
@@ -295,27 +300,28 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
                         {stk.symbol} {stk.price.toFixed(2)} {stk.change_pct >= 0 ? '▲' : '▼'} {Math.abs(stk.change_pct).toFixed(2)}%
                       </div>
                     ))}
-                    <div style={{ color: '#666', fontSize: '0.7em', marginTop: 4, whiteSpace: 'nowrap' }}>
-                      Last Update: {(() => {
-                        const latest = eggStocks.reduce((a, b) => new Date(a.updated_at) > new Date(b.updated_at) ? a : b);
-                        const marketCloseTime = new Date(latest.updated_at);
-                        marketCloseTime.setHours(16, 0, 0, 0); // Set to 4:00 PM local time
-                        return new Date().getHours() < 9 || new Date().getHours() > 16 ?
-                          marketCloseTime.toLocaleTimeString(undefined, {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            timeZoneName: 'short'
-                          }) :
-                          new Date(latest.updated_at).toLocaleTimeString(undefined, {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            timeZoneName: 'short'
-                          });
-                      })()}
-                    </div>
                   </>
                 )}
-                <div style={{fontSize:'0.6em',marginTop:2,color:'#666'}}>Source: Polygon.io</div>
+                {eggStocks && eggStocks.length > 0 && (
+                  <div style={{ color: '#666', fontSize: '0.6em', marginTop: 2, whiteSpace: 'nowrap' }}>
+                    Source: Polygon.io • Last Update: {(() => {
+                      const latest = eggStocks.reduce((a, b) => new Date(a.updated_at) > new Date(b.updated_at) ? a : b);
+                      const marketCloseTime = new Date(latest.updated_at);
+                      marketCloseTime.setHours(16, 0, 0, 0); // Set to 4:00 PM local time
+                      return new Date().getHours() < 9 || new Date().getHours() > 16 ?
+                        marketCloseTime.toLocaleTimeString(undefined, {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          timeZoneName: 'short'
+                        }) :
+                        new Date(latest.updated_at).toLocaleTimeString(undefined, {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          timeZoneName: 'short'
+                        });
+                    })()}
+                  </div>
+                )}
               </div>
             </TerminalTile>
 
@@ -327,8 +333,10 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
                     <div key={rs.symbol} style={{color: rs.change_pct>=0?'#0f0':'#f00'}}>
                       {rs.symbol} {rs.price.toFixed(2)} {rs.change_pct>=0?'▲':'▼'} {Math.abs(rs.change_pct).toFixed(2)}%
                     </div>))}
-                  <div style={{color:'#666',fontSize:'0.7em',marginTop:4,whiteSpace:'nowrap'}}>
-                    Last Update: {(() => {
+                </>)}
+                {retailerStocks && retailerStocks.length > 0 && (
+                  <div style={{color:'#666',fontSize:'0.6em',marginTop:2,whiteSpace:'nowrap'}}>
+                    Source: Polygon.io • Last Update: {(() => {
                       const latest = retailerStocks.reduce((a, b) => new Date(a.updated_at) > new Date(b.updated_at) ? a : b);
                       const marketCloseTime = new Date(latest.updated_at);
                       marketCloseTime.setHours(16, 0, 0, 0);
@@ -337,65 +345,17 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
                         : new Date(latest.updated_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' });
                     })()}
                   </div>
-                </>)}
-                <div style={{fontSize:'0.6em',color:'#666',marginTop:2}}>Source: Polygon.io</div>
+                )}
               </div>
             </TerminalTile>
 
             {/* Egg Price News */}
-            <TerminalTile title="News" span={getSpan(2)} style={{ minHeight: isMobile ? '120px' : '150px', maxHeight: isMobile ? '120px' : '150px' }}>
+            <TerminalTile title="News" span={getSpan(2)} style={{ minHeight: isMobile ? '200px' : '300px', maxHeight: isMobile ? '200px' : '300px' }}>
               <div style={{ height: '100%', overflowY: 'auto', paddingRight: '4px' }}>
                 <EggNewsPanel fontSize={isMobile ? '0.75rem' : '0.85rem'} />
               </div>
             </TerminalTile>
 
-            {/* National Supply Index */}
-            <TerminalTile title="Bird Flu Cases" span={getSpan(3)} style={{minHeight: isMobile ? '200px' : 'auto'}}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={[{name: 'Supply/Demand', supply: 78, demand: 65}]} layout="vertical" margin={{ top: 20, right: 20, bottom: 0, left: isMobile ? 5 : 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#222" />
-                  <XAxis type="number" hide />
-                  <YAxis type="category" dataKey="name" hide/>
-                  <Tooltip wrapperStyle={{zIndex:1000}} />
-                  <Bar dataKey="supply" barSize={isMobile ? 15 : 20} fill="#1e90ff" name="Supply Index" />
-                  <Bar dataKey="demand" barSize={isMobile ? 15 : 20} fill="#00c800" name="Demand Index" />
-                </BarChart>
-              </ResponsiveContainer>
-            </TerminalTile>
-
-            {/* National View - Row 4 */}
-            <TerminalTile title="Egg Type Distribution (Natl)" span={getSpan(3)} style={{minHeight: isMobile ? '200px' : 'auto'}}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-                  <Pie data={[{name: 'Cage-Free', value: 45}, {name: 'Conventional', value: 45}, {name: 'Organic', value: 10}]} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={isMobile ? 40 : 60} innerRadius={isMobile ? 20 : 30} labelLine={false} label={({ name, percent }) => isMobile ? `${(percent * 100).toFixed(0)}%` : `${name} ${(percent * 100).toFixed(0)}%` } >
-                    {pieData.map((entry, index) => (
-                      <Cell key={`cell-nat-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip/>
-                </PieChart>
-              </ResponsiveContainer>
-            </TerminalTile>
-            
-            {/* National View - Row 5 (More filler to make it distinct) */}
-            <TerminalTile title="Global Production Snapshot" span={getSpan(2)} style={{minHeight: isMobile ? '100px' : 'auto'}}>
-                 <div style={{padding: 8, textAlign: 'center', fontSize: isMobile ? '0.9em' : '1em', color: '#87CEEB', paddingTop: '15px'}}>
-                     <p>Top Producer: China (35 MMT)</p>
-                     <p>US Production: ~6.5 MMT (Est.)</p>
-                 </div>
-            </TerminalTile>
-            <TerminalTile title="Export Volume (Dozens)" span={getSpan(2)} style={{minHeight: isMobile ? '100px' : 'auto'}}>
-                <div style={{textAlign: 'center', paddingTop: '20px'}}>
-                    <p style={{fontSize: isMobile ? '1.1em' : '1.3em', color: '#90EE90'}}>+{(Math.random()*500+100).toFixed(0)}K</p>
-                    <p style={{fontSize: isMobile ? '0.6em' : '0.7em', color: '#aaa'}}>vs. Prev. Month</p>
-                </div>
-            </TerminalTile>
-             <TerminalTile title="Weather Outlook (Key Regions)" span={getSpan(2)} style={{minHeight: isMobile ? '120px' : 'auto'}}>
-                <div style={{padding: 8, fontSize: isMobile ? '0.7em' : '0.8em', color: '#FFD700'}}>
-                    <p><strong>Midwest:</strong> Clear, seasonal temps. Good for transport.</p>
-                    <p><strong>Southeast:</strong> Scattered showers, minimal impact.</p>
-                </div>
-            </TerminalTile>
           </>
         )}
       </div>

@@ -22,7 +22,7 @@ export async function GET() {
     const { data: regularData, error: regularError } = await sb
       .from('usda_weekly_egg_prices')
       .select('report_end_date, price')
-      .eq('product_type', 'regular')
+      .eq('product_type', 'grd a lrg')
       .gte('report_end_date', formatDate(oneYearAgo))
       .lte('report_end_date', formatDate(today))
       .order('report_end_date', { ascending: true });
