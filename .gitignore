@@ -23,6 +23,9 @@
 # misc
 .DS_Store
 *.pem
+npm-cache/
+data/
+temp-wa/
 
 # debug
 npm-debug.log*
