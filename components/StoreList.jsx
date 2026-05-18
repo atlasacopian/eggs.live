@@ -1,13 +1,14 @@
 import React from 'react'
 
-export default function StoreList({ 
-  stores = [], 
-  selectedStore = null, 
-  setSelectedStore = () => {}, 
-  hoveredStore = null, 
-  setHoveredStore = () => {}, 
+export default function StoreList({
+  stores = [],
+  selectedStore = null,
+  setSelectedStore = () => {},
+  hoveredStore = null,
+  setHoveredStore = () => {},
   priceType = 'regular',
-  isMobile = false 
+  isMobile = false,
+  maxListHeight = '400px',
 }) {
   if (!stores.length) return <div>No stores found in this area</div>
 
@@ -27,7 +28,7 @@ export default function StoreList({
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
-    maxWidth: 'calc(100vw - 340px)',
+    minWidth: 0,
   };
 
   const addressStyle = {
@@ -52,7 +53,13 @@ export default function StoreList({
 
   return (
     <div
-      style={{ display: 'flex', flexDirection: 'column', gap: 4, overflowY: 'auto', maxHeight: '400px' }}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 4,
+        overflowY: 'auto',
+        maxHeight: maxListHeight,
+      }}
       onMouseLeave={() => setHoveredStore(null)}
     >
       {stores.slice(0, 10).map(s => (
@@ -71,7 +78,7 @@ export default function StoreList({
                 : 'inherit',
           }}
         >
-          <div>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <div style={storeNameStyle}>{s.name}</div>
             <div style={addressStyle}>{s.address}</div>
             {typeof s.distance === 'number' && (
@@ -80,7 +87,7 @@ export default function StoreList({
               </div>
             )}
           </div>
-          <div style={{ textAlign: 'right', minWidth: 260 }}>
+          <div style={{ textAlign: 'right', minWidth: 260, flexShrink: 0 }}>
             <div style={{ fontSize: '0.72rem', color: '#aaa', display:'flex', gap: 0, letterSpacing: 1, marginBottom: 4 }}>
               <span style={{ flex: 1, textAlign: 'center' }}>LOWEST REGULAR</span>
               <span style={{ flex: 1, textAlign: 'center' }}>LOWEST ORGANIC</span>
