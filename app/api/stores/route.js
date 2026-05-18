@@ -42,6 +42,26 @@ function getLatestPrices(priceRecords, idField = 'store_id') {
     return priceMap;
 }
 
+/** Pass through lat/lon from Supabase RPC rows when present (for map UI). */
+function geoFromStoreRow(store) {
+  const lat =
+    store.latitude ??
+    store.lat ??
+    store.location_lat ??
+    store.lat_in;
+  const lng =
+    store.longitude ??
+    store.lon ??
+    store.lng ??
+    store.location_lon ??
+    store.lon_in;
+  if (lat == null || lng == null) return {};
+  const la = Number(lat);
+  const lo = Number(lng);
+  if (!Number.isFinite(la) || !Number.isFinite(lo)) return {};
+  return { latitude: la, longitude: lo };
+}
+
 
 export async function GET(req) {
   console.log('--- EXECUTING LATEST STORES API V3 ---');
@@ -201,7 +221,8 @@ export async function GET(req) {
                       updated_at: priceRec.captured_at,
                       brand: 'Kroger/Affiliate',
                       store_identifier: `K${store.store_id}`,
-                      status: priceRec.status || 'NO_DATA_FOUND'
+                      status: priceRec.status || 'NO_DATA_FOUND',
+                      ...geoFromStoreRow(store),
                   };
               });
               allStores.push(...mappedKrogerStores);
@@ -283,7 +304,8 @@ export async function GET(req) {
                     distance: store.distance,
                       updated_at: prices.updated_at,
                     brand: 'Target',
-                      store_identifier: `T${store.store_id}`
+                      store_identifier: `T${store.store_id}`,
+                      ...geoFromStoreRow(store),
                   };
              }));
              allStores.push(...targetStoresData);

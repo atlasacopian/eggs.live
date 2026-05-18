@@ -3,6 +3,7 @@ import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, BarChart, Bar, Cart
 import TerminalTile from './TerminalTile.jsx';
 import TerminalHeader from './TerminalHeader.jsx';
 import StoreList from './StoreList.jsx';
+import StoreMapPanel from './StoreMapPanel.jsx';
 import EggPriceChart from './EggPriceChart.jsx';
 import UsdaPriceChart from './UsdaPriceChart.jsx';
 import FredChart from './FredChart.jsx';
@@ -200,7 +201,30 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
             >
               <EggPriceChart selectedStore={selectedStore} isMobile={isMobile} />
             </TerminalTile>
-            
+
+            {showOnlyStoresAndHistory && localStores.length > 0 && (
+              <TerminalTile
+                title="Store map"
+                span={getSpan(5)}
+                style={{
+                  minHeight: isMobile ? 240 : 'clamp(260px, 36vh, 520px)',
+                }}
+                bodyStyle={{
+                  padding: 0,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  flex: 1,
+                  minHeight: 0,
+                  overflow: 'hidden',
+                }}
+              >
+                <StoreMapPanel
+                  zipCode={zipCode}
+                  focusStore={hoveredStore ?? selectedStore ?? localStores[0]}
+                />
+              </TerminalTile>
+            )}
+
             {!showOnlyStoresAndHistory && (
               <>
             <TerminalTile title={`Price Trends for ${zipCode}`} span={getSpan(1)} style={{minHeight: isMobile ? '200px' : 'auto'}}>
