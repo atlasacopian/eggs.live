@@ -2,6 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 
+const MAX_HEADLINES = 15;
+
 // Helper function to parse relative date strings like "1 week ago", "2 days ago", etc.
 function parseRelativeDate(dateStr) {
   if (!dateStr || typeof dateStr !== 'string') return null;
@@ -109,7 +111,7 @@ export default function EggNewsPanel({ fontSize = '0.8rem' }) {
   return (
     <>
       <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize, lineHeight: 1.4 }}>
-        {sortedArticles.slice(0,20).map((a) => {
+        {sortedArticles.slice(0, MAX_HEADLINES).map((a) => {
           const parsedDate = parseRelativeDate(a.publishedAt);
           const dateDisplay = parsedDate 
             ? parsedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
