@@ -2,6 +2,7 @@ import { config } from 'dotenv'
 config({ path: '.env.local' })
 import fetch from 'node-fetch'
 import { createClient } from '@supabase/supabase-js'
+import { runIfMain } from './lib/run-if-main.js'
 
 const {
   SUPABASE_URL,
@@ -293,11 +294,4 @@ async function flush(map) {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
-  const latestMode = process.argv.includes('--latest')
-  // Run with the determined mode
-  run({ latestOnly: latestMode }).catch((err) => {
-    console.error(err);
-    process.exit(1);
-  });
-} 
+runIfMain(() => run({ latestOnly: process.argv.includes('--latest') }), import.meta.url); 

@@ -2,10 +2,15 @@ import { config } from 'dotenv'
 config({ path: '.env.local' })
 import fetch from 'node-fetch'
 import { createClient } from '@supabase/supabase-js'
+import { runIfMain } from './lib/run-if-main.js'
 
 const { SUPABASE_URL, SUPABASE_SERVICE_KEY, FRED_API_KEY } = process.env
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
   console.error('❌ Supabase env vars missing')
+  process.exit(1)
+}
+if (!FRED_API_KEY) {
+  console.error('❌ FRED_API_KEY must be set (GitHub secret or .env.local)')
   process.exit(1)
 }
 const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
@@ -63,9 +68,4 @@ export async function run() {
   process.exit(0)
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
-  run().catch((err) => {
-    console.error(err)
-    process.exit(1)
-  })
-} 
+runIfMain(run, import.meta.url)

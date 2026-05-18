@@ -15,8 +15,13 @@ jobs:
         with:
           node-version: 22
       - name: Install deps
-        run: npm ci --omit=dev
-      - name: Run APHIS HPAI state ingest
+        run: npm ci
+      - name: Validate secrets
+        run: bash scripts/ci-require-env.sh SUPABASE_URL SUPABASE_SERVICE_KEY
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      - name: Run HPAI state ingest
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
