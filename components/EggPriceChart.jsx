@@ -65,15 +65,22 @@ export default function EggPriceChart({ selectedStore, store, highlight = false,
     ? [dates[0], dates[Math.floor(dates.length / 2)], dates[dates.length - 1]]
     : dates;
 
+  // Full view: grow with viewport so the chart fills tall terminal tiles (was fixed 160px).
+  const fullChartOuterStyle = preview
+    ? { width: '100%', height: 24 }
+    : {
+        width: '100%',
+        height: 'clamp(280px, calc(100vh - 260px), 720px)',
+      };
+
   // Unified chart renderer for both preview and full views
   const ChartRenderer = () => {
-    const chartHeight = preview ? 24 : 160;
     return (
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: preview ? 0.3 : 0.5 }}
-        style={{ width: '100%', height: chartHeight }}
+        style={fullChartOuterStyle}
       >
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
