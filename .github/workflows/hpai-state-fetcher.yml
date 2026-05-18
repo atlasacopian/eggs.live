@@ -8,7 +8,9 @@ on:
 jobs:
   run-fetcher:
     runs-on: ubuntu-latest
-    environment: production
+    # Use repository Actions secrets only (no GitHub "Environment").
+    # A named environment can block scheduled runs if it requires reviewers or
+    # has secrets that are not duplicated at the repo level.
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
