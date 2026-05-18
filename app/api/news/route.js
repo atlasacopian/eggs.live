@@ -17,11 +17,14 @@ const PRIORITY_SOURCES = [
 /** SerpHouse + Google RSS fallback query */
 const QUERY = 'egg price OR egg prices OR egg shortage';
 
+// Simple phrases work more reliably than long OR chains; omit country for breadth (lang=en).
 const GNEWS_SEARCH_QUERIES = [
   'egg price',
   'egg prices',
-  'egg shortage OR egg inflation',
-  'poultry eggs OR avian flu eggs',
+  'egg shortage',
+  'avian flu poultry',
+  'cal-maine foods',
+  'USDA egg',
 ];
 
 const RSS_UA =
@@ -59,7 +62,6 @@ async function fetchGNewsSearchOnce(apiKey, q, max) {
   const u = new URL('https://gnews.io/api/v4/search');
   u.searchParams.set('q', q);
   u.searchParams.set('lang', 'en');
-  u.searchParams.set('country', 'us');
   u.searchParams.set('max', String(max));
   u.searchParams.set('apikey', apiKey);
   const res = await fetch(u.toString(), { cache: 'no-store' });
@@ -154,9 +156,11 @@ async function fetchNewsFromProviders() {
 
   let raw = [];
   let apiSource = 'Unknown';
+  let gnewsHits = 0;
 
   if (GNEWS_API_KEY) {
     raw = await fetchGNewsArticles(GNEWS_API_KEY);
+    gnewsHits = raw.length;
     apiSource = 'GNews';
   }
 
@@ -165,14 +169,26 @@ async function fetchNewsFromProviders() {
     apiSource = GNEWS_API_KEY ? 'SerpHouse (GNews fallback)' : 'SerpHouse';
   }
 
-  if (raw.length === 0) {
-    raw = await fetchGoogleNewsRssArticles();
-    if (raw.length > 0) {
-      apiSource =
-        GNEWS_API_KEY || SERPHOUSE_API_KEY
-          ? 'Google News RSS (fallback)'
-          : 'Google News RSS';
+  // Google News RSS usually returns many items; merge so we are not stuck on 1–2 syndicated GNews URLs.
+  const rssArticles = await fetchGoogleNewsRssArticles();
+  const seenBeforeRss = new Set(raw.map((a) => a.url).filter(Boolean));
+  let rssAdded = 0;
+  for (const a of rssArticles) {
+    if (a.url && !seenBeforeRss.has(a.url)) {
+      seenBeforeRss.add(a.url);
+      raw.push(a);
+      rssAdded++;
     }
+  }
+  if (rssAdded > 0) {
+    if (gnewsHits > 0) apiSource = 'GNews + Google News RSS';
+    else if (apiSource === 'SerpHouse' || apiSource.includes('SerpHouse'))
+      apiSource = `${apiSource} + Google News RSS`;
+    else if (raw.length > 0) apiSource = 'Google News RSS';
+  }
+
+  if (raw.length === 0) {
+    apiSource = 'Google News RSS';
   }
 
   console.log(
@@ -180,12 +196,16 @@ async function fetchNewsFromProviders() {
   );
 
   const seen = new Set();
+  const seenTitles = new Set();
   let articles = [];
   for (const a of raw) {
     const url = a.url;
     const title = typeof a.title === 'string' ? a.title.trim() : '';
     if (!url || !title || seen.has(url)) continue;
+    const titleKey = title.toLowerCase().replace(/\s+/g, ' ').slice(0, 120);
+    if (seenTitles.has(titleKey)) continue;
     seen.add(url);
+    seenTitles.add(titleKey);
     articles.push({
       title,
       url,
@@ -220,7 +240,7 @@ async function fetchNewsFromProviders() {
   };
 }
 
-const getCachedNews = unstable_cache(fetchNewsFromProviders, ['egg-news-bundle-v7-multi-query'], {
+const getCachedNews = unstable_cache(fetchNewsFromProviders, ['egg-news-bundle-v9-gnews-plus-rss'], {
   revalidate: 3600,
 });
 
