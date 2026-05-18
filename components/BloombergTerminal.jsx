@@ -295,11 +295,22 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
                   <div style={{ color: '#666' }}>No data</div>
                 ) : (
                   <>
-                    {eggStocks.map((stk) => (
-                      <div key={stk.symbol} style={{ color: stk.change_pct >= 0 ? '#0f0' : '#f00' }}>
-                        {stk.symbol} {stk.price.toFixed(2)} {stk.change_pct >= 0 ? '▲' : '▼'} {Math.abs(stk.change_pct).toFixed(2)}%
+                    {eggStocks.map((stk) => {
+                      const px =
+                        typeof stk.price === 'number' && Number.isFinite(stk.price)
+                          ? stk.price.toFixed(2)
+                          : '—'
+                      const ch =
+                        typeof stk.change_pct === 'number' && Number.isFinite(stk.change_pct)
+                          ? stk.change_pct
+                          : null
+                      const up = ch != null && ch >= 0
+                      return (
+                      <div key={stk.symbol} style={{ color: up ? '#0f0' : '#f00' }}>
+                        {stk.symbol} {px} {ch == null ? '—' : up ? '▲' : '▼'} {ch == null ? '—' : `${Math.abs(ch).toFixed(2)}%`}
                       </div>
-                    ))}
+                      )
+                    })}
                   </>
                 )}
                 {eggStocks && eggStocks.length > 0 && (
@@ -329,10 +340,22 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
             <TerminalTile title="Grocery Store Stocks" span={getSpan(2)} style={{minHeight: isMobile ? '120px' : 'auto'}}>
               <div style={{ padding: 8, fontFamily: 'Menlo, monospace', fontSize: isMobile ? '0.75rem' : '0.85rem' }}>
                 {retailerStocks === null ? (<div style={{color:'#666'}}>Loading...</div>) : retailerStocks.length===0 ? (<div style={{color:'#666'}}>No data</div>) : (<>
-                  {retailerStocks.map(rs=> (
-                    <div key={rs.symbol} style={{color: rs.change_pct>=0?'#0f0':'#f00'}}>
-                      {rs.symbol} {rs.price.toFixed(2)} {rs.change_pct>=0?'▲':'▼'} {Math.abs(rs.change_pct).toFixed(2)}%
-                    </div>))}
+                  {retailerStocks.map((rs) => {
+                    const px =
+                      typeof rs.price === 'number' && Number.isFinite(rs.price)
+                        ? rs.price.toFixed(2)
+                        : '—'
+                    const ch =
+                      typeof rs.change_pct === 'number' && Number.isFinite(rs.change_pct)
+                        ? rs.change_pct
+                        : null
+                    const up = ch != null && ch >= 0
+                    return (
+                    <div key={rs.symbol} style={{ color: up ? '#0f0' : '#f00' }}>
+                      {rs.symbol} {px} {ch == null ? '—' : up ? '▲' : '▼'} {ch == null ? '—' : `${Math.abs(ch).toFixed(2)}%`}
+                    </div>
+                    )
+                  })}
                 </>)}
                 {retailerStocks && retailerStocks.length > 0 && (
                   <div style={{color:'#666',fontSize:'0.6em',marginTop:2,whiteSpace:'nowrap'}}>

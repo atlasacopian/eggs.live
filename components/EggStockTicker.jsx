@@ -25,10 +25,19 @@ export default function EggStockTicker() {
   if (tickers === null) return <div style={{ padding: '4px' }}>Loading…</div>
 
   const text = tickers.map(t => {
-    const price = typeof t.price === 'number' ? t.price : 0
-    const pct = typeof t.change_pct === 'number' ? t.change_pct.toFixed(2) : '–'
-    const color = t.change_pct != null && t.change_pct >= 0 ? '#00FF00' : '#FF0000'
-    return `<span style="margin:0 1rem; color:${color};">${t.symbol} ${price.toFixed(2)} ${pct}%</span>`
+    const priceStr =
+      typeof t.price === 'number' && Number.isFinite(t.price)
+        ? t.price.toFixed(2)
+        : '—'
+    const pct =
+      typeof t.change_pct === 'number' && Number.isFinite(t.change_pct)
+        ? t.change_pct.toFixed(2)
+        : '–'
+    const color =
+      t.change_pct != null && Number.isFinite(t.change_pct) && t.change_pct >= 0
+        ? '#00FF00'
+        : '#FF0000'
+    return `<span style="margin:0 1rem; color:${color};">${t.symbol} ${priceStr} ${pct}%</span>`
   }).join('')
 
   return (

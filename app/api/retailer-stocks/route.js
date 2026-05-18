@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { rowFromSnapshotTicker } from '../../../lib/snapshot-ticker-row.js'
 
 export const revalidate = 3600  // cache at edge for 1 hour
 
@@ -23,34 +24,7 @@ export async function GET() {
   const snapJson = await snapshotRes.json()
   let rows = []
   if (Array.isArray(snapJson.tickers) && snapJson.tickers.length > 0) {
-    // Map snapshot to row shape
-    rows = snapJson.tickers.map(t => {
-      const p = t.lastTrade?.p ?? t.day?.c ?? null
-      const o = t.day?.o ?? p
-      const change_pct = p != null && o != null ? ((p - o) / o) * 100 : null
-      
-      // Use a more appropriate timestamp for market data display
-      let updated_at
-      if (t.lastTrade?.t) {
-        const tradeTime = new Date(t.lastTrade.t)
-        const tradeHour = tradeTime.getUTCHours() - 5 // Convert to ET (approximate)
-        
-        // If trade was during market hours (9:30 AM - 4:00 PM ET), use it
-        // Otherwise, use market close time (4:00 PM ET) for the trading day
-        if (tradeHour >= 9.5 && tradeHour <= 16) {
-          updated_at = tradeTime.toISOString()
-        } else {
-          // Use 4:00 PM ET of the most recent trading day
-          const marketClose = new Date(tradeTime)
-          marketClose.setUTCHours(21, 0, 0, 0) // 4:00 PM ET = 21:00 UTC
-          updated_at = marketClose.toISOString()
-        }
-      } else {
-        updated_at = new Date().toISOString()
-      }
-      
-      return { symbol: t.ticker, price: p, change_pct, updated_at }
-    })
+    rows = snapJson.tickers.map((t) => rowFromSnapshotTicker(t))
   } else {
     // Fallback to yesterday's close via free open-close endpoint
     // Compute yesterday's date in America/New_York
