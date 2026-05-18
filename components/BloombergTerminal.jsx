@@ -141,7 +141,6 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
 
   const getGridCols = () => {
     if (isMobile) return 1;
-    if (view === 'local' && showOnlyStoresAndHistory) return 1;
     return view === 'local' ? 5 : 6;
   };
 
@@ -153,24 +152,11 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
     ? 'calc(100vh - 200px)'
     : '400px';
 
+  const localStoresRowMinHeight =
+    showOnlyStoresAndHistory && !isMobile ? 'calc(100vh - 180px)' : undefined;
+
   return (
-    <div
-      style={{
-        padding: showOnlyStoresAndHistory
-          ? isMobile
-            ? 6
-            : '12px 10px'
-          : isMobile
-            ? 8
-            : 16,
-        background: '#000',
-        color: '#fff',
-        minHeight: '100vh',
-        boxSizing: 'border-box',
-        width: '100%',
-        maxWidth: '100vw',
-      }}
-    >
+    <div style={{ padding: isMobile ? 8 : 16, background: '#000', color: '#fff', minHeight: '100vh' }}>
       <TerminalHeader 
         zipCode={zipCode} 
         view={view} 
@@ -189,9 +175,9 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
             {/* Local View */}
             <TerminalTile
               title="Store Prices"
-              span={getSpan(showOnlyStoresAndHistory ? 1 : 3)}
+              span={getSpan(3)}
               style={{
-                minHeight: isMobile ? '200px' : showOnlyStoresAndHistory ? 'min(55vh, 720px)' : 'auto',
+                minHeight: isMobile ? '200px' : localStoresRowMinHeight || 'auto',
               }}
             >
               <StoreList
@@ -207,9 +193,9 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
             </TerminalTile>
             <TerminalTile
               title="Store Price History"
-              span={getSpan(showOnlyStoresAndHistory ? 1 : 2)}
+              span={getSpan(2)}
               style={{
-                minHeight: isMobile ? '200px' : showOnlyStoresAndHistory ? 'min(40vh, 520px)' : 'auto',
+                minHeight: isMobile ? '200px' : localStoresRowMinHeight || 'auto',
               }}
             >
               <EggPriceChart selectedStore={selectedStore} isMobile={isMobile} />
