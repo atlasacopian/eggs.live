@@ -1,10 +1,12 @@
+# Dependency update PRs (not required to merge immediately).
+# Tune here to reduce email noise; GitHub → Settings → Notifications for email prefs.
 version: 2
 updates:
   - package-ecosystem: npm
     directory: /
     schedule:
-      interval: weekly
-    open-pull-requests-limit: 5
+      interval: monthly
+    open-pull-requests-limit: 3
     groups:
       next-react:
         patterns:
@@ -14,3 +16,17 @@ updates:
       supabase:
         patterns:
           - '@supabase/*'
+    # Avoid auto-PRs for large major jumps (often breaking); upgrade those on purpose.
+    ignore:
+      - dependency-name: framer-motion
+        update-types: [version-update:semver-major]
+      - dependency-name: recharts
+        update-types: [version-update:semver-major]
+      - dependency-name: dotenv
+        update-types: [version-update:semver-major]
+      - dependency-name: three
+        update-types: [version-update:semver-major]
+      - dependency-name: '@react-three/fiber'
+        update-types: [version-update:semver-major]
+      - dependency-name: '@react-three/drei'
+        update-types: [version-update:semver-major]
