@@ -4,7 +4,14 @@ export const revalidate = 3600  // cache at edge for 1 hour
 
 export async function GET() {
   const TICKERS = ['CALM','POST','HRL','VITL']
-  const key     = process.env.POLYGON_API_KEY
+  const key =
+    process.env.MASSIVE_API_KEY || process.env.POLYGON_API_KEY
+  if (!key) {
+    return NextResponse.json(
+      { error: 'Missing MASSIVE_API_KEY (or POLYGON_API_KEY)' },
+      { status: 500 }
+    )
+  }
   const snapshotUrl = `https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/tickers?tickers=${TICKERS.join(',')}&apiKey=${key}`
 
   // Fetch live snapshot (may return empty when market closed)
