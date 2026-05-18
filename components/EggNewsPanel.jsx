@@ -53,7 +53,7 @@ export default function EggNewsPanel({ fontSize = '0.8rem' }) {
   useEffect(() => {
     async function fetchNews() {
       try {
-        const res = await fetch('/api/news');
+        const res = await fetch('/api/news', { cache: 'force-cache' });
         if (!res.ok) throw new Error('Bad resp');
         const data = await res.json();
         setArticles(data.articles || []);
@@ -68,8 +68,6 @@ export default function EggNewsPanel({ fontSize = '0.8rem' }) {
       }
     }
     fetchNews();
-    const id = setInterval(fetchNews, 60 * 60 * 1000);
-    return () => clearInterval(id);
   }, []);
 
   if (articles === null) {

@@ -9,7 +9,7 @@ export default function NewsStrip({ fontSize = '12px' }) {
   useEffect(() => {
     async function fetchNews() {
       try {
-        const res = await fetch('/api/news');
+        const res = await fetch('/api/news', { cache: 'force-cache' });
         if (!res.ok) return;
         const { articles } = await res.json();
         if (articles && articles.length) {
