@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import { unstable_cache } from 'next/cache';
+import Parser from 'rss-parser';
 
-/** CDN + browser: one shared copy, refresh at most every hour (not per visitor). */
+/**
+ * News providers (order): **GNews** (primary) → SerpHouse → Google News RSS.
+ * Set `GNEWS_API_KEY` in Vercel (paid plan for production). RSS is best-effort backup.
+ */
 const CACHE_CONTROL =
   'public, s-maxage=3600, stale-while-revalidate=86400, max-age=300';
 
@@ -10,6 +14,9 @@ const PRIORITY_SOURCES = [
 ];
 
 const QUERY = 'egg price';
+
+const RSS_UA =
+  'Mozilla/5.0 (compatible; eggs.live/1.0; +https://eggs.live) AppleWebKit/537.36 (KHTML, like Gecko)';
 
 /** @returns {Promise<{ title: string, url: string, publishedAt: string, source: string }[]>} */
 async function fetchSerpHouseArticles(apiKey) {
@@ -60,6 +67,56 @@ async function fetchGNewsArticles(apiKey) {
   }));
 }
 
+/** Google News topic RSS — no API key; best-effort. */
+async function fetchGoogleNewsRssArticles() {
+  const u = new URL('https://news.google.com/rss/search');
+  u.searchParams.set('q', QUERY);
+  u.searchParams.set('hl', 'en-US');
+  u.searchParams.set('gl', 'US');
+  u.searchParams.set('ceid', 'US:en');
+
+  const res = await fetch(u.toString(), {
+    headers: {
+      'User-Agent': RSS_UA,
+      Accept: 'application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.8',
+    },
+    cache: 'no-store',
+  });
+  if (!res.ok) {
+    console.error('Google News RSS HTTP', res.status);
+    return [];
+  }
+  const xml = await res.text();
+  const parser = new Parser();
+  let feed;
+  try {
+    feed = await parser.parseString(xml);
+  } catch (e) {
+    console.error('Google News RSS parse error', e);
+    return [];
+  }
+
+  return (feed.items || [])
+    .map((item) => {
+      const title = (item.title || '').trim();
+      const link = (item.link || '').trim();
+      let source = 'Google News';
+      const dash = title.lastIndexOf(' - ');
+      if (dash > 0 && dash < title.length - 3) {
+        source = title.slice(dash + 3).trim() || source;
+      }
+      const pub =
+        item.pubDate || item.isoDate || new Date().toISOString();
+      return {
+        title: dash > 0 ? title.slice(0, dash).trim() : title,
+        url: link,
+        publishedAt: pub,
+        source,
+      };
+    })
+    .filter((a) => a.title && a.url);
+}
+
 async function fetchNewsFromProviders() {
   const startTime = Date.now();
   const { SERPHOUSE_API_KEY, GNEWS_API_KEY } = process.env;
@@ -67,17 +124,29 @@ async function fetchNewsFromProviders() {
   let raw = [];
   let apiSource = 'Unknown';
 
-  if (SERPHOUSE_API_KEY) {
-    raw = await fetchSerpHouseArticles(SERPHOUSE_API_KEY);
-    apiSource = 'SERPHouse';
-  }
-
-  if (raw.length === 0 && GNEWS_API_KEY) {
+  if (GNEWS_API_KEY) {
     raw = await fetchGNewsArticles(GNEWS_API_KEY);
-    apiSource = SERPHOUSE_API_KEY ? 'GNews (SerpHouse fallback)' : 'GNews';
+    apiSource = 'GNews';
   }
 
-  console.log(`News provider fetch done in ${Date.now() - startTime}ms, raw count=${raw.length}, source=${apiSource}`);
+  if (raw.length === 0 && SERPHOUSE_API_KEY) {
+    raw = await fetchSerpHouseArticles(SERPHOUSE_API_KEY);
+    apiSource = GNEWS_API_KEY ? 'SerpHouse (GNews fallback)' : 'SERPHouse';
+  }
+
+  if (raw.length === 0) {
+    raw = await fetchGoogleNewsRssArticles();
+    if (raw.length > 0) {
+      apiSource =
+        GNEWS_API_KEY || SERPHOUSE_API_KEY
+          ? 'Google News RSS (fallback)'
+          : 'Google News RSS';
+    }
+  }
+
+  console.log(
+    `News provider fetch done in ${Date.now() - startTime}ms, raw count=${raw.length}, source=${apiSource}`
+  );
 
   const seen = new Set();
   let articles = [];
@@ -119,19 +188,11 @@ async function fetchNewsFromProviders() {
   };
 }
 
-const getCachedNews = unstable_cache(fetchNewsFromProviders, ['egg-news-bundle'], {
+const getCachedNews = unstable_cache(fetchNewsFromProviders, ['egg-news-bundle-v4-gnews-first'], {
   revalidate: 3600,
 });
 
 export async function GET() {
-  const { SERPHOUSE_API_KEY, GNEWS_API_KEY } = process.env;
-  if (!SERPHOUSE_API_KEY && !GNEWS_API_KEY) {
-    return NextResponse.json(
-      { error: 'Missing SERPHOUSE_API_KEY or GNEWS_API_KEY env' },
-      { status: 500, headers: { 'Cache-Control': 'no-store' } }
-    );
-  }
-
   try {
     const data = await getCachedNews();
     return NextResponse.json(
