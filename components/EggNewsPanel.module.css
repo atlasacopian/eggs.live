@@ -1,0 +1,8 @@
+.headlineLink {
+  color: #00c800;
+  text-decoration: none;
+}
+
+.headlineLink:hover {
+  text-decoration: underline;
+}

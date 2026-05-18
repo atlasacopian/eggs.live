@@ -88,3 +88,11 @@ html {
   /* Apply to the direct child 'header' tag */
   animation: headerPulse 0.6s ease-in-out infinite alternate;
 }
+
+a.egg-news-headline {
+  text-decoration: none;
+}
+
+a.egg-news-headline:hover {
+  text-decoration: underline;
+}

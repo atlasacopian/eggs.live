@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import styles from './EggNewsPanel.module.css';
 
 const MAX_HEADLINES = 20;
 
@@ -119,7 +120,12 @@ export default function EggNewsPanel({ fontSize = '0.8rem' }) {
           
           return (
             <li key={a.url} style={{ marginBottom: 6 }}>
-              <a href={a.url} target="_blank" rel="noopener noreferrer" style={{ color: '#00c800', textDecoration: 'none' }}>
+              <a
+                href={a.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.headlineLink}
+              >
                 {(a.title || '').length > 120 ? (a.title || '').slice(0, 117) + '…' : a.title}
               </a>
               <span style={{ color: '#999', marginLeft: 6, fontSize: '0.7em' }}>

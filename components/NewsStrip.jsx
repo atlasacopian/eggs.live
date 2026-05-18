@@ -14,7 +14,10 @@ export default function NewsStrip({ fontSize = '12px' }) {
         const { articles } = await res.json();
         if (articles && articles.length) {
           const headlineString = articles
-            .map(a => `<a href="${a.url}" target="_blank" rel="noopener noreferrer">${a.title}</a> <span style='margin:0 4px;'>🥚</span>`)
+            .map(
+              (a) =>
+                `<a class="egg-news-headline" href="${a.url}" target="_blank" rel="noopener noreferrer">${a.title}</a> <span style='margin:0 4px;'>🥚</span>`
+            )
             .join(' ');
           setContent(headlineString);
         }
