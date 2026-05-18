@@ -27,8 +27,10 @@ export default function FredChart({ symbol = 'APU0000703111', start = '1980-01-0
             }))
           setData(formatted)
           
-          // Find the most recent data point
-          if (formatted.length > 0) {
+          // Use the API response timestamp instead of the data date
+          if (json.realtime_end) {
+            setLastUpdated(json.realtime_end)
+          } else if (formatted.length > 0) {
             const mostRecent = formatted[formatted.length - 1]
             setLastUpdated(mostRecent.date)
           }
@@ -42,6 +44,7 @@ export default function FredChart({ symbol = 'APU0000703111', start = '1980-01-0
 
   if (!data.length) return null
 
+
   return (
     <div style={{
       width: '100%',
@@ -50,6 +53,7 @@ export default function FredChart({ symbol = 'APU0000703111', start = '1980-01-0
       pointerEvents: 'auto',
       overflow: 'visible',
     }}>
+
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 20, right: 20, bottom: 0, left: 0 }}>
           <defs>

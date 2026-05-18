@@ -168,6 +168,7 @@
 .bracket {
   display: inline-block;
   padding: 0 .25em;
+  transition: color 0.2s ease-out;
 }
 
 .orText {

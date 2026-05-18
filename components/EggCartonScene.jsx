@@ -39,7 +39,7 @@ const ModelPrimitive = forwardRef((props, ref) => {
     return cloned
   }, [gltf])
 
-  return <primitive ref={ref} object={model} scale={7} {...props} />
+  return <primitive ref={ref} object={model} scale={5} {...props} />
 })
 ModelPrimitive.displayName = 'ModelPrimitive'
 

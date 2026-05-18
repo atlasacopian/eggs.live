@@ -27,7 +27,7 @@ export default function EggStockTicker() {
   const text = tickers.map(t => {
     const price = typeof t.price === 'number' ? t.price : 0
     const pct = typeof t.change_pct === 'number' ? t.change_pct.toFixed(2) : '–'
-    const color = t.change_pct != null && t.change_pct >= 0 ? '#0a0' : '#a00'
+    const color = t.change_pct != null && t.change_pct >= 0 ? '#00FF00' : '#FF0000'
     return `<span style="margin:0 1rem; color:${color};">${t.symbol} ${price.toFixed(2)} ${pct}%</span>`
   }).join('')
 
