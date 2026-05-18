@@ -53,7 +53,8 @@ export default function EggNewsPanel({ fontSize = '0.8rem' }) {
   useEffect(() => {
     async function fetchNews() {
       try {
-        const res = await fetch('/api/news', { cache: 'force-cache' });
+        // Never use force-cache here: browsers can keep an old empty /api/news body forever.
+        const res = await fetch('/api/news', { cache: 'no-store' });
         if (!res.ok) throw new Error('Bad resp');
         const data = await res.json();
         setArticles(data.articles || []);
@@ -117,7 +118,7 @@ export default function EggNewsPanel({ fontSize = '0.8rem' }) {
           return (
             <li key={a.url} style={{ marginBottom: 6 }}>
               <a href={a.url} target="_blank" rel="noopener noreferrer" style={{ color: '#00c800', textDecoration: 'none' }}>
-                {a.title.length > 120 ? a.title.slice(0, 117) + '…' : a.title}
+                {(a.title || '').length > 120 ? (a.title || '').slice(0, 117) + '…' : a.title}
               </a>
               <span style={{ color: '#999', marginLeft: 6, fontSize: '0.7em' }}>
                 {a.source === 'Cable News Network' ? 'CNN' : a.source}

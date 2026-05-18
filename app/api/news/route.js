@@ -6,8 +6,9 @@ import Parser from 'rss-parser';
  * News providers (order): **GNews** (primary) → SerpHouse → Google News RSS.
  * Set `GNEWS_API_KEY` in Vercel. Auth query param must be `apikey` (GNews v4).
  */
+// Short browser cache so UI recovers quickly after API/env fixes; s-maxage caps edge reuse.
 const CACHE_CONTROL =
-  'public, s-maxage=3600, stale-while-revalidate=86400, max-age=300';
+  'public, s-maxage=300, stale-while-revalidate=120, max-age=0, must-revalidate';
 
 const PRIORITY_SOURCES = [
   'Reuters','Associated Press','AP','Bloomberg','The Wall Street Journal','WSJ','The New York Times','CNN','BBC','NBC News','CBS News','ABC News','Fox News','Financial Times','CNBC','The Washington Post'
@@ -166,10 +167,11 @@ async function fetchNewsFromProviders() {
   let articles = [];
   for (const a of raw) {
     const url = a.url;
-    if (!url || seen.has(url)) continue;
+    const title = typeof a.title === 'string' ? a.title.trim() : '';
+    if (!url || !title || seen.has(url)) continue;
     seen.add(url);
     articles.push({
-      title: a.title,
+      title,
       url,
       publishedAt: a.publishedAt,
       source: a.source,
@@ -202,7 +204,7 @@ async function fetchNewsFromProviders() {
   };
 }
 
-const getCachedNews = unstable_cache(fetchNewsFromProviders, ['egg-news-bundle-v5-gnews-apikey'], {
+const getCachedNews = unstable_cache(fetchNewsFromProviders, ['egg-news-bundle-v6-client-cache-fix'], {
   revalidate: 3600,
 });
 
