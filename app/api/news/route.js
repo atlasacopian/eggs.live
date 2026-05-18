@@ -4,7 +4,7 @@ import Parser from 'rss-parser';
 
 /**
  * News providers (order): **GNews** (primary) → SerpHouse → Google News RSS.
- * Set `GNEWS_API_KEY` in Vercel (paid plan for production). RSS is best-effort backup.
+ * Set `GNEWS_API_KEY` in Vercel. Auth query param must be `apikey` (GNews v4).
  */
 const CACHE_CONTROL =
   'public, s-maxage=3600, stale-while-revalidate=86400, max-age=300';
@@ -50,14 +50,27 @@ async function fetchGNewsArticles(apiKey) {
   const u = new URL('https://gnews.io/api/v4/search');
   u.searchParams.set('q', QUERY);
   u.searchParams.set('lang', 'en');
+  u.searchParams.set('country', 'us');
   u.searchParams.set('max', '30');
-  u.searchParams.set('token', apiKey);
+  // GNews v4 expects `apikey`, not `token` (wrong param yields empty/errors).
+  u.searchParams.set('apikey', apiKey);
   const res = await fetch(u.toString(), { cache: 'no-store' });
+  const bodyText = await res.text().catch(() => '');
   if (!res.ok) {
-    console.error('GNews response not ok', res.status, await res.text().catch(() => ''));
+    console.error('GNews response not ok', res.status, bodyText.slice(0, 500));
     return [];
   }
-  const j = await res.json().catch(() => ({ articles: [] }));
+  let j;
+  try {
+    j = JSON.parse(bodyText);
+  } catch {
+    console.error('GNews JSON parse failed', bodyText.slice(0, 200));
+    return [];
+  }
+  if (j.errors?.length) {
+    console.error('GNews API errors', j.errors);
+    return [];
+  }
   const arr = j.articles || [];
   return arr.map((a) => ({
     title: a.title,
@@ -119,7 +132,8 @@ async function fetchGoogleNewsRssArticles() {
 
 async function fetchNewsFromProviders() {
   const startTime = Date.now();
-  const { SERPHOUSE_API_KEY, GNEWS_API_KEY } = process.env;
+  const SERPHOUSE_API_KEY = process.env.SERPHOUSE_API_KEY?.trim();
+  const GNEWS_API_KEY = process.env.GNEWS_API_KEY?.trim();
 
   let raw = [];
   let apiSource = 'Unknown';
@@ -131,7 +145,7 @@ async function fetchNewsFromProviders() {
 
   if (raw.length === 0 && SERPHOUSE_API_KEY) {
     raw = await fetchSerpHouseArticles(SERPHOUSE_API_KEY);
-    apiSource = GNEWS_API_KEY ? 'SerpHouse (GNews fallback)' : 'SERPHouse';
+    apiSource = GNEWS_API_KEY ? 'SerpHouse (GNews fallback)' : 'SerpHouse';
   }
 
   if (raw.length === 0) {
@@ -188,7 +202,7 @@ async function fetchNewsFromProviders() {
   };
 }
 
-const getCachedNews = unstable_cache(fetchNewsFromProviders, ['egg-news-bundle-v4-gnews-first'], {
+const getCachedNews = unstable_cache(fetchNewsFromProviders, ['egg-news-bundle-v5-gnews-apikey'], {
   revalidate: 3600,
 });
 
