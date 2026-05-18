@@ -14,7 +14,15 @@ const PRIORITY_SOURCES = [
   'Reuters','Associated Press','AP','Bloomberg','The Wall Street Journal','WSJ','The New York Times','CNN','BBC','NBC News','CBS News','ABC News','Fox News','Financial Times','CNBC','The Washington Post'
 ];
 
-const QUERY = 'egg price';
+/** SerpHouse + Google RSS fallback query */
+const QUERY = 'egg price OR egg prices OR egg shortage';
+
+const GNEWS_SEARCH_QUERIES = [
+  'egg price',
+  'egg prices',
+  'egg shortage OR egg inflation',
+  'poultry eggs OR avian flu eggs',
+];
 
 const RSS_UA =
   'Mozilla/5.0 (compatible; eggs.live/1.0; +https://eggs.live) AppleWebKit/537.36 (KHTML, like Gecko)';
@@ -46,30 +54,29 @@ async function fetchSerpHouseArticles(apiKey) {
   }));
 }
 
-/** @returns {Promise<{ title: string, url: string, publishedAt: string, source: string }[]>} */
-async function fetchGNewsArticles(apiKey) {
+/** One GNews search request; returns articles or []. */
+async function fetchGNewsSearchOnce(apiKey, q, max) {
   const u = new URL('https://gnews.io/api/v4/search');
-  u.searchParams.set('q', QUERY);
+  u.searchParams.set('q', q);
   u.searchParams.set('lang', 'en');
   u.searchParams.set('country', 'us');
-  u.searchParams.set('max', '30');
-  // GNews v4 expects `apikey`, not `token` (wrong param yields empty/errors).
+  u.searchParams.set('max', String(max));
   u.searchParams.set('apikey', apiKey);
   const res = await fetch(u.toString(), { cache: 'no-store' });
   const bodyText = await res.text().catch(() => '');
   if (!res.ok) {
-    console.error('GNews response not ok', res.status, bodyText.slice(0, 500));
+    console.error('GNews response not ok', q, res.status, bodyText.slice(0, 300));
     return [];
   }
   let j;
   try {
     j = JSON.parse(bodyText);
   } catch {
-    console.error('GNews JSON parse failed', bodyText.slice(0, 200));
+    console.error('GNews JSON parse failed', q, bodyText.slice(0, 200));
     return [];
   }
   if (j.errors?.length) {
-    console.error('GNews API errors', j.errors);
+    console.error('GNews API errors', q, j.errors);
     return [];
   }
   const arr = j.articles || [];
@@ -79,6 +86,15 @@ async function fetchGNewsArticles(apiKey) {
     publishedAt: a.publishedAt || new Date().toISOString(),
     source: a.source?.name || a.source || 'Unknown',
   }));
+}
+
+/** Merge several US searches so we fill the UI (single queries often return very few rows). */
+async function fetchGNewsArticles(apiKey) {
+  const maxPer = 25;
+  const batches = await Promise.all(
+    GNEWS_SEARCH_QUERIES.map((q) => fetchGNewsSearchOnce(apiKey, q, maxPer))
+  );
+  return batches.flat();
 }
 
 /** Google News topic RSS — no API key; best-effort. */
@@ -204,7 +220,7 @@ async function fetchNewsFromProviders() {
   };
 }
 
-const getCachedNews = unstable_cache(fetchNewsFromProviders, ['egg-news-bundle-v6-client-cache-fix'], {
+const getCachedNews = unstable_cache(fetchNewsFromProviders, ['egg-news-bundle-v7-multi-query'], {
   revalidate: 3600,
 });
 

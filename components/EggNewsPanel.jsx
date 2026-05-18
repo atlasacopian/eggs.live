@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-const MAX_HEADLINES = 15;
+const MAX_HEADLINES = 20;
 
 // Helper function to parse relative date strings like "1 week ago", "2 days ago", etc.
 function parseRelativeDate(dateStr) {
