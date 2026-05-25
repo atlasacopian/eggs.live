@@ -22,8 +22,6 @@ const CHECKS = [
   { table: 'usda_weekly_egg_prices', dateCol: 'report_end_date', workflow: 'National Daily (USDA)', expectDays: 14 },
   { table: 'FRED', dateCol: 'ref_date', workflow: 'National Historical (FRED)', expectDays: 45 },
   { table: 'hpai_state_daily_stats', dateCol: 'captured_date', workflow: 'HPAI State Fetcher (CDC flock CSV)', expectDays: 2 },
-  { table: 'egg_stock_quotes', dateCol: 'updated_at', workflow: '(no GH workflow — manual?)', expectDays: 3 },
-  { table: 'retailer_stock_quotes', dateCol: 'updated_at', workflow: '(no GH workflow — manual?)', expectDays: 3 },
   { table: 'egg_news_articles', dateCol: 'published_at', workflow: '(no GH workflow — manual?)', expectDays: 7 },
   { table: 'cdc_bird_flu_summary', dateCol: 'as_of_date', workflow: '(no GH workflow — manual?)', expectDays: 14 },
 ];
@@ -119,4 +117,4 @@ console.log('  • Target Egg Prices      — daily ~07:05 UTC');
 console.log('  • National Daily (USDA)  — daily 16:00 UTC');
 console.log('  • National Historical (FRED) — daily 07:00 UTC');
 console.log('  • HPAI State Fetcher     — daily 07:10 UTC');
-console.log('\nTables with no workflow: egg stocks, retailer stocks, news, CDC — only update if run manually.\n');
+console.log('\nTables with no workflow: news, CDC — only update if run manually.\n');

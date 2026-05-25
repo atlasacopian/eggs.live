@@ -11,67 +11,12 @@ import EggNewsPanel from './EggNewsPanel.jsx';
 
 const MOBILE_BREAKPOINT = 768;
 
-// Polygon egg-related tickers (Cal-Maine Foods etc.)
-const EGG_STOCK_TICKERS = ['CALM', 'POST', 'HRL', 'VITL'];
-
-// Helper function to format market timestamp
-const formatMarketTime = (timestamp) => {
-  if (!timestamp) return 'Unknown';
-  
-  const date = new Date(timestamp);
-  const now = new Date();
-  const diffMs = now - date;
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffHours / 24);
-  
-  // Always show the exact timestamp when the data was last updated
-  // If it's from today, show time
-  if (diffDays === 0) {
-    return date.toLocaleTimeString('en-US', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      timeZone: 'America/New_York'
-    }) + ' ET';
-  }
-  
-  // If it's from yesterday, show yesterday + time
-  if (diffDays === 1) {
-    return 'Yesterday ' + date.toLocaleTimeString('en-US', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      timeZone: 'America/New_York'
-    }) + ' ET';
-  }
-  
-  // For recent data (within a week), show day and time
-  if (diffDays <= 7) {
-    return `${diffDays} day${diffDays === 1 ? '' : 's'} ago at ` + date.toLocaleTimeString('en-US', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      timeZone: 'America/New_York'
-    }) + ' ET';
-  }
-  
-  // For older data, show date and time
-  return date.toLocaleDateString('en-US', { 
-    month: 'short', 
-    day: 'numeric',
-    timeZone: 'America/New_York'
-  }) + ' at ' + date.toLocaleTimeString('en-US', { 
-    hour: '2-digit', 
-    minute: '2-digit',
-    timeZone: 'America/New_York'
-  }) + ' ET';
-};
-
 export default function BloombergTerminal({ zipCode, localStores = [], nationalStats = {}, showOnlyStoresAndHistory = false }) {
   const [view, setView] = useState('local'); // local | national
   const [selectedStore, setSelectedStore] = useState(localStores[0] || null);
   const [hoveredStore, setHoveredStore] = useState(null);
   const [priceType, setPriceType] = useState('regular');
   const [isMobile, setIsMobile] = useState(false);
-  const [eggStocks, setEggStocks] = useState(null);
-  const [retailerStocks, setRetailerStocks] = useState(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -89,42 +34,6 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
       setSelectedStore(localStores[0]);
     }
   }, [localStores, selectedStore]);
-
-  // Fetch egg stock quotes via our serverless API route (data cached by GitHub-worker)
-  useEffect(() => {
-    async function fetchEggStocks() {
-      try {
-        const res = await fetch('/api/egg-stocks');
-        const json = await res.json();
-        console.log('Egg stock API response', json);
-        if (json.data && Array.isArray(json.data)) {
-          setEggStocks(json.data);
-        } else {
-          setEggStocks([]);
-        }
-      } catch (err) {
-        console.error('Client egg stock fetch error', err);
-        setEggStocks([]);
-      }
-    }
-
-    fetchEggStocks();
-    const id = setInterval(fetchEggStocks, 60_000);
-    return () => clearInterval(id);
-  }, []);
-
-  // Retailer stocks
-  useEffect(() => {
-    async function fetchRetailers() {
-      try {
-        const res = await fetch('/api/retailer-stocks');
-        const json = await res.json();
-        if (json.data && Array.isArray(json.data)) setRetailerStocks(json.data); else setRetailerStocks([]);
-      } catch (e) { console.error('retailer fetch', e); setRetailerStocks([]); }
-    }
-    fetchRetailers();
-    const id = setInterval(fetchRetailers, 60_000); return () => clearInterval(id);
-  }, []);
 
   // Fake helper data --------------------------------------------------
   const randomSeries = (n = 30, min = 5, max = 10) =>
@@ -329,95 +238,8 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
               <UsdaPriceChart />
             </TerminalTile>
 
-            {/* National View - Row 2: Market indices */}
-            {/* Shell Market Index */}
-            <TerminalTile title="Egg Stocks" span={getSpan(2)} style={{minHeight: isMobile ? '120px' : 'auto'}}>
-              <div style={{ padding: 8, fontFamily: 'Menlo, monospace', fontSize: isMobile ? '0.75rem' : '0.85rem' }}>
-                {eggStocks === null ? (
-                  <div style={{ color: '#666' }}>Loading...</div>
-                ) : eggStocks.length === 0 ? (
-                  <div style={{ color: '#666' }}>No data</div>
-                ) : (
-                  <>
-                    {eggStocks.map((stk) => {
-                      const px =
-                        typeof stk.price === 'number' && Number.isFinite(stk.price)
-                          ? stk.price.toFixed(2)
-                          : '—'
-                      const ch =
-                        typeof stk.change_pct === 'number' && Number.isFinite(stk.change_pct)
-                          ? stk.change_pct
-                          : null
-                      const up = ch != null && ch >= 0
-                      return (
-                      <div key={stk.symbol} style={{ color: up ? '#0f0' : '#f00' }}>
-                        {stk.symbol} {px} {ch == null ? '—' : up ? '▲' : '▼'} {ch == null ? '—' : `${Math.abs(ch).toFixed(2)}%`}
-                      </div>
-                      )
-                    })}
-                  </>
-                )}
-                {eggStocks && eggStocks.length > 0 && (
-                  <div style={{ color: '#666', fontSize: '0.6em', marginTop: 2, whiteSpace: 'nowrap' }}>
-                    Source: Polygon.io • Last Update: {(() => {
-                      const latest = eggStocks.reduce((a, b) => new Date(a.updated_at) > new Date(b.updated_at) ? a : b);
-                      const marketCloseTime = new Date(latest.updated_at);
-                      marketCloseTime.setHours(16, 0, 0, 0); // Set to 4:00 PM local time
-                      return new Date().getHours() < 9 || new Date().getHours() > 16 ?
-                        marketCloseTime.toLocaleTimeString(undefined, {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          timeZoneName: 'short'
-                        }) :
-                        new Date(latest.updated_at).toLocaleTimeString(undefined, {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          timeZoneName: 'short'
-                        });
-                    })()}
-                  </div>
-                )}
-              </div>
-            </TerminalTile>
-
-            {/* Retailer Stocks */}
-            <TerminalTile title="Grocery Store Stocks" span={getSpan(2)} style={{minHeight: isMobile ? '120px' : 'auto'}}>
-              <div style={{ padding: 8, fontFamily: 'Menlo, monospace', fontSize: isMobile ? '0.75rem' : '0.85rem' }}>
-                {retailerStocks === null ? (<div style={{color:'#666'}}>Loading...</div>) : retailerStocks.length===0 ? (<div style={{color:'#666'}}>No data</div>) : (<>
-                  {retailerStocks.map((rs) => {
-                    const px =
-                      typeof rs.price === 'number' && Number.isFinite(rs.price)
-                        ? rs.price.toFixed(2)
-                        : '—'
-                    const ch =
-                      typeof rs.change_pct === 'number' && Number.isFinite(rs.change_pct)
-                        ? rs.change_pct
-                        : null
-                    const up = ch != null && ch >= 0
-                    return (
-                    <div key={rs.symbol} style={{ color: up ? '#0f0' : '#f00' }}>
-                      {rs.symbol} {px} {ch == null ? '—' : up ? '▲' : '▼'} {ch == null ? '—' : `${Math.abs(ch).toFixed(2)}%`}
-                    </div>
-                    )
-                  })}
-                </>)}
-                {retailerStocks && retailerStocks.length > 0 && (
-                  <div style={{color:'#666',fontSize:'0.6em',marginTop:2,whiteSpace:'nowrap'}}>
-                    Source: Polygon.io • Last Update: {(() => {
-                      const latest = retailerStocks.reduce((a, b) => new Date(a.updated_at) > new Date(b.updated_at) ? a : b);
-                      const marketCloseTime = new Date(latest.updated_at);
-                      marketCloseTime.setHours(16, 0, 0, 0);
-                      return new Date().getHours() < 9 || new Date().getHours() > 16
-                        ? marketCloseTime.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })
-                        : new Date(latest.updated_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' });
-                    })()}
-                  </div>
-                )}
-              </div>
-            </TerminalTile>
-
             {/* Egg Price News */}
-            <TerminalTile title="News" span={getSpan(2)} style={{ minHeight: isMobile ? '200px' : '300px', maxHeight: isMobile ? '200px' : '300px' }}>
+            <TerminalTile title="News" span={getSpan(6)} style={{ minHeight: isMobile ? '200px' : '300px', maxHeight: isMobile ? '200px' : '300px' }}>
               <div style={{ height: '100%', overflowY: 'auto', paddingRight: '4px' }}>
                 <EggNewsPanel fontSize={isMobile ? '0.75rem' : '0.85rem'} />
               </div>

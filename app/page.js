@@ -6,7 +6,6 @@ import Head from 'next/head'
 import Header from '../components/Header'
 import LocationPrompt from '../components/LocationPrompt'
 import EggCartonScene from '../components/EggCartonScene'
-import EggStockTicker from '../components/EggStockTicker'
 
 export default function Home() {
   const router = useRouter()
@@ -48,10 +47,6 @@ export default function Home() {
         overflow: 'hidden',
       }}
     >
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}>
-        <EggStockTicker />
-      </div>
-      
       {/* Logo and tagline centered above the egg */}
       <div
         style={{
