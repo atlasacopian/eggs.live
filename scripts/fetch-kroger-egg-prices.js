@@ -199,8 +199,14 @@ async function fetchStoreEggs (location_id_raw) {
           errReason = errJson?.errors?.reason;
         } catch {}
 
-        if (errCode === 'PRODUCT-4105-400' || /invalid parameters/i.test(errReason ?? '')) {
-          console.warn(`fetchStoreEggs: Invalid parameters for store ${location_id} (code: ${errCode || 'N/A'}). Skipping store.`);
+        // Store no longer valid: bad/changed parameters or a location ID Kroger no longer recognizes.
+        if (
+          errCode === 'PRODUCT-4105-400' ||
+          errCode === 'PRODUCT-4109-404' ||
+          /invalid parameters/i.test(errReason ?? '') ||
+          /no location was found/i.test(errReason ?? '')
+        ) {
+          console.warn(`fetchStoreEggs: Skipping store ${location_id} (status 400, code: ${errCode || 'N/A'}, reason: ${errReason || 'N/A'}).`);
           return buckets; // Skip this store but do NOT abort entire run
         }
       }
