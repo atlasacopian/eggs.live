@@ -1,10 +1,11 @@
 name: National Daily (USDA)
 
 on:
-  # Runs daily at 16:00 UTC (8 AM PST / 9 AM PDT / 12 PM ET) to catch the latest USDA weekly report
+  # Primary: 16:00 UTC (8 AM PST / 9 AM PDT / 12 PM ET)
+  # Backup: 19:00 UTC — catches runner-queue failures on the primary slot (safe: --latest is idempotent)
   schedule:
     - cron: '0 16 * * *'
-  # Allow a manual run from the Actions tab
+    - cron: '0 19 * * *'
   workflow_dispatch:
 
 permissions:
