@@ -44,6 +44,8 @@
   color: var(--accent-color) !important; /* match accent */
   background: transparent !important;    /* no white box */
   border: none !important;               /* remove default input border */
+  outline: none !important;              /* remove browser's default focus ring */
+  box-shadow: none !important;           /* Safari/WebKit draws focus as a shadow, not just outline */
   font-family: 'Roboto Mono', monospace;
   font-size: 9px; /* Match option font size */
   letter-spacing: 2px;
@@ -54,6 +56,12 @@
   line-height: 36px;
   padding-right: 5ch;       /* leave space for arrow */
   caret-color: #000 !important;
+}
+
+.zipInput:focus,
+.zipInput:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 /* New style for valid input */
