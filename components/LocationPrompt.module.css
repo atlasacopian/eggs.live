@@ -41,7 +41,7 @@
 
 /* Ensure ZIP input is clearly visible */
 .zipInput {
-  color: var(--accent-color) !important; /* match accent */
+  color: #333333 !important;             /* neutral gray, matches bracket color - no orange */
   background: transparent !important;    /* no white box */
   border: none !important;               /* remove default input border */
   outline: none !important;              /* remove browser's default focus ring */
@@ -54,8 +54,7 @@
   text-align: center;
   height: 100%;
   line-height: 36px;
-  padding-right: 5ch;       /* leave space for arrow */
-  caret-color: #000 !important;
+  caret-color: #333333 !important;
 }
 
 .zipInput:focus,
@@ -123,6 +122,24 @@
 .option:active .bracket,
 .option:focus .bracket {
   color: var(--accent-color);
+}
+
+/* The ZIP button stays neutral gray while active/typing - it shouldn't
+   turn orange like the other hover/focus states do. */
+.option.zipActive,
+.option.zipActive:hover,
+.option.zipActive:focus-within,
+.option.zipActive:active,
+.option.zipActive:focus {
+  color: #333333 !important;
+}
+
+.option.zipActive .bracket,
+.option.zipActive:hover .bracket,
+.option.zipActive:focus-within .bracket,
+.option.zipActive:active .bracket,
+.option.zipActive:focus .bracket {
+  color: #333333 !important;
 }
 
 .promptWrapper {
@@ -205,8 +222,14 @@
 }
 
 .option.zipActive {
-  border-color: var(--accent-color);
-  background-color: rgba(255, 193, 7, 0.15);
+  border-color: rgba(0, 0, 0, 0.2);
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+/* Fixed width so the bracket positions don't shift when the ZIP button
+   switches between its static label and the editable input. */
+.zipOption {
+  width: 170px;
 }
 
  

@@ -40,7 +40,7 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
         </div>
         <span className={styles.orText}>OR</span>
         <div
-          className={`${styles.option} ${showZipInput ? styles.zipActive : ''}`}
+          className={`${styles.option} ${styles.zipOption} ${showZipInput ? styles.zipActive : ''}`}
           onClick={() => {
             if (!showZipInput) {
               setShowZipInput(true)
@@ -57,7 +57,7 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
               <span className={styles.bracket}>[</span>
               <input
                 className={styles.zipInput}
-                style={{ width: '5ch', paddingRight: 0 }}
+                style={{ width: '80px' }}
                 type="text"
                 maxLength={5}
                 placeholder="12345"
