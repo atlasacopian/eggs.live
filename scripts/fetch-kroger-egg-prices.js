@@ -203,8 +203,10 @@ async function fetchStoreEggs (location_id_raw) {
         if (
           errCode === 'PRODUCT-4105-400' ||
           errCode === 'PRODUCT-4109-404' ||
+          errCode === 'PRODUCT-2029' ||
           /invalid parameters/i.test(errReason ?? '') ||
-          /no location was found/i.test(errReason ?? '')
+          /no location was found/i.test(errReason ?? '') ||
+          /product searching is not available/i.test(errReason ?? '')
         ) {
           console.warn(`fetchStoreEggs: Skipping store ${location_id} (status 400, code: ${errCode || 'N/A'}, reason: ${errReason || 'N/A'}).`);
           return buckets; // Skip this store but do NOT abort entire run
