@@ -2,10 +2,14 @@
 
 import React, { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Head from 'next/head'
+import dynamic from 'next/dynamic'
 import Header from '../components/Header'
 import LocationPrompt from '../components/LocationPrompt'
-import EggCartonScene from '../components/EggCartonScene'
+
+const EggCartonScene = dynamic(() => import('../components/EggCartonScene'), {
+  ssr: false,
+  loading: () => null,
+})
 
 export default function Home() {
   const router = useRouter()
@@ -33,10 +37,11 @@ export default function Home() {
 
   return (
     <>
-      {/* Preload the 3D model early to start fetching before React mounts the scene */}
-      <Head>
-        <link rel="preload" href="/final.glb" as="fetch" type="model/gltf-binary" crossOrigin="anonymous" />
-      </Head>
+      {/* Preload the 3D model + env map early. next/head doesn't work in the
+          App Router; React 19 hoists <link>/<meta>/<title> to <head> even
+          rendered here directly, in a client component. */}
+      <link rel="preload" href="/final.glb" as="fetch" type="model/gltf-binary" crossOrigin="anonymous" fetchPriority="high" />
+      <link rel="preload" href="/studio_small_03_1k.hdr" as="fetch" crossOrigin="anonymous" fetchPriority="high" />
     <main
       className="main"
       style={{

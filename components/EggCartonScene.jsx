@@ -2,13 +2,16 @@
 
 import { useRef, useEffect, Suspense, useState, useMemo, forwardRef } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { useGLTF } from '@react-three/drei'
+import { useGLTF, useEnvironment } from '@react-three/drei'
 import { Center, Environment, ContactShadows } from '@react-three/drei'
 import * as THREE from 'three'
-import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
 // Preload the original egg GLB so it's ready when the scene mounts
 useGLTF.preload('/final.glb')
+// Preload the studio environment HDRI from our own public/ instead of the
+// pmndrs CDN (raw.githack.com), which added a redirect + ~1.7MB cross-origin
+// fetch that blocked the whole scene's Suspense boundary.
+useEnvironment.preload({ files: '/studio_small_03_1k.hdr' })
 
 // Update ModelPrimitive for immediate load
 const ModelPrimitive = forwardRef((props, ref) => {
@@ -19,13 +22,10 @@ const ModelPrimitive = forwardRef((props, ref) => {
     const cloned = gltf.scene.clone()
     cloned.traverse((child) => {
       if (child.isMesh && child.material) {
-        // Weld vertices to fix seams
-        let geo = child.geometry.clone()
-        geo = mergeVertices(geo)
-        if (geo.attributes.uv) {
-          geo.setAttribute('uv2', geo.attributes.uv)
+        // Vertices are pre-welded at build time; just apply material overrides
+        if (child.geometry.attributes.uv) {
+          child.geometry.setAttribute('uv2', child.geometry.attributes.uv)
         }
-        child.geometry = geo
 
         const mat = child.material
         // Subtle off-white base color
@@ -95,8 +95,8 @@ export function Experience({ onInteractionStart }) {
 
   return (
     <>
-      {/* Photorealistic studio environment */}
-      <Environment preset="studio" background={false} />
+      {/* Photorealistic studio environment, served from our own public/ dir */}
+      <Environment files="/studio_small_03_1k.hdr" background={false} />
       {/* Hemispheric fill for softer gradients and seam removal */}
       <hemisphereLight skyColor="#ffffff" groundColor="#ffffff" intensity={0.4} />
       {/* Soft ambient light */}
