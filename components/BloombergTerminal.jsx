@@ -8,6 +8,8 @@ import EggPriceChart from './EggPriceChart.jsx';
 import UsdaPriceChart from './UsdaPriceChart.jsx';
 import FredChart from './FredChart.jsx';
 import EggNewsPanel from './EggNewsPanel.jsx';
+import NationalStoreStats from './NationalStoreStats.jsx';
+import StoreHeatMap from './StoreHeatMap.jsx';
 
 const MOBILE_BREAKPOINT = 768;
 
@@ -17,6 +19,8 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
   const [hoveredStore, setHoveredStore] = useState(null);
   const [priceType, setPriceType] = useState('regular');
   const [isMobile, setIsMobile] = useState(false);
+  const [storeSurveyStats, setStoreSurveyStats] = useState(null);
+  const [storeSurveyError, setStoreSurveyError] = useState(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -27,6 +31,15 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
       handleResize(); // Initial check
       return () => window.removeEventListener('resize', handleResize);
     }
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/national-store-stats')
+      .then(res => res.json())
+      .then(data => { if (!cancelled) setStoreSurveyStats(data); })
+      .catch(err => { if (!cancelled) setStoreSurveyError(err.message); });
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
@@ -243,6 +256,27 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
               <div style={{ height: '100%', overflowY: 'auto', paddingRight: '4px' }}>
                 <EggNewsPanel fontSize={isMobile ? '0.75rem' : '0.85rem'} />
               </div>
+            </TerminalTile>
+
+            {/* Store Coverage - Row */}
+            <TerminalTile
+              title="Stores Surveyed by Brand"
+              span={getSpan(2)}
+              style={{ minHeight: isMobile ? '280px' : '340px', maxHeight: isMobile ? '280px' : '340px' }}
+            >
+              <NationalStoreStats stats={storeSurveyStats} error={storeSurveyError} />
+            </TerminalTile>
+
+            <TerminalTile
+              title="Store Coverage Heat Map"
+              span={getSpan(4)}
+              style={{ minHeight: isMobile ? '280px' : '340px', maxHeight: isMobile ? '280px' : '340px' }}
+            >
+              <StoreHeatMap
+                points={storeSurveyStats?.points}
+                bounds={storeSurveyStats?.conusBounds}
+                error={storeSurveyError}
+              />
             </TerminalTile>
 
           </>
