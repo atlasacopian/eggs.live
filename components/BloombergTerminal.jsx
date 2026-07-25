@@ -269,19 +269,20 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
           textAlign: 'center',
           fontFamily: 'Menlo, monospace',
           fontSize: isMobile ? '0.75rem' : '0.85rem',
-          color: '#ffffff',
+          textTransform: 'uppercase',
+          color: 'rgba(255, 255, 255, 0.35)',
         }}
       >
         made by{' '}
-        <a href="https://atlasacopian.com/" target="_blank" rel="noopener noreferrer" style={{ color: '#ffffff' }}>
+        <a href="https://atlasacopian.com/" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit' }}>
           Atlas Acopian
         </a>
         {' '}and{' '}
-        <a href="https://cursor.com/" target="_blank" rel="noopener noreferrer" style={{ color: '#ffffff' }}>
+        <a href="https://cursor.com/" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit' }}>
           Cursor
         </a>
         {' '}and{' '}
-        <a href="https://claude.ai/" target="_blank" rel="noopener noreferrer" style={{ color: '#ffffff' }}>
+        <a href="https://claude.ai/" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit' }}>
           Claude
         </a>
       </div>
