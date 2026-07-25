@@ -226,18 +226,36 @@
 }
 
 @keyframes pressEnterFade {
-  from { opacity: 0; transform: translateY(-2px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translate(-50%, -2px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
 }
 
+@keyframes pressEnterPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Positioned absolutely and anchored to .zipOption (position:relative,
+   inherited from .option) so it hangs directly under the zip box
+   without adding to the row's layout height - otherwise .promptWrapper
+   (anchored by `bottom`) would shift everything above it upward
+   whenever this hint appeared. */
 .pressEnterHint {
+  position: absolute;
+  top: 100%;
+  left: 50%;
   margin-top: 8px;
+  white-space: nowrap;
   text-align: center;
   font-family: 'Roboto Mono', monospace;
   font-size: 9px;
   letter-spacing: 1px;
   color: var(--accent-color);
   animation: pressEnterFade 0.2s ease-out;
+}
+
+.pressEnterHint.submitting {
+  animation: pressEnterPulse 0.8s ease-in-out infinite;
 }
 
  

@@ -8,6 +8,7 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
   const [zipCode, setZipCode] = useState('')
   const [showZipInput, setShowZipInput] = useState(false)
   const [zipError, setZipError] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const router = useRouter()
 
   const handleLocationClick = () => {
@@ -26,6 +27,7 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
     e.preventDefault()
     if (/^\d{5}$/.test(zipCode)) {
       setZipError(false)
+      setSubmitting(true)
       if (onEnterZip) return onEnterZip(zipCode)
       router.push(`/${zipCode}`)
     } else {
@@ -72,20 +74,21 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
                 data-1p-ignore
                 data-lpignore="true"
                 autoFocus
+                readOnly={submitting}
               />
             </form>
           )}
           <span className={styles.bracket}>]</span>
+          {zipComplete && !zipError && (
+            <div className={`${styles.pressEnterHint} ${submitting ? styles.submitting : ''}`}>
+              {submitting ? 'LOADING…' : 'PRESS ENTER ↵'}
+            </div>
+          )}
         </div>
       </div>
       {showZipInput && zipError && (
         <div className={styles.zipErrorText}>
           Please enter a valid 5-digit ZIP code.
-        </div>
-      )}
-      {zipComplete && !zipError && (
-        <div className={styles.pressEnterHint}>
-          PRESS ENTER ↵
         </div>
       )}
       <style jsx>{`
