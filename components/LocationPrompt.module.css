@@ -188,6 +188,20 @@
   width: 120px;
 }
 
+/* Fixed width so swapping "USE LOCATION" for the shorter "LOCATING…"
+   text doesn't shrink the button and shift OR/the zip box next to it. */
+.locationLabel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 112px;
+}
+
+.option.locating {
+  cursor: default;
+  animation: pressEnterPulse 0.8s ease-in-out infinite;
+}
+
 .option .bracket:first-child {
   margin-right: 0.35ch;
 }

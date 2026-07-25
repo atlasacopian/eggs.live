@@ -9,9 +9,12 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
   const [showZipInput, setShowZipInput] = useState(false)
   const [zipError, setZipError] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [locating, setLocating] = useState(false)
   const router = useRouter()
 
   const handleLocationClick = () => {
+    if (locating) return
+    setLocating(true)
     if (onUseLocation) return onUseLocation()
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -41,9 +44,9 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
     <div className={styles.promptWrapper}>
       {/* Buttons Container */}
       <div className={styles.container}>
-        <div className={styles.option} onClick={handleLocationClick}>
+        <div className={`${styles.option} ${locating ? styles.locating : ''}`} onClick={handleLocationClick}>
           <span className={styles.bracket}>[</span>
-          &nbsp;USE&nbsp;LOCATION&nbsp;
+          <span className={styles.locationLabel}>&nbsp;{locating ? 'LOCATING…' : 'USE LOCATION'}&nbsp;</span>
           <span className={styles.bracket}>]</span>
         </div>
         <span className={styles.orText}>OR</span>
