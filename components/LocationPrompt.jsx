@@ -84,13 +84,13 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
               {submitting ? 'LOADING…' : 'PRESS ENTER ↵'}
             </div>
           )}
+          {showZipInput && zipError && (
+            <div className={styles.zipErrorText}>
+              Please enter a valid 5-digit ZIP code.
+            </div>
+          )}
         </div>
       </div>
-      {showZipInput && zipError && (
-        <div className={styles.zipErrorText}>
-          Please enter a valid 5-digit ZIP code.
-        </div>
-      )}
       <style jsx>{`
         @media (max-width: 768px) {
           .scan-header-text {

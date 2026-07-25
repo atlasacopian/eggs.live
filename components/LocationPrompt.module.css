@@ -216,8 +216,16 @@
   color: var(--accent-color) !important;
 }
 
+/* Anchored to .zipOption the same way as .pressEnterHint below, so it
+   hangs directly under just the zip box without adding layout height
+   (which would otherwise shift everything above it upward). */
 .zipErrorText {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
   margin-top: 8px;
+  white-space: nowrap;
   text-align: center;
   font-family: 'Roboto Mono', monospace;
   font-size: 9px;

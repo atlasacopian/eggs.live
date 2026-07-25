@@ -145,7 +145,7 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
               onChange={e=>setTempZip(e.target.value)}
               onBlur={()=>setEditingZip(false)}
               onKeyDown={e=>{if(e.key==='Enter'){setEditingZip(false); if(tempZip.match(/^\d{5}$/)){router.push(`/${tempZip}`)}}}}
-              style={{width:70,boxSizing:'border-box',background:'#000',color:'#fff',border:'1px solid transparent',outline:'none',boxShadow:'none',fontFamily:'Menlo, monospace',fontSize:16,fontWeight:600,textAlign:'left'}}
+              style={{width:70,boxSizing:'border-box',background:'#000',color:'#fff',border:'1px solid transparent',outline:'none',boxShadow:'none',fontFamily:'Menlo, monospace',fontSize:16,fontWeight:600,textAlign:'left',transform:`scale(${isMobile ? 0.75 : 0.85})`,transformOrigin:'left center'}}
               type="text"
               inputMode="numeric"
               maxLength={5}
