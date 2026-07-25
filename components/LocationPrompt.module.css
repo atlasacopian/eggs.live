@@ -203,14 +203,25 @@
   letter-spacing: 2px;
 }
 
-/* Flex container for the zip form to center input and button */
+/* Flex container for the zip form to center input and button.
+   Width matches .zipLabel exactly so the brackets don't shift
+   position when switching between the static label and the input. */
 .zipForm {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   height: 100%;
   position: relative; /* allow arrow absolute positioning */
-  width: 18ch; /* constant width so highlight doesn't shrink */
+  width: 120px;
+}
+
+/* Static "ENTER ZIP CODE" label, sized to match .zipForm's width above
+   so the bracket gap stays constant between the idle and active states. */
+.zipLabel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
 }
 
 .option .bracket:first-child {
@@ -230,6 +241,15 @@
    switches between its static label and the editable input. */
 .zipOption {
   width: 170px;
+}
+
+.zipErrorText {
+  margin-top: 8px;
+  text-align: center;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: #cc3333;
 }
 
  

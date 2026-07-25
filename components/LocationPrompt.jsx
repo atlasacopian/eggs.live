@@ -7,6 +7,7 @@ import styles from './LocationPrompt.module.css'
 export default function LocationPrompt({ onUseLocation, onEnterZip }) {
   const [zipCode, setZipCode] = useState('')
   const [showZipInput, setShowZipInput] = useState(false)
+  const [zipError, setZipError] = useState(false)
   const router = useRouter()
 
   const handleLocationClick = () => {
@@ -24,8 +25,11 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
   const handleZipSubmit = (e) => {
     e.preventDefault()
     if (/^\d{5}$/.test(zipCode)) {
+      setZipError(false)
       if (onEnterZip) return onEnterZip(zipCode)
       router.push(`/${zipCode}`)
+    } else {
+      setZipError(true)
     }
   }
 
@@ -48,28 +52,35 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
             }
           }}
         >
+          <span className={styles.bracket}>[</span>
           {!showZipInput ? (
-            <>
-              <span className={styles.bracket}>[</span>&nbsp;ENTER&nbsp;ZIP&nbsp;CODE&nbsp;<span className={styles.bracket}>]</span>
-            </>
+            <span className={styles.zipLabel}>&nbsp;ENTER&nbsp;ZIP&nbsp;CODE&nbsp;</span>
           ) : (
             <form className={styles.zipForm} onSubmit={handleZipSubmit}>
-              <span className={styles.bracket}>[</span>
               <input
                 className={styles.zipInput}
                 style={{ width: '80px' }}
                 type="text"
+                inputMode="numeric"
                 maxLength={5}
                 placeholder="12345"
                 value={zipCode}
-                onChange={(e) => setZipCode(e.target.value)}
+                onChange={(e) => { setZipCode(e.target.value); setZipError(false) }}
+                autoComplete="off"
+                data-1p-ignore
+                data-lpignore="true"
                 autoFocus
               />
-              <span className={styles.bracket}>]</span>
             </form>
           )}
+          <span className={styles.bracket}>]</span>
         </div>
       </div>
+      {showZipInput && zipError && (
+        <div className={styles.zipErrorText}>
+          Please enter a valid 5-digit ZIP code.
+        </div>
+      )}
       <style jsx>{`
         @media (max-width: 768px) {
           .scan-header-text {
@@ -80,4 +91,4 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
       `}</style>
     </div>
   )
-} 
+}
