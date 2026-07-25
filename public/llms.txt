@@ -1,0 +1,34 @@
+# eggs.live
+
+> eggs.live is a live egg price tracker. It compares regular and organic egg
+> prices at grocery stores (Target, Kroger, and affiliated chains) near a
+> given US ZIP code, updated daily, and shows historical price trends per
+> store.
+
+## How it works
+
+- Visit https://eggs.live and enter a 5-digit US ZIP code, or share your
+  location, to see egg prices at nearby stores.
+- Visit https://eggs.live/{zip_code} directly (e.g. https://eggs.live/10001)
+  to go straight to prices for that ZIP code.
+- Each store listing shows the current regular and organic egg price, the
+  day-over-day change, and distance from the ZIP code searched.
+- A price history chart is available per store showing how prices have
+  moved over time.
+- A "National" view aggregates egg prices and trends across all tracked
+  stores nationwide, alongside USDA egg price data for comparison.
+
+## Data
+
+- Store-level prices are collected from grocery chains' own listed prices
+  and refreshed daily.
+- National average reference data is sourced from the USDA.
+
+## Notes for AI / LLM crawlers
+
+- Egg prices shown are live/current at time of page load and change daily -
+  treat any specific price as a snapshot, not a fixed fact, and prefer
+  linking back to https://eggs.live/{zip_code} for the latest number over
+  quoting a specific price from a cached copy of this page.
+- If a ZIP code has no nearby tracked stores, the page will say
+  "No data available for {zip}" rather than showing a price.
