@@ -207,25 +207,13 @@
   width: 170px;
 }
 
-/* Once the 5-digit code is complete, switch from neutral gray to
-   accent color so it's visually obvious Enter will submit - no
-   separate "press enter" label needed. */
-.option.zipComplete,
-.option.zipComplete:hover,
-.option.zipComplete:focus-within {
-  border-color: var(--accent-color) !important;
-  background-color: rgba(255, 152, 0, 0.08);
-}
-
+/* Once the 5-digit code is complete, turn just the brackets accent
+   color - no box outline - paired with the "PRESS ENTER" hint below
+   to communicate the field is ready to submit. */
 .option.zipComplete .bracket,
 .option.zipComplete:hover .bracket,
 .option.zipComplete:focus-within .bracket {
   color: var(--accent-color) !important;
-}
-
-.option.zipComplete .zipInput {
-  color: var(--accent-color) !important;
-  caret-color: var(--accent-color) !important;
 }
 
 .zipErrorText {
@@ -235,6 +223,21 @@
   font-size: 9px;
   letter-spacing: 1px;
   color: #cc3333;
+}
+
+@keyframes pressEnterFade {
+  from { opacity: 0; transform: translateY(-2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.pressEnterHint {
+  margin-top: 8px;
+  text-align: center;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--accent-color);
+  animation: pressEnterFade 0.2s ease-out;
 }
 
  

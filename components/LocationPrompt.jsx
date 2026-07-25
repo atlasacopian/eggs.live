@@ -33,6 +33,8 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
     }
   }
 
+  const zipComplete = showZipInput && /^\d{5}$/.test(zipCode)
+
   return (
     <div className={styles.promptWrapper}>
       {/* Buttons Container */}
@@ -44,7 +46,7 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
         </div>
         <span className={styles.orText}>OR</span>
         <div
-          className={`${styles.option} ${styles.zipOption} ${showZipInput ? styles.zipActive : ''} ${showZipInput && /^\d{5}$/.test(zipCode) ? styles.zipComplete : ''}`}
+          className={`${styles.option} ${styles.zipOption} ${showZipInput ? styles.zipActive : ''} ${zipComplete ? styles.zipComplete : ''}`}
           onClick={() => {
             if (!showZipInput) {
               setShowZipInput(true)
@@ -79,6 +81,11 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
       {showZipInput && zipError && (
         <div className={styles.zipErrorText}>
           Please enter a valid 5-digit ZIP code.
+        </div>
+      )}
+      {zipComplete && !zipError && (
+        <div className={styles.pressEnterHint}>
+          PRESS ENTER ↵
         </div>
       )}
       <style jsx>{`
