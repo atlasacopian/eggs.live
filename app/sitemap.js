@@ -1,65 +1,62 @@
-// Zip codes can't be practically enumerated (any of ~40,000 US ZIPs could be
-// a valid page), so this seeds crawlers with the homepage plus a curated set
-// of major-city ZIPs to demonstrate the /[zipCode] page template. Google
-// discovers additional ZIPs organically from there (internal links, direct
-// visits, and its own crawl of the dynamic route pattern).
-const MAJOR_CITY_ZIPS = [
-  '10001', // New York, NY
-  '90026', // Los Angeles, CA
-  '60601', // Chicago, IL
-  '77002', // Houston, TX
-  '85001', // Phoenix, AZ
-  '19102', // Philadelphia, PA
-  '78201', // San Antonio, TX
-  '92101', // San Diego, CA
-  '75201', // Dallas, TX
-  '95101', // San Jose, CA
-  '78701', // Austin, TX
-  '32202', // Jacksonville, FL
-  '76102', // Fort Worth, TX
-  '43215', // Columbus, OH
-  '28202', // Charlotte, NC
-  '94102', // San Francisco, CA
-  '46204', // Indianapolis, IN
-  '98101', // Seattle, WA
-  '80202', // Denver, CO
-  '20001', // Washington, DC
-  '02108', // Boston, MA
-  '37201', // Nashville, TN
-  '48226', // Detroit, MI
-  '97201', // Portland, OR
-  '38103', // Memphis, TN
-  '89101', // Las Vegas, NV
-  '40202', // Louisville, KY
-  '21201', // Baltimore, MD
-  '53202', // Milwaukee, WI
-  '87102', // Albuquerque, NM
-  '85701', // Tucson, AZ
-  '30303', // Atlanta, GA
-  '33130', // Miami, FL
-  '95814', // Sacramento, CA
-  '64105', // Kansas City, MO
-  '44113', // Cleveland, OH
-  '70112', // New Orleans, LA
-  '55401', // Minneapolis, MN
-  '33602', // Tampa, FL
-  '32801', // Orlando, FL
-];
+import { supabaseServer } from '../lib/supabase';
 
-export default function sitemap() {
+// Regenerate once a day rather than on every sitemap request - the set of
+// covered ZIPs changes slowly (only when store coverage changes), so there's
+// no need to hit the DB on every crawl.
+export const revalidate = 86400;
+
+async function fetchAllZips(sb, table) {
+  const zips = new Set();
+  const pageSize = 1000;
+  let from = 0;
+  while (true) {
+    const { data, error } = await sb.from(table).select('zip').range(from, from + pageSize - 1);
+    if (error) {
+      console.error(`sitemap: failed to read zips from ${table}`, error);
+      break;
+    }
+    if (!data || !data.length) break;
+    data.forEach(row => {
+      if (row.zip) zips.add(String(row.zip).trim());
+    });
+    if (data.length < pageSize) break;
+    from += pageSize;
+  }
+  return zips;
+}
+
+export default async function sitemap() {
   const now = new Date();
-  return [
+  const entries = [
     {
       url: 'https://eggs.live',
       lastModified: now,
       changeFrequency: 'daily',
       priority: 1,
     },
-    ...MAJOR_CITY_ZIPS.map(zip => ({
-      url: `https://eggs.live/${zip}`,
-      lastModified: now,
-      changeFrequency: 'daily',
-      priority: 0.8,
-    })),
   ];
+
+  try {
+    const sb = supabaseServer();
+    const [krogerZips, targetZips] = await Promise.all([
+      fetchAllZips(sb, 'kroger_stores'),
+      fetchAllZips(sb, 'target_stores'),
+    ]);
+    const allZips = new Set([...krogerZips, ...targetZips]);
+
+    allZips.forEach(zip => {
+      entries.push({
+        url: `https://eggs.live/${zip}`,
+        lastModified: now,
+        changeFrequency: 'daily',
+        priority: 0.8,
+      });
+    });
+  } catch (e) {
+    // If Supabase is unreachable at build/request time, still ship a sitemap
+    // with just the homepage rather than failing the whole route.
+    console.error('sitemap: failed to load store ZIPs', e);
+  }
+
+  return entries;
 }
