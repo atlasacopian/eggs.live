@@ -98,40 +98,6 @@ export default function Home() {
           onEnterZip={handleEnterZip}
         />
       </div>
-      {/* Real, visible body copy below the fold - the hero above is almost
-          entirely visual (3D model + short-text prompt), which gives Google
-          very little on-page text to rank the site on for terms like
-          "egg prices" or "egg price tracker".
-
-          Everything in the hero (logo, egg scene, prompt) is position:
-          absolute/fixed, so none of it occupies normal document flow -
-          without an explicit 100vh marginTop here, this would be the only
-          in-flow content and would render at the very top, overlapping the
-          hero instead of sitting below it. */}
-      <div
-        style={{
-          position: 'relative',
-          zIndex: 70,
-          maxWidth: 640,
-          margin: '100vh auto 0',
-          padding: '48px 24px 64px',
-          textAlign: 'center',
-          fontFamily: 'Menlo, monospace',
-          fontSize: '13px',
-          lineHeight: 1.7,
-          color: '#333',
-        }}
-      >
-        <h1 style={{ fontSize: '14px', letterSpacing: 1, marginBottom: 12 }}>
-          Egg Price Tracker
-        </h1>
-        <p>
-          eggs.live is a live egg price tracker that compares regular and organic
-          egg prices at grocery stores near you, updated daily. Enter your ZIP
-          code above to see current egg prices at Target, Kroger, and other
-          stores in your area, plus how prices have changed over time.
-        </p>
-      </div>
     </main>
     </>
   )
