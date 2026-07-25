@@ -44,7 +44,7 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
         </div>
         <span className={styles.orText}>OR</span>
         <div
-          className={`${styles.option} ${styles.zipOption} ${showZipInput ? styles.zipActive : ''}`}
+          className={`${styles.option} ${styles.zipOption} ${showZipInput ? styles.zipActive : ''} ${showZipInput && /^\d{5}$/.test(zipCode) ? styles.zipComplete : ''}`}
           onClick={() => {
             if (!showZipInput) {
               setShowZipInput(true)
@@ -74,16 +74,6 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
             </form>
           )}
           <span className={styles.bracket}>]</span>
-          {showZipInput && /^\d{5}$/.test(zipCode) && (
-            <button
-              type="button"
-              className={styles.enterHint}
-              onClick={handleZipSubmit}
-              aria-label="Submit ZIP code"
-            >
-              ↵ ENTER
-            </button>
-          )}
         </div>
       </div>
       {showZipInput && zipError && (

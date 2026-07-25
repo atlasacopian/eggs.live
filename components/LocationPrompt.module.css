@@ -68,49 +68,9 @@
   box-shadow: none;
 }
 
-/* Style for the Enter hint */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateX(-5px); }
   to { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes enterFade { from { opacity: 0; transform: translateY(-2px);} to { opacity:1; transform: translateY(0);} }
-
-/* Arrow hint shown once 5 digits are entered. Positioned absolutely
-   and anchored to .zipOption (outside the fixed-width bracket area)
-   so it never affects the bracket layout. */
-.enterHint {
-  position: absolute;
-  left: 100%;
-  margin-left: 8px;
-  top: 50%;
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  white-space: nowrap;
-  color: var(--accent-color);
-  font-family: 'Roboto Mono', monospace;
-  font-size: 9px;
-  letter-spacing: 1px;
-  line-height: 1;
-  transform: translateY(-50%);
-  opacity: 0; /* start hidden and fade in via animation */
-  transition: opacity 0.1s ease;
-  animation: enterFade 0.3s ease-out forwards;
-  background: none;
-  border: none;
-  outline: none;
-  padding: 4px 6px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-/* Visual feedback when arrow is tapped */
-.enterHint:active {
-  /* Tint background for feedback and keep arrow visible */
-  background-color: rgba(255, 193, 7, 0.2);
-  opacity: 1;
-  border-radius: 4px;
 }
 
 .scanHeader {
@@ -192,10 +152,6 @@
     width: 5ch;
     box-sizing: border-box;
   }
-  /* Arrow already static, extra spacing included in width */
-  .enterHint {
-    margin-left: 0.25rem;
-  }
 }
 
 .bracket {
@@ -249,6 +205,27 @@
    switches between its static label and the editable input. */
 .zipOption {
   width: 170px;
+}
+
+/* Once the 5-digit code is complete, switch from neutral gray to
+   accent color so it's visually obvious Enter will submit - no
+   separate "press enter" label needed. */
+.option.zipComplete,
+.option.zipComplete:hover,
+.option.zipComplete:focus-within {
+  border-color: var(--accent-color) !important;
+  background-color: rgba(255, 152, 0, 0.08);
+}
+
+.option.zipComplete .bracket,
+.option.zipComplete:hover .bracket,
+.option.zipComplete:focus-within .bracket {
+  color: var(--accent-color) !important;
+}
+
+.option.zipComplete .zipInput {
+  color: var(--accent-color) !important;
+  caret-color: var(--accent-color) !important;
 }
 
 .zipErrorText {
