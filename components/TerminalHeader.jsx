@@ -32,9 +32,10 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
     background: '#000000',
     color: '#ffffff',
     padding: isMobile ? '8px' : '8px 12px',
-    display: 'flex',
-    flexDirection: isMobile ? 'column' : 'row',
-    justifyContent: isMobile ? 'space-between' : 'center',
+    display: isMobile ? 'flex' : 'grid',
+    gridTemplateColumns: isMobile ? undefined : 'minmax(100px, 1fr) auto minmax(390px, 1.6fr)',
+    flexDirection: isMobile ? 'column' : undefined,
+    justifyContent: isMobile ? 'space-between' : undefined,
     alignItems: 'center',
     fontFamily: 'Menlo, monospace',
     fontSize: isMobile ? '0.8rem' : '0.9rem',
@@ -49,12 +50,11 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
     textAlign: 'center',
     marginBottom: '5px',
   } : {
-    position: 'absolute',
-    left: '12px',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    width: '300px',
     textAlign: 'left',
+    minWidth: 0,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
   };
 
   const eggsLiveStyle = {
@@ -107,12 +107,11 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
     width: '100%',
   } : {
     fontSize: '0.85rem',
-    position: 'absolute',
-    right: '12px',
-    top: '50%',
-    transform: 'translateY(-50%)',
     textAlign: 'right',
-    minWidth: '180px',
+    minWidth: 0,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
   };
 
   return (
@@ -138,20 +137,32 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
 
       <div style={dateTimeStyle}>
         <span>{formatDateTime(currentDateTime)}</span>
-        {editingZip ? (
-          <input
-            value={tempZip}
-            onChange={e=>setTempZip(e.target.value)}
-            onBlur={()=>setEditingZip(false)}
-            onKeyDown={e=>{if(e.key==='Enter'){setEditingZip(false); if(tempZip.match(/^\d{5}$/)){router.push(`/${tempZip}`)}}}}
-            style={{width:70,background:'#000',color:'#fff',border:'1px solid #555',fontFamily:'Menlo, monospace',fontSize:'0.8rem',marginLeft:8}}
-            autoFocus
-          />
-        ) : (
-          <span style={{ marginLeft: 16, fontWeight: 600, cursor:'pointer' }} onClick={()=>setEditingZip(true)}>
-            ZIP CODE: {zipCode || 'N/A'}
-          </span>
-        )}
+        <span style={{ marginLeft: 16, fontWeight: 600 }}>
+          ZIP CODE:{' '}
+          {editingZip ? (
+            <input
+              value={tempZip}
+              onChange={e=>setTempZip(e.target.value)}
+              onBlur={()=>setEditingZip(false)}
+              onKeyDown={e=>{if(e.key==='Enter'){setEditingZip(false); if(tempZip.match(/^\d{5}$/)){router.push(`/${tempZip}`)}}}}
+              style={{width:70,boxSizing:'border-box',background:'#000',color:'#fff',border:'1px solid #555',fontFamily:'Menlo, monospace',fontSize:'0.8rem',fontWeight:600,textAlign:'left'}}
+              type="text"
+              inputMode="numeric"
+              maxLength={5}
+              autoComplete="off"
+              data-1p-ignore
+              data-lpignore="true"
+              autoFocus
+            />
+          ) : (
+            <span
+              style={{display:'inline-block',width:70,boxSizing:'border-box',border:'1px solid transparent',textAlign:'left',cursor:'pointer'}}
+              onClick={()=>setEditingZip(true)}
+            >
+              {zipCode || 'N/A'}
+            </span>
+          )}
+        </span>
       </div>
     </div>
   );
