@@ -147,7 +147,7 @@ export default function EggPriceChart({ selectedStore, store, highlight = false,
   if (!history.length) {
     if (preview) return null;
     return (
-      <p className="text-gray-400 text-sm">
+      <p style={{ color: '#888', fontSize: '0.85rem', padding: '8px 10px' }}>
         {zipCode ? `No data available for ${zipCode}.` : 'No price history available.'}
       </p>
     );
