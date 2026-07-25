@@ -74,6 +74,16 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
             </form>
           )}
           <span className={styles.bracket}>]</span>
+          {showZipInput && /^\d{5}$/.test(zipCode) && (
+            <button
+              type="button"
+              className={styles.enterHint}
+              onClick={handleZipSubmit}
+              aria-label="Submit ZIP code"
+            >
+              ↵ ENTER
+            </button>
+          )}
         </div>
       </div>
       {showZipInput && zipError && (

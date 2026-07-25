@@ -76,25 +76,33 @@
 
 @keyframes enterFade { from { opacity: 0; transform: translateY(-2px);} to { opacity:1; transform: translateY(0);} }
 
-/* Arrow button shown after ZIP input */
+/* Arrow hint shown once 5 digits are entered. Positioned absolutely
+   and anchored to .zipOption (outside the fixed-width bracket area)
+   so it never affects the bracket layout. */
 .enterHint {
-  /* arrow sits absolutely so it doesn't affect input centering */
-  margin-left: 0;
   position: absolute;
-  right: 4ch;    /* shift arrow further left to avoid overlapping bracket */
+  left: 100%;
+  margin-left: 8px;
   top: 50%;
   display: flex;
   align-items: center;
+  gap: 3px;
+  white-space: nowrap;
   color: var(--accent-color);
-  font-size: 11px; /* slightly smaller for balance */
-  line-height: 1; /* prevent baseline shift */
-  transform: translateY(-45%);
+  font-family: 'Roboto Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  line-height: 1;
+  transform: translateY(-50%);
   opacity: 0; /* start hidden and fade in via animation */
-  transition: transform 0.1s ease, opacity 0.1s ease;
-  animation: enterFade 0.4s ease-out forwards;
+  transition: opacity 0.1s ease;
+  animation: enterFade 0.3s ease-out forwards;
   background: none;
   border: none;
   outline: none;
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
 }
 
 /* Visual feedback when arrow is tapped */
