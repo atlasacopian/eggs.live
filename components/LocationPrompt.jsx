@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import styles from './LocationPrompt.module.css'
+import { getCurrentZip } from '../lib/geolocate'
 
 export default function LocationPrompt({ onUseLocation, onEnterZip }) {
   const [zipCode, setZipCode] = useState('')
@@ -12,18 +13,12 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
   const [locating, setLocating] = useState(false)
   const router = useRouter()
 
-  const handleLocationClick = () => {
+  const handleLocationClick = async () => {
     if (locating) return
     setLocating(true)
     if (onUseLocation) return onUseLocation()
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        () => router.push('/90026'),
-        () => router.push('/90026')
-      )
-    } else {
-      router.push('/90026')
-    }
+    const zip = await getCurrentZip()
+    router.push(`/${zip || '90026'}`)
   }
 
   const handleZipSubmit = (e) => {

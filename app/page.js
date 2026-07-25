@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import Header from '../components/Header'
 import LocationPrompt from '../components/LocationPrompt'
+import { getCurrentZip } from '../lib/geolocate'
 
 const EggCartonScene = dynamic(() => import('../components/EggCartonScene'), {
   ssr: false,
@@ -20,15 +21,9 @@ export default function Home() {
     document.body.classList.remove('dark-theme')
   }, [])
 
-  const handleUseLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        () => router.push('/90026'),
-        () => router.push('/90026')
-      )
-    } else {
-      router.push('/90026')
-    }
+  const handleUseLocation = async () => {
+    const zip = await getCurrentZip()
+    router.push(`/${zip || '90026'}`)
   }
 
   const handleEnterZip = (zip) => {
