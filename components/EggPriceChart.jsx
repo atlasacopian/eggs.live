@@ -18,7 +18,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
-export default function EggPriceChart({ selectedStore, store, highlight = false, preview = false, priceType = 'regular', isMobile = false }) {
+export default function EggPriceChart({ selectedStore, store, highlight = false, preview = false, priceType = 'regular', isMobile = false, zipCode = null }) {
   // Use selectedStore if provided, otherwise fall back to store prop
   const currentStore = selectedStore || store;
   const [history, setHistory] = useState([]);
@@ -145,7 +145,12 @@ export default function EggPriceChart({ selectedStore, store, highlight = false,
   if (error) return <p className="text-red-500 text-sm">Error: {error}</p>;
   // If preview and no history, render nothing. Otherwise show the standard message.
   if (!history.length) {
-    return preview ? null : <p className="text-gray-400 text-sm">No price history available.</p>;
+    if (preview) return null;
+    return (
+      <p className="text-gray-400 text-sm">
+        {zipCode ? `No data available for ${zipCode}.` : 'No price history available.'}
+      </p>
+    );
   }
 
   return <ChartRenderer />;

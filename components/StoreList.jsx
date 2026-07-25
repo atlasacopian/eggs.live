@@ -9,8 +9,15 @@ export default function StoreList({
   priceType = 'regular',
   isMobile = false,
   maxListHeight = '400px',
+  zipCode = null,
 }) {
-  if (!stores.length) return <div>No stores found in this area</div>
+  if (!stores.length) {
+    return (
+      <div style={{ color: '#888', fontSize: '0.85rem', padding: '8px 10px' }}>
+        {zipCode ? `No data available for ${zipCode}.` : 'No stores found in this area.'}
+      </div>
+    )
+  }
 
   const storeLineStyle = {
     display: 'flex',

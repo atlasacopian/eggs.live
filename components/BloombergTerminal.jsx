@@ -111,6 +111,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
                 priceType={priceType}
                 isMobile={isMobile}
                 maxListHeight={storeListMaxHeight}
+                zipCode={zipCode}
               />
             </TerminalTile>
             <TerminalTile
@@ -120,7 +121,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
                 minHeight: isMobile ? '200px' : localStoresRowMinHeight || 'auto',
               }}
             >
-              <EggPriceChart selectedStore={selectedStore} isMobile={isMobile} />
+              <EggPriceChart selectedStore={selectedStore} isMobile={isMobile} zipCode={zipCode} />
             </TerminalTile>
 
 
