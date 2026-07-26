@@ -112,7 +112,7 @@
 
 .promptWrapper {
   position: fixed;
-  bottom: 12vh; /* sit just under the egg instead of overlapping it */
+  bottom: 18vh; /* sit just under the egg instead of overlapping it */
   left: 50%;
   transform: translateX(-50%);
   z-index: 20;
