@@ -1,0 +1,30 @@
+name: HPAI Detections Fetcher
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: '30 7 * * *'  # every day at 07:30 UTC, shortly after the state-level fetcher
+
+jobs:
+  run-fetcher:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Install deps
+        run: npm ci
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Validate secrets
+        run: bash scripts/ci-require-env.sh SUPABASE_URL SUPABASE_SERVICE_KEY
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      - name: Run HPAI detections ingest
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          NODE_OPTIONS: '--no-warnings'
+        run: node scripts/fetch-hpai-aphis-detections.js

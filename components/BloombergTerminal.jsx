@@ -9,6 +9,7 @@ import FredChart from './FredChart.jsx';
 import EggNewsPanel from './EggNewsPanel.jsx';
 import NationalStoreStats from './NationalStoreStats.jsx';
 import StoreHeatMap from './StoreHeatMap.jsx';
+import BirdFluPanel from './BirdFluPanel.jsx';
 
 const MOBILE_BREAKPOINT = 768;
 
@@ -234,6 +235,15 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
               <div style={{ height: '100%', overflowY: 'auto', paddingRight: '4px' }}>
                 <EggNewsPanel fontSize={isMobile ? '0.75rem' : '0.85rem'} />
               </div>
+            </TerminalTile>
+
+            {/* Bird Flu (HPAI) Detections */}
+            <TerminalTile
+              title="Bird Flu (HPAI) Detections"
+              span={getSpan(6)}
+              style={{ minHeight: isMobile ? '280px' : '320px', maxHeight: isMobile ? '280px' : '320px' }}
+            >
+              <BirdFluPanel />
             </TerminalTile>
 
             {/* Store Coverage - Row */}
