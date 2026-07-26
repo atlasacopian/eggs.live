@@ -78,16 +78,12 @@ export function Experience({ onInteractionStart }) {
         centerRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.5) * 0.1;
         centerRef.current.rotation.z = Math.sin(state.clock.elapsedTime * 0.3) * 0.05;
       } else {
-        // Reduced sensitivity for a smoother, less aggressive tip
-        const targetY = mouse.current.x * 0.5;
-        const targetX = (mouse.current.y * 0.4) + (Math.abs(mouse.current.x) * 0.2);
-        // Smooth interpolation for tipping
-        centerRef.current.rotation.y = THREE.MathUtils.lerp(centerRef.current.rotation.y, targetY, 0.1);
-        centerRef.current.rotation.x = THREE.MathUtils.lerp(centerRef.current.rotation.x, targetX, 0.1);
-        // Clamp rotations for a gentler range
-        centerRef.current.rotation.y = THREE.MathUtils.clamp(centerRef.current.rotation.y, -0.5, 0.5);
-        centerRef.current.rotation.x = THREE.MathUtils.clamp(centerRef.current.rotation.x, -0.05, 0.5);
-        // Reset any Z rotation to keep it stable
+        // Side-to-side swivel only, no vertical tipping
+        const targetY = mouse.current.x * 1.4;
+        centerRef.current.rotation.y = THREE.MathUtils.lerp(centerRef.current.rotation.y, targetY, 0.18);
+        centerRef.current.rotation.y = THREE.MathUtils.clamp(centerRef.current.rotation.y, -1.4, 1.4);
+        // Keep X and Z rotation stable (no up/down tip)
+        centerRef.current.rotation.x = 0;
         centerRef.current.rotation.z = 0;
       }
     }
