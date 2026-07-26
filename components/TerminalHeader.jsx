@@ -23,8 +23,8 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
     const mm = String(date.getMonth() + 1).padStart(2, '0');
     const dd = String(date.getDate()).padStart(2, '0');
     const yyyy = date.getFullYear();
-    // Local time with seconds, no time zone abbreviation
-    const timeString = date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    // Local time with seconds, 24-hour format, no time zone abbreviation
+    const timeString = date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
     return `${mm}/${dd}/${yyyy} ${timeString}`;
   };
 
