@@ -74,30 +74,25 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
   };
 
   const viewButtonStyle = {
-    background: '#111111',
-    color: '#cccccc',
-    borderWidth: '1px',
-    borderStyle: 'solid',
-    borderColor: '#333333',
+    background: 'transparent',
+    color: '#888888',
+    border: 'none',
     padding: '4px 8px',
     cursor: 'pointer',
     fontFamily: 'Menlo, monospace',
     fontSize: '0.8rem',
     textTransform: 'uppercase',
-    marginLeft: '4px',
-    marginRight: '4px',
-    minWidth: '90px',
+    letterSpacing: '1px',
+    // Fixed width sized for the longest bracketed label ("[ NATIONAL ]") so
+    // switching which view is active doesn't shift the other button.
+    width: '100px',
     textAlign: 'center',
     boxSizing: 'border-box',
-    opacity: 0.8,
   };
 
   const activeViewButtonStyle = {
     ...viewButtonStyle,
-    background: '#000000',
     color: '#fff',
-    borderColor: '#fff',
-    opacity: 1,
   };
 
   const dateTimeStyle = isMobile ? {
@@ -120,17 +115,17 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
       </div>
 
       <div style={buttonGroupStyle}>
-        <button 
-          onClick={() => onSetView('local')} 
+        <button
+          onClick={() => onSetView('local')}
           style={view === 'local' ? activeViewButtonStyle : viewButtonStyle}
         >
-          Local
+          {view === 'local' ? '[ LOCAL ]' : 'LOCAL'}
         </button>
-        <button 
-          onClick={() => onSetView('national')} 
+        <button
+          onClick={() => onSetView('national')}
           style={view === 'national' ? activeViewButtonStyle : viewButtonStyle}
         >
-          National
+          {view === 'national' ? '[ NATIONAL ]' : 'NATIONAL'}
         </button>
       </div>
 
