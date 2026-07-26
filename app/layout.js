@@ -16,8 +16,8 @@ const SITE_DESCRIPTION =
 export const metadata = {
   metadataBase: new URL('https://eggs.live'),
   title: {
-    default: 'Live Egg Prices Near You | eggs.live',
-    template: '%s | eggs.live',
+    default: 'Live Egg Prices Near You',
+    template: '%s',
   },
   description: SITE_DESCRIPTION,
   keywords: [
