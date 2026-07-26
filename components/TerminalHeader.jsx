@@ -18,14 +18,13 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
   useEffect(()=>{setTempZip(zipCode||'')},[zipCode]);
 
   const formatDateTime = (date) => {
-    // Format date as MM-DD-YYYY
+    // Format date as MM/DD/YYYY
     const mm = String(date.getMonth() + 1).padStart(2, '0');
     const dd = String(date.getDate()).padStart(2, '0');
     const yyyy = date.getFullYear();
-    // Get local time string with time zone abbreviation
-    const timeString = date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    const tzAbbr = date.toLocaleTimeString(undefined, { timeZoneName: 'short' }).split(' ').pop();
-    return `${mm}-${dd}-${yyyy} ${timeString} ${tzAbbr}`;
+    // Local time, no seconds and no time zone abbreviation
+    const timeString = date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    return `${mm}/${dd}/${yyyy} ${timeString}`;
   };
 
   const headerStyle = {
