@@ -9,12 +9,12 @@
 
 .option {
   font-family: 'Roboto Mono', monospace; /* ensure consistent monospace width */
-  position: relative; 
-  cursor: pointer; 
+  position: relative;
+  cursor: pointer;
   text-transform: uppercase;
-  letter-spacing: 2px; 
+  letter-spacing: 2px;
   font-size: 9px; /* Default desktop size */
-  color: #000000;
+  color: #ffffff;
   background-color: transparent;
   padding: 0 0.5rem; /* consistent spacing */
   border-radius: 4px; 
@@ -41,7 +41,7 @@
 
 /* Ensure ZIP input is clearly visible */
 .zipInput {
-  color: #333333 !important;             /* neutral gray, matches bracket color - no orange */
+  color: #cccccc !important;             /* neutral light gray, matches bracket color - no orange */
   background: transparent !important;    /* no white box */
   border: none !important;               /* remove default input border */
   outline: none !important;              /* remove browser's default focus ring */
@@ -54,7 +54,7 @@
   text-align: center;
   height: 100%;
   line-height: 36px;
-  caret-color: #333333 !important;
+  caret-color: #cccccc !important;
 }
 
 .zipInput:focus,
@@ -99,7 +99,7 @@
 .option.zipActive:focus-within,
 .option.zipActive:active,
 .option.zipActive:focus {
-  color: #333333 !important;
+  color: #cccccc !important;
 }
 
 .option.zipActive .bracket,
@@ -107,12 +107,12 @@
 .option.zipActive:focus-within .bracket,
 .option.zipActive:active .bracket,
 .option.zipActive:focus .bracket {
-  color: #333333 !important;
+  color: #cccccc !important;
 }
 
 .promptWrapper {
   position: fixed;
-  bottom: 18vh; /* sit just under the egg instead of overlapping it */
+  bottom: 16vh; /* sit just under the egg instead of overlapping it */
   left: 50%;
   transform: translateX(-50%);
   z-index: 20;
@@ -120,6 +120,13 @@
   flex-direction: column;
   align-items: center;
   width: auto;
+  /* Frosted glass panel behind the prompt */
+  padding: 14px 28px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 /* Remove redundant overrides at bottom if they conflict */
@@ -161,7 +168,7 @@
 }
 
 .orText {
-  color: #000000;
+  color: rgba(255, 255, 255, 0.6);
   cursor: default;
   font-size: 9px;
   letter-spacing: 2px;
@@ -211,8 +218,8 @@
 }
 
 .option.zipActive {
-  border-color: rgba(0, 0, 0, 0.2);
-  background-color: rgba(0, 0, 0, 0.03);
+  border-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 /* Fixed width so the bracket positions don't shift when the ZIP button
@@ -244,7 +251,7 @@
   font-family: 'Roboto Mono', monospace;
   font-size: 9px;
   letter-spacing: 1px;
-  color: #cc3333;
+  color: #ff6b6b;
 }
 
 @keyframes pressEnterFade {

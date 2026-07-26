@@ -46,6 +46,7 @@ ModelPrimitive.displayName = 'ModelPrimitive'
 // Static Experience component for egg carton
 export function Experience({ onInteractionStart }) {
   const centerRef = useRef()
+  const pointLightRef = useRef()
   const mouse = useRef({ x: 0, y: 0 }) // For desktop mouse tracking
   const [isMobile, setIsMobile] = useState(false);
 
@@ -91,6 +92,14 @@ export function Experience({ onInteractionStart }) {
         centerRef.current.rotation.z = 0;
       }
     }
+    // Subtle warm light that drifts toward the cursor, layered on top of the
+    // existing lighting rather than replacing it - additive only.
+    if (pointLightRef.current && !isMobile) {
+      const targetLX = mouse.current.x * 4;
+      const targetLY = mouse.current.y * 3 + 2;
+      pointLightRef.current.position.x = THREE.MathUtils.lerp(pointLightRef.current.position.x, targetLX, 0.08);
+      pointLightRef.current.position.y = THREE.MathUtils.lerp(pointLightRef.current.position.y, targetLY, 0.08);
+    }
   })
 
   return (
@@ -104,6 +113,9 @@ export function Experience({ onInteractionStart }) {
       {/* Directional lights for subtle highlights */}
       <directionalLight position={[5, 5, 5]} intensity={0.6} />
       <directionalLight position={[-5, 5, -5]} intensity={0.3} />
+      {/* Warm cursor-following accent light - additive, doesn't touch the
+          base lighting above */}
+      <pointLight ref={pointLightRef} position={[0, 2, 6]} intensity={0.5} color="#ffc107" distance={15} decay={2} />
       {/* Ground shadows */}
       <ContactShadows resolution={1024} position={[0, -0.01, 0]} scale={10} blur={2} far={0.5} opacity={0.5} />
       <Suspense fallback={null}>
