@@ -68,9 +68,10 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    flex: isMobile ? 'none' : '0 0 200px',
+    gap: '8px',
+    flex: isMobile ? 'none' : '0 0 240px',
     marginBottom: isMobile ? '5px' : '0',
-    width: isMobile ? '100%' : '200px',
+    width: isMobile ? '100%' : '240px',
   };
 
   const viewButtonStyle = {
@@ -82,10 +83,10 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
     fontFamily: 'Menlo, monospace',
     fontSize: '0.8rem',
     textTransform: 'uppercase',
-    letterSpacing: '1px',
+    whiteSpace: 'nowrap',
     // Fixed width sized for the longest bracketed label ("[ NATIONAL ]") so
     // switching which view is active doesn't shift the other button.
-    width: '100px',
+    width: '110px',
     textAlign: 'center',
     boxSizing: 'border-box',
   };
@@ -131,32 +132,34 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
 
       <div style={dateTimeStyle}>
         <span>{formatDateTime(currentDateTime)}</span>
-        <span style={{ marginLeft: 16, fontWeight: 600 }}>
-          ZIP CODE:{' '}
-          {editingZip ? (
-            <input
-              value={tempZip}
-              onChange={e=>setTempZip(e.target.value)}
-              onBlur={()=>setEditingZip(false)}
-              onKeyDown={e=>{if(e.key==='Enter'){setEditingZip(false); if(tempZip.match(/^\d{5}$/)){router.push(`/${tempZip}`)}}}}
-              style={{width:70,boxSizing:'border-box',background:'#000',color:'#fff',border:'1px solid transparent',outline:'none',boxShadow:'none',fontFamily:'Menlo, monospace',fontSize:16,fontWeight:600,textAlign:'left',transform:`scale(${isMobile ? 0.75 : 0.85})`,transformOrigin:'left center'}}
-              type="text"
-              inputMode="numeric"
-              maxLength={5}
-              autoComplete="off"
-              data-1p-ignore
-              data-lpignore="true"
-              autoFocus
-            />
-          ) : (
-            <span
-              style={{display:'inline-block',width:70,boxSizing:'border-box',border:'1px solid transparent',textAlign:'left',cursor:'pointer'}}
-              onClick={()=>setEditingZip(true)}
-            >
-              {zipCode || 'N/A'}
-            </span>
-          )}
-        </span>
+        {view === 'local' && (
+          <span style={{ marginLeft: 16, fontWeight: 600 }}>
+            ZIP CODE:{' '}
+            {editingZip ? (
+              <input
+                value={tempZip}
+                onChange={e=>setTempZip(e.target.value)}
+                onBlur={()=>setEditingZip(false)}
+                onKeyDown={e=>{if(e.key==='Enter'){setEditingZip(false); if(tempZip.match(/^\d{5}$/)){router.push(`/${tempZip}`)}}}}
+                style={{width:70,boxSizing:'border-box',background:'#000',color:'#fff',border:'1px solid transparent',outline:'none',boxShadow:'none',fontFamily:'Menlo, monospace',fontSize:16,fontWeight:600,textAlign:'left',transform:`scale(${isMobile ? 0.75 : 0.85})`,transformOrigin:'left center'}}
+                type="text"
+                inputMode="numeric"
+                maxLength={5}
+                autoComplete="off"
+                data-1p-ignore
+                data-lpignore="true"
+                autoFocus
+              />
+            ) : (
+              <span
+                style={{display:'inline-block',width:70,boxSizing:'border-box',border:'1px solid transparent',textAlign:'left',cursor:'pointer'}}
+                onClick={()=>setEditingZip(true)}
+              >
+                {zipCode || 'N/A'}
+              </span>
+            )}
+          </span>
+        )}
       </div>
     </div>
   );
