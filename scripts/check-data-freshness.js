@@ -21,7 +21,7 @@ const CHECKS = [
   { table: 'target_egg_price_stats', dateCol: 'captured_date', workflow: 'Target Egg Prices', expectDays: 2 },
   { table: 'usda_weekly_egg_prices', dateCol: 'report_end_date', workflow: 'National Daily (USDA)', expectDays: 14 },
   { table: 'FRED', dateCol: 'ref_date', workflow: 'National Historical (FRED)', expectDays: 45 },
-  { table: 'hpai_state_daily_stats', dateCol: 'captured_date', workflow: 'HPAI State Fetcher (CDC flock CSV)', expectDays: 2 },
+  { table: 'hpai_detections', dateCol: 'captured_at', workflow: 'HPAI Detections Fetcher (APHIS dashboard)', expectDays: 2 },
   { table: 'egg_news_articles', dateCol: 'published_at', workflow: '(no GH workflow — manual?)', expectDays: 7 },
   { table: 'cdc_bird_flu_summary', dateCol: 'as_of_date', workflow: '(no GH workflow — manual?)', expectDays: 14 },
 ];
