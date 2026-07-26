@@ -123,11 +123,35 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
     whiteSpace: 'nowrap',
   };
 
-  const zipRowStyle = {
-    textAlign: isMobile ? 'center' : 'right',
-    fontSize: isMobile ? '0.75rem' : '0.85rem',
-    fontWeight: 600,
-    marginTop: '4px',
+  const zipInputStyle = {
+    ...activeViewButtonStyle,
+    background: 'transparent',
+    border: 'none',
+    outline: 'none',
+    boxShadow: 'none',
+    padding: '4px 8px',
+    // iOS Safari auto-zooms on focus for any input under 16px; render at 16px
+    // and scale back down visually to match the button's 0.8rem look.
+    fontSize: isMobile ? 16 : '0.8rem',
+    transform: isMobile ? 'scale(0.8)' : undefined,
+    transformOrigin: 'center',
+  };
+
+  const handleZipSubmit = () => {
+    setEditingZip(false);
+    if (tempZip.match(/^\d{5}$/) && tempZip !== zipCode) {
+      router.push(`/${tempZip}`);
+    } else {
+      setTempZip(zipCode || '');
+    }
+  };
+
+  const handleLocalClick = () => {
+    if (view === 'local') {
+      setEditingZip(true);
+    } else {
+      onSetView('local');
+    }
   };
 
   return (
@@ -138,12 +162,29 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
         </div>
 
         <div style={buttonGroupStyle}>
-          <button
-            onClick={() => onSetView('local')}
-            style={view === 'local' ? activeViewButtonStyle : viewButtonStyle}
-          >
-            {view === 'local' ? '[ LOCAL ]' : 'LOCAL'}
-          </button>
+          {editingZip ? (
+            <input
+              value={tempZip}
+              onChange={e => setTempZip(e.target.value)}
+              onBlur={handleZipSubmit}
+              onKeyDown={e => { if (e.key === 'Enter') handleZipSubmit(); }}
+              style={zipInputStyle}
+              type="text"
+              inputMode="numeric"
+              maxLength={5}
+              autoComplete="off"
+              data-1p-ignore
+              data-lpignore="true"
+              autoFocus
+            />
+          ) : (
+            <button
+              onClick={handleLocalClick}
+              style={view === 'local' ? activeViewButtonStyle : viewButtonStyle}
+            >
+              {view === 'local' ? `[ ${zipCode || 'N/A'} ]` : (zipCode || 'N/A')}
+            </button>
+          )}
           <button
             onClick={() => onSetView('national')}
             style={view === 'national' ? activeViewButtonStyle : viewButtonStyle}
@@ -156,35 +197,6 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
           <span>{formatDateTime(currentDateTime)}</span>
         </div>
       </div>
-
-      {view === 'local' && (
-        <div style={zipRowStyle}>
-          ZIP CODE:{' '}
-          {editingZip ? (
-            <input
-              value={tempZip}
-              onChange={e=>setTempZip(e.target.value)}
-              onBlur={()=>setEditingZip(false)}
-              onKeyDown={e=>{if(e.key==='Enter'){setEditingZip(false); if(tempZip.match(/^\d{5}$/)){router.push(`/${tempZip}`)}}}}
-              style={{width:70,boxSizing:'border-box',background:'#000',color:'#fff',border:'1px solid transparent',outline:'none',boxShadow:'none',fontFamily:'Menlo, monospace',fontSize:16,fontWeight:600,textAlign:'left',transform:`scale(${isMobile ? 0.75 : 0.85})`,transformOrigin:'left center'}}
-              type="text"
-              inputMode="numeric"
-              maxLength={5}
-              autoComplete="off"
-              data-1p-ignore
-              data-lpignore="true"
-              autoFocus
-            />
-          ) : (
-            <span
-              style={{display:'inline-block',width:70,boxSizing:'border-box',border:'1px solid transparent',textAlign:isMobile ? 'center' : 'left',cursor:'pointer'}}
-              onClick={()=>setEditingZip(true)}
-            >
-              {zipCode || 'N/A'}
-            </span>
-          )}
-        </div>
-      )}
     </div>
   );
 }
