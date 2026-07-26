@@ -186,13 +186,19 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
               style={{
                 ...(view === 'local' ? activeViewButtonStyle : viewButtonStyle),
                 // Only the active zip is click-to-edit; hint that with an
-                // I-beam cursor (vs. the pointer hand on plain nav buttons)
-                // plus a plain white underline on hover (no color change).
+                // I-beam cursor (vs. the pointer hand on plain nav buttons).
                 cursor: view === 'local' ? 'text' : 'pointer',
-                textDecoration: view === 'local' && zipHover ? 'underline' : 'none',
               }}
             >
-              {view === 'local' ? `[ ${zipCode || 'N/A'} ]` : (zipCode || 'N/A')}
+              {view === 'local' ? (
+                <>
+                  {'[ '}
+                  <span style={{ textDecoration: zipHover ? 'underline' : 'none' }}>
+                    {zipCode || 'N/A'}
+                  </span>
+                  {' ]'}
+                </>
+              ) : (zipCode || 'N/A')}
             </button>
           )}
           <button
