@@ -187,11 +187,9 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
                 ...(view === 'local' ? activeViewButtonStyle : viewButtonStyle),
                 // Only the active zip is click-to-edit; hint that with an
                 // I-beam cursor (vs. the pointer hand on plain nav buttons)
-                // plus an underline + accent color on hover.
+                // plus a plain white underline on hover (no color change).
                 cursor: view === 'local' ? 'text' : 'pointer',
-                ...(view === 'local' && zipHover
-                  ? { color: 'var(--accent-color)', textDecoration: 'underline' }
-                  : null),
+                textDecoration: view === 'local' && zipHover ? 'underline' : 'none',
               }}
             >
               {view === 'local' ? `[ ${zipCode || 'N/A'} ]` : (zipCode || 'N/A')}
