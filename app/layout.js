@@ -16,7 +16,7 @@ const SITE_DESCRIPTION =
 export const metadata = {
   metadataBase: new URL('https://eggs.live'),
   title: {
-    default: 'Egg Price Tracker – Live Egg Prices Near You | eggs.live',
+    default: 'Live Egg Prices Near You | eggs.live',
     template: '%s | eggs.live',
   },
   description: SITE_DESCRIPTION,
@@ -29,7 +29,7 @@ export const metadata = {
     'egg price by zip code',
   ],
   openGraph: {
-    title: 'Egg Price Tracker – Live Egg Prices Near You',
+    title: 'Live Egg Prices Near You',
     description: SITE_DESCRIPTION,
     url: 'https://eggs.live',
     siteName: 'eggs.live',
@@ -39,7 +39,7 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Egg Price Tracker – Live Egg Prices Near You',
+    title: 'Live Egg Prices Near You',
     description: SITE_DESCRIPTION,
     images: ['/logo_test2.png'],
   },
