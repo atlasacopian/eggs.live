@@ -3,7 +3,7 @@ import { unstable_cache } from 'next/cache';
 import Parser from 'rss-parser';
 
 /**
- * News providers (order): **GNews** (primary) → SerpHouse → Google News RSS.
+ * News providers (order): **GNews** (primary) → Google News RSS.
  * Set `GNEWS_API_KEY` in Vercel. Auth query param must be `apikey` (GNews v4).
  */
 // Short browser cache so UI recovers quickly after API/env fixes; s-maxage caps edge reuse.
@@ -14,7 +14,7 @@ const PRIORITY_SOURCES = [
   'Reuters','Associated Press','AP','Bloomberg','The Wall Street Journal','WSJ','The New York Times','CNN','BBC','NBC News','CBS News','ABC News','Fox News','Financial Times','CNBC','The Washington Post'
 ];
 
-/** SerpHouse + Google RSS fallback query */
+/** Google RSS fallback query */
 const QUERY = 'egg price OR egg prices OR egg shortage';
 
 // Simple phrases work more reliably than long OR chains; omit country for breadth (lang=en).
@@ -29,33 +29,6 @@ const GNEWS_SEARCH_QUERIES = [
 
 const RSS_UA =
   'Mozilla/5.0 (compatible; eggs.live/1.0; +https://eggs.live) AppleWebKit/537.36 (KHTML, like Gecko)';
-
-/** @returns {Promise<{ title: string, url: string, publishedAt: string, source: string }[]>} */
-async function fetchSerpHouseArticles(apiKey) {
-  const url = new URL('https://api.serphouse.com/serp/live');
-  url.searchParams.set('q', QUERY);
-  url.searchParams.set('serp_type', 'news');
-  url.searchParams.set('domain', 'google.com');
-  url.searchParams.set('lang', 'en');
-  url.searchParams.set('device', 'desktop');
-  url.searchParams.set('num_result', '30');
-  const res = await fetch(url.toString(), {
-    headers: { Authorization: `Bearer ${apiKey}` },
-    cache: 'no-store',
-  });
-  if (!res.ok) {
-    console.error('SerpHouse response not ok', res.status, await res.text().catch(() => ''));
-    return [];
-  }
-  const j = await res.json().catch(() => ({}));
-  const arr = j.results?.results?.news || [];
-  return arr.map((n) => ({
-    title: n.title,
-    url: n.url,
-    publishedAt: n.time || new Date().toISOString(),
-    source: n.channel || 'Unknown',
-  }));
-}
 
 /** One GNews search request; returns articles or []. */
 async function fetchGNewsSearchOnce(apiKey, q, max) {
@@ -151,22 +124,14 @@ async function fetchGoogleNewsRssArticles() {
 
 async function fetchNewsFromProviders() {
   const startTime = Date.now();
-  const SERPHOUSE_API_KEY = process.env.SERPHOUSE_API_KEY?.trim();
   const GNEWS_API_KEY = process.env.GNEWS_API_KEY?.trim();
 
   let raw = [];
-  let apiSource = 'Unknown';
   let gnewsHits = 0;
 
   if (GNEWS_API_KEY) {
     raw = await fetchGNewsArticles(GNEWS_API_KEY);
     gnewsHits = raw.length;
-    apiSource = 'GNews';
-  }
-
-  if (raw.length === 0 && SERPHOUSE_API_KEY) {
-    raw = await fetchSerpHouseArticles(SERPHOUSE_API_KEY);
-    apiSource = GNEWS_API_KEY ? 'SerpHouse (GNews fallback)' : 'SerpHouse';
   }
 
   // Google News RSS usually returns many items; merge so we are not stuck on 1–2 syndicated GNews URLs.
@@ -180,16 +145,11 @@ async function fetchNewsFromProviders() {
       rssAdded++;
     }
   }
-  if (rssAdded > 0) {
-    if (gnewsHits > 0) apiSource = 'GNews + Google News RSS';
-    else if (apiSource === 'SerpHouse' || apiSource.includes('SerpHouse'))
-      apiSource = `${apiSource} + Google News RSS`;
-    else if (raw.length > 0) apiSource = 'Google News RSS';
-  }
 
-  if (raw.length === 0) {
-    apiSource = 'Google News RSS';
-  }
+  let apiSource;
+  if (gnewsHits > 0 && rssAdded > 0) apiSource = 'GNews + Google News RSS';
+  else if (gnewsHits > 0) apiSource = 'GNews';
+  else apiSource = 'Google News RSS';
 
   console.log(
     `News provider fetch done in ${Date.now() - startTime}ms, raw count=${raw.length}, source=${apiSource}`
