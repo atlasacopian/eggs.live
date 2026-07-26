@@ -97,7 +97,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
           <>
             {/* Local View */}
             <TerminalTile
-              title="Store Prices"
+              title="Store Prices Today"
               span={getSpan(3)}
               style={{
                 minHeight: isMobile ? '200px' : localStoresRowMinHeight || 'auto',

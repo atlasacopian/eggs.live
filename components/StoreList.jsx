@@ -58,6 +58,26 @@ export default function StoreList({
     marginTop: 2,
   });
 
+  const staleStyle = {
+    fontSize: '0.75rem',
+    fontWeight: 600,
+    fontStyle: 'italic',
+    color: '#666',
+    lineHeight: 1,
+  };
+
+  // Scrapers write captured_date/captured_at as UTC calendar dates, so "today"
+  // is compared the same way to avoid drifting from what the data actually
+  // means by "today".
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const isStale = (priceDate) => Boolean(priceDate) && String(priceDate).slice(0, 10) !== todayStr;
+
+  const renderPrice = (price, priceDate) => {
+    if (price == null) return <span style={priceStyle}>--</span>;
+    if (isStale(priceDate)) return <span style={staleStyle}>STALE</span>;
+    return <span style={priceStyle}>{`$${price.toFixed(2)}`}</span>;
+  };
+
   return (
     <div
       style={{
@@ -102,7 +122,7 @@ export default function StoreList({
             <div style={{ display:'flex' }}>
               {/* Regular Column */}
               <div style={{ flex: 1, display:'flex', flexDirection:'column', alignItems:'center' }}>
-                <span style={priceStyle}>{s.regular_price ? `$${s.regular_price.toFixed(2)}` : '--'}</span>
+                {renderPrice(s.regular_price, s.regular_price_date)}
                 {typeof s.regular_change === 'number' && (
                   <span style={changeStyle(s.regular_change)}>
                     {s.regular_change > 0 ? '▲' : s.regular_change < 0 ? '▼' : '→'}{Math.abs(s.regular_change).toFixed(1)}%
@@ -112,7 +132,7 @@ export default function StoreList({
 
               {/* Organic Column */}
               <div style={{ flex: 1, display:'flex', flexDirection:'column', alignItems:'center' }}>
-                <span style={priceStyle}>{s.organic_price ? `$${s.organic_price.toFixed(2)}` : '--'}</span>
+                {renderPrice(s.organic_price, s.organic_price_date)}
                 {typeof s.organic_change === 'number' && (
                   <span style={changeStyle(s.organic_change)}>
                     {s.organic_change > 0 ? '▲' : s.organic_change < 0 ? '▼' : '→'}{Math.abs(s.organic_change).toFixed(1)}%
