@@ -60,9 +60,12 @@ async function getToken () {
   return cachedToken;
 }
 
-// regex helpers: shell eggs & 12-count
-const RE_EGG = /(shell\s*)?egg(s)?/i;
+// regex helpers: shell eggs & 12-count. Word-boundaried so "veggies" etc. can't
+// false-match the bare "egg" substring. Kept in sync with the exclude list and
+// organic check in fetch-target-egg-prices-intercept.js's classifyEggProduct.
+const RE_EGG = /\b(shell\s+)?eggs?\b/i;
 const RE_TWELVE = /(12\s*(ct|pk|count|pack|dozen|doz)\b|\bdozen\b|\bdoz\b)/i;
+const EXCLUDE_WORDS = ['eggo', 'frozen', 'pancake', 'waffle', 'muffin', 'protein', 'powder', 'hard-cooked', 'scramble', 'liquid', 'bites'];
 
 // The classify function is removed as its logic is now integrated into fetchStoreEggs
 /*
@@ -247,10 +250,16 @@ async function fetchStoreEggs (location_id_raw) {
 
       const itemSize = p.items?.[0]?.size?.toLowerCase() || ''; // Ensure it's a string, default to empty
 
+      // Exclude non-carton egg products (Eggo, liquid egg substitute, egg
+      // bites, etc.) before classifying - same exclusion list Target uses.
+      if (EXCLUDE_WORDS.some((w) => combinedName.toLowerCase().includes(w))) {
+        continue;
+      }
+
       // More lenient egg product identification:
       // 1. Check for explicit "egg" keywords in description or size.
       let isEggKeywordPresent = RE_EGG.test(combinedName) || RE_EGG.test(itemSize);
-      
+
       // 2. Check for 12-count packaging (ct, pk, doz, dozen - not generic units like oz).
       const isDozenPackaging = RE_TWELVE.test(combinedName) || RE_TWELVE.test(itemSize);
 
@@ -262,7 +271,8 @@ async function fetchStoreEggs (location_id_raw) {
         continue;
       }
 
-      const type = /organic/i.test(combinedName) ? 'organic' : 'regular'; // Organic check remains on mainDesc
+      // Organic check matches Target's: substring "organic" or standalone "org".
+      const type = (/organic/i.test(combinedName) || /\borg\b/i.test(combinedName)) ? 'organic' : 'regular';
       
       // ---- NEW: iterate over *all* item records (different fulfillment channels) ----
       const allItems = Array.isArray(p.items) ? p.items : [];
