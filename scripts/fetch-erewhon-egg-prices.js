@@ -27,12 +27,17 @@ const ALGOLIA_API_KEY = '107758089d485c894f7205d715457357';
 
 const EXCLUDE_WORDS = ['egg white', 'liquid', 'hard-cooked', 'hard cooked', 'boiled', 'duck', 'scramble', 'quesadilla', 'bites'];
 
+// Erewhon's dozen-carton inventory is essentially all-organic; the one
+// exception ("Non-GMO Corn & Soy Free Pasture Raised Medium Eggs") is itself
+// a premium item, not a real "regular/conventional" carton the way Kroger or
+// Target stock one - so it's excluded rather than tracked as regular. We
+// don't poll for a "regular" category here at all.
 function classifyEgg(hit) {
   if (hit.SubCategory !== 'Eggs') return null;
   if (hit.Size !== '12 ct') return null;
   const name = (hit.ProductName || '').toLowerCase();
   if (EXCLUDE_WORDS.some((w) => name.includes(w))) return null;
-  return (hit.Attributes || []).includes('Organic') ? 'organic' : 'regular';
+  return (hit.Attributes || []).includes('Organic') ? 'organic' : null;
 }
 
 async function searchEggs(locationId) {

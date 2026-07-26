@@ -41,7 +41,7 @@ export async function GET(req) {
     // Query Target stats
     const { data, error } = await sb
       .from('target_egg_price_stats')
-      .select('captured_date, avg_price, product_type')
+      .select('captured_date, min_price, product_type')
       .eq('store_id', targetId)
       .order('captured_date', { ascending: true });
     if (error) {
@@ -52,7 +52,7 @@ export async function GET(req) {
     const byDate = {};
     for (const item of data) {
       if (!byDate[item.captured_date]) byDate[item.captured_date] = { date: item.captured_date };
-      byDate[item.captured_date][item.product_type] = item.avg_price;
+      byDate[item.captured_date][item.product_type] = item.min_price;
     }
     historyData = Object.values(byDate).map(item => ({
       ...item,
@@ -64,7 +64,7 @@ export async function GET(req) {
     // Try with 'K' prefix
     ({ data, error } = await sb
       .from('kroger_egg_prices_new')
-      .select('captured_date, regular_avg, organic_avg')
+      .select('captured_date, regular_min, organic_min')
       .eq('location_id', storeIdentifier)
       .order('captured_date', { ascending: true }));
     if (error) {
@@ -76,7 +76,7 @@ export async function GET(req) {
       const idNoK = storeIdentifier.slice(1);
       const { data: dataNoK, error: errorNoK } = await sb
         .from('kroger_egg_prices_new')
-        .select('captured_date, regular_avg, organic_avg')
+        .select('captured_date, regular_min, organic_min')
         .eq('location_id', idNoK)
         .order('captured_date', { ascending: true });
       if (errorNoK) {
@@ -96,15 +96,15 @@ export async function GET(req) {
     }
     historyData = (data || []).map(item => ({
       date: item.captured_date + 'T12:00:00Z',
-      regular: item.regular_avg,
-      organic: item.organic_avg,
+      regular: item.regular_min,
+      organic: item.organic_min,
     }));
   } else if (/^E[A-Z]+$/.test(storeIdentifier)) {
     // Erewhon: strip 'E' prefix to get the Algolia location_id (e.g. 'GROVE')
     const locationId = storeIdentifier.slice(1);
     const { data, error } = await sb
       .from('erewhon_egg_prices')
-      .select('captured_date, regular_avg, organic_avg')
+      .select('captured_date, regular_min, organic_min')
       .eq('location_id', locationId)
       .order('captured_date', { ascending: true });
     if (error) {
@@ -113,8 +113,8 @@ export async function GET(req) {
     }
     historyData = (data || []).map(item => ({
       date: item.captured_date + 'T12:00:00Z',
-      regular: item.regular_avg,
-      organic: item.organic_avg,
+      regular: item.regular_min,
+      organic: item.organic_min,
     }));
   } else {
     // Query LA stats (existing logic)
