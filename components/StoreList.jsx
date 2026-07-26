@@ -58,7 +58,13 @@ export default function StoreList({
     marginTop: 2,
   });
 
-  const oldPriceStyle = { ...priceStyle, color: '#666' };
+  const staleStyle = {
+    fontSize: '0.85rem',
+    fontWeight: 600,
+    fontStyle: 'italic',
+    color: '#666',
+    lineHeight: 1,
+  };
 
   const dateLabelStyle = {
     fontSize: '0.6rem',
@@ -67,30 +73,45 @@ export default function StoreList({
     marginTop: 1,
   };
 
-  // Scrapers write captured_date/captured_at as UTC calendar dates, so "how
-  // many days old" is computed the same way to avoid drifting from what the
-  // data actually means by a given day.
-  const todayUtc = new Date(new Date().toISOString().slice(0, 10));
+  // Freshness is judged in the viewer's own local time, not the server's or
+  // the scraper's timezone - a price from "yesterday" should mean yesterday
+  // wherever the person looking at this page happens to be.
+  // new Date("YYYY-MM-DD") parses as UTC midnight (a JS quirk for date-only
+  // strings), so build a local-midnight Date manually instead.
+  const parseDateOnlyLocal = (dateStr) => {
+    const [y, m, d] = String(dateStr).slice(0, 10).split('-').map(Number);
+    return new Date(y, m - 1, d);
+  };
+  const now = new Date();
+  const todayLocalMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const daysOld = (priceDate) => {
     if (!priceDate) return null;
-    const priceDayUtc = new Date(String(priceDate).slice(0, 10));
-    return Math.round((todayUtc - priceDayUtc) / 86_400_000);
+    return Math.round((todayLocalMidnight - parseDateOnlyLocal(priceDate)) / 86_400_000);
   };
   const formatShortDate = (priceDate) => {
-    const d = new Date(priceDate);
-    return `${d.getUTCMonth() + 1}/${d.getUTCDate()}`;
+    const d = parseDateOnlyLocal(priceDate);
+    return `${d.getMonth() + 1}/${d.getDate()}`;
   };
 
   // Never label a price "today" if it isn't - always show the actual pull
   // date so freshness is explicit rather than assumed. A price 2+ days old
-  // (a real gap, not just today's batch not having reached this store yet)
-  // is additionally dimmed to flag it as genuinely stale.
+  // is a real data gap (not just today's batch not having reached this
+  // store yet), so the number itself is replaced with "STALE" rather than
+  // shown as if it were still a usable current price.
   const renderPrice = (price, priceDate) => {
     if (price == null) return <span style={priceStyle}>--</span>;
     const age = daysOld(priceDate);
+    if (age != null && age >= 2) {
+      return (
+        <>
+          <span style={staleStyle}>STALE</span>
+          <span style={dateLabelStyle}>{formatShortDate(priceDate)}</span>
+        </>
+      );
+    }
     return (
       <>
-        <span style={age != null && age >= 2 ? oldPriceStyle : priceStyle}>{`$${price.toFixed(2)}`}</span>
+        <span style={priceStyle}>{`$${price.toFixed(2)}`}</span>
         <span style={dateLabelStyle}>{formatShortDate(priceDate)}</span>
       </>
     );
