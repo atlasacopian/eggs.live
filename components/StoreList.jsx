@@ -58,24 +58,42 @@ export default function StoreList({
     marginTop: 2,
   });
 
-  const staleStyle = {
-    fontSize: '0.75rem',
-    fontWeight: 600,
+  const oldPriceStyle = { ...priceStyle, color: '#666' };
+
+  const dateLabelStyle = {
+    fontSize: '0.6rem',
+    color: '#888',
     fontStyle: 'italic',
-    color: '#666',
-    lineHeight: 1,
+    marginTop: 1,
   };
 
-  // Scrapers write captured_date/captured_at as UTC calendar dates, so "today"
-  // is compared the same way to avoid drifting from what the data actually
-  // means by "today".
-  const todayStr = new Date().toISOString().slice(0, 10);
-  const isStale = (priceDate) => Boolean(priceDate) && String(priceDate).slice(0, 10) !== todayStr;
+  // Scrapers write captured_date/captured_at as UTC calendar dates, so "how
+  // many days old" is computed the same way to avoid drifting from what the
+  // data actually means by a given day.
+  const todayUtc = new Date(new Date().toISOString().slice(0, 10));
+  const daysOld = (priceDate) => {
+    if (!priceDate) return null;
+    const priceDayUtc = new Date(String(priceDate).slice(0, 10));
+    return Math.round((todayUtc - priceDayUtc) / 86_400_000);
+  };
+  const formatShortDate = (priceDate) => {
+    const d = new Date(priceDate);
+    return `${d.getUTCMonth() + 1}/${d.getUTCDate()}`;
+  };
 
+  // Never label a price "today" if it isn't - always show the actual pull
+  // date so freshness is explicit rather than assumed. A price 2+ days old
+  // (a real gap, not just today's batch not having reached this store yet)
+  // is additionally dimmed to flag it as genuinely stale.
   const renderPrice = (price, priceDate) => {
     if (price == null) return <span style={priceStyle}>--</span>;
-    if (isStale(priceDate)) return <span style={staleStyle}>STALE</span>;
-    return <span style={priceStyle}>{`$${price.toFixed(2)}`}</span>;
+    const age = daysOld(priceDate);
+    return (
+      <>
+        <span style={age != null && age >= 2 ? oldPriceStyle : priceStyle}>{`$${price.toFixed(2)}`}</span>
+        <span style={dateLabelStyle}>{formatShortDate(priceDate)}</span>
+      </>
+    );
   };
 
   return (
