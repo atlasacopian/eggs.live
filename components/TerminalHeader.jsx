@@ -31,7 +31,7 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
   const headerStyle = {
     background: '#000000',
     color: '#ffffff',
-    padding: isMobile ? '4px 8px' : '4px 12px',
+    padding: isMobile ? '0 8px 4px' : '0 12px 4px',
     display: 'flex',
     flexDirection: 'column',
     fontFamily: 'Menlo, monospace',
