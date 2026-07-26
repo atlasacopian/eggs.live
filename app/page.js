@@ -15,10 +15,10 @@ const EggCartonScene = dynamic(() => import('../components/EggCartonScene'), {
 export default function Home() {
   const router = useRouter()
 
-  // Ensure dark theme on homepage (matches the terminal results pages)
+  // Ensure light theme on homepage
   useEffect(() => {
-    document.documentElement.classList.add('dark-theme')
-    document.body.classList.add('dark-theme')
+    document.documentElement.classList.remove('dark-theme')
+    document.body.classList.remove('dark-theme')
   }, [])
 
   const handleUseLocation = async () => {
@@ -40,27 +40,13 @@ export default function Home() {
     <main
       className="main"
       style={{
-        color: '#fff',
+        color: '#000',
         position: 'relative',
-        background: '#000',
+        background: '#fff',
         minHeight: '100vh',
         overflow: 'hidden',
       }}
     >
-      {/* Soft amber ambient glow behind the egg, echoing the yolk accent color */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: 'min(90vw, 900px)',
-          height: 'min(90vw, 900px)',
-          background: 'radial-gradient(circle, rgba(255,193,7,0.16) 0%, rgba(255,193,7,0.06) 35%, rgba(255,193,7,0) 70%)',
-          zIndex: 10,
-          pointerEvents: 'none',
-        }}
-      />
       {/* Logo and tagline centered above the egg */}
       <div
         style={{
@@ -84,7 +70,6 @@ export default function Home() {
             height: 'auto',
             objectFit: 'contain',
             marginBottom: '4px',
-            filter: 'invert(1)',
             opacity: 0,
             animation: 'heroFadeIn 0.7s ease-out 0.1s forwards',
           }}

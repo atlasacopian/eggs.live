@@ -14,7 +14,7 @@
   text-transform: uppercase;
   letter-spacing: 2px;
   font-size: 9px; /* Default desktop size */
-  color: #ffffff;
+  color: #000000;
   background-color: transparent;
   padding: 0 0.5rem; /* consistent spacing */
   border-radius: 4px; 
@@ -41,7 +41,7 @@
 
 /* Ensure ZIP input is clearly visible */
 .zipInput {
-  color: #cccccc !important;             /* neutral light gray, matches bracket color - no orange */
+  color: #333333 !important;             /* neutral gray, matches bracket color - no orange */
   background: transparent !important;    /* no white box */
   border: none !important;               /* remove default input border */
   outline: none !important;              /* remove browser's default focus ring */
@@ -54,7 +54,7 @@
   text-align: center;
   height: 100%;
   line-height: 36px;
-  caret-color: #cccccc !important;
+  caret-color: #333333 !important;
 }
 
 .zipInput:focus,
@@ -81,7 +81,7 @@
   font-family: 'Roboto Mono', monospace;
   letter-spacing: 2px;
   font-size: 9px;
-  color: #fff; /* white to contrast dark background */
+  color: #000;
 }
 
 /* Brackets inherit carrot color when hovered; override to white */
@@ -99,7 +99,7 @@
 .option.zipActive:focus-within,
 .option.zipActive:active,
 .option.zipActive:focus {
-  color: #cccccc !important;
+  color: #333333 !important;
 }
 
 .option.zipActive .bracket,
@@ -107,7 +107,7 @@
 .option.zipActive:focus-within .bracket,
 .option.zipActive:active .bracket,
 .option.zipActive:focus .bracket {
-  color: #cccccc !important;
+  color: #333333 !important;
 }
 
 .promptWrapper {
@@ -161,7 +161,7 @@
 }
 
 .orText {
-  color: rgba(255, 255, 255, 0.6);
+  color: #000000;
   cursor: default;
   font-size: 9px;
   letter-spacing: 2px;
@@ -211,8 +211,8 @@
 }
 
 .option.zipActive {
-  border-color: rgba(255, 255, 255, 0.2);
-  background-color: rgba(255, 255, 255, 0.05);
+  border-color: rgba(0, 0, 0, 0.2);
+  background-color: rgba(0, 0, 0, 0.03);
 }
 
 /* Fixed width so the bracket positions don't shift when the ZIP button
@@ -244,7 +244,7 @@
   font-family: 'Roboto Mono', monospace;
   font-size: 9px;
   letter-spacing: 1px;
-  color: #ff6b6b;
+  color: #cc3333;
 }
 
 @keyframes pressEnterFade {
