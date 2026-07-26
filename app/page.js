@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import Header from '../components/Header'
@@ -14,28 +14,11 @@ const EggCartonScene = dynamic(() => import('../components/EggCartonScene'), {
 
 export default function Home() {
   const router = useRouter()
-  const [nationalAvg, setNationalAvg] = useState(null)
 
   // Ensure dark theme on homepage (matches the terminal results pages)
   useEffect(() => {
     document.documentElement.classList.add('dark-theme')
     document.body.classList.add('dark-theme')
-  }, [])
-
-  // Live data teaser: latest national average regular egg price, so the
-  // "live" premise is felt on the hero before anyone enters a ZIP.
-  useEffect(() => {
-    let cancelled = false
-    fetch('/api/national-egg-stats')
-      .then(res => res.json())
-      .then(data => {
-        if (cancelled) return
-        const series = data?.priceHistoryRegular
-        const latest = series?.[series.length - 1]
-        if (latest?.value != null) setNationalAvg(latest.value)
-      })
-      .catch(() => {})
-    return () => { cancelled = true }
   }, [])
 
   const handleUseLocation = async () => {
@@ -117,21 +100,6 @@ export default function Home() {
         }}>
           TRACKING THE EGG-CONOMY
         </div>
-        {nationalAvg != null && (
-          <div style={{
-            fontWeight: 400,
-            letterSpacing: 1.5,
-            fontFamily: 'Menlo, monospace',
-            fontSize: '10px',
-            marginTop: '8px',
-            textAlign: 'center',
-            opacity: 0,
-            animation: 'heroFadeIn 0.7s ease-out 0.5s forwards',
-          }}>
-            <span style={{ color: 'rgba(255,255,255,0.55)' }}>NATIONAL AVG:</span>{' '}
-            <span style={{ color: 'var(--accent-color)' }}>${nationalAvg.toFixed(2)}/DOZEN</span>
-          </div>
-        )}
       </div>
       {/* 3D Egg scene behind logo (full-screen) */}
       <div
