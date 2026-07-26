@@ -79,7 +79,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
     showOnlyStoresAndHistory && !isMobile ? 'calc(100vh - 180px)' : undefined;
 
   return (
-    <div style={{ padding: isMobile ? 8 : 16, background: '#000', color: '#fff', minHeight: '100vh' }}>
+    <div style={{ padding: isMobile ? 8 : 16, background: '#000', color: '#fff' }}>
       <TerminalHeader 
         zipCode={zipCode} 
         view={view} 
