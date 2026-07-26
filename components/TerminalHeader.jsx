@@ -7,6 +7,7 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [editingZip, setEditingZip] = useState(false);
   const [tempZip, setTempZip] = useState(zipCode || '');
+  const [zipHover, setZipHover] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -180,7 +181,18 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
           ) : (
             <button
               onClick={handleLocalClick}
-              style={view === 'local' ? activeViewButtonStyle : viewButtonStyle}
+              onMouseEnter={() => setZipHover(true)}
+              onMouseLeave={() => setZipHover(false)}
+              style={{
+                ...(view === 'local' ? activeViewButtonStyle : viewButtonStyle),
+                // Only the active zip is click-to-edit; hint that with an
+                // I-beam cursor (vs. the pointer hand on plain nav buttons)
+                // plus an underline + accent color on hover.
+                cursor: view === 'local' ? 'text' : 'pointer',
+                ...(view === 'local' && zipHover
+                  ? { color: 'var(--accent-color)', textDecoration: 'underline' }
+                  : null),
+              }}
             >
               {view === 'local' ? `[ ${zipCode || 'N/A'} ]` : (zipCode || 'N/A')}
             </button>
