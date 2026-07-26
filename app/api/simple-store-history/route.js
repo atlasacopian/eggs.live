@@ -99,6 +99,23 @@ export async function GET(req) {
       regular: item.regular_avg,
       organic: item.organic_avg,
     }));
+  } else if (/^E[A-Z]+$/.test(storeIdentifier)) {
+    // Erewhon: strip 'E' prefix to get the Algolia location_id (e.g. 'GROVE')
+    const locationId = storeIdentifier.slice(1);
+    const { data, error } = await sb
+      .from('erewhon_egg_prices')
+      .select('captured_date, regular_avg, organic_avg')
+      .eq('location_id', locationId)
+      .order('captured_date', { ascending: true });
+    if (error) {
+      console.error('[simple-store-history] Supabase error (erewhon):', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    historyData = (data || []).map(item => ({
+      date: item.captured_date + 'T12:00:00Z',
+      regular: item.regular_avg,
+      organic: item.organic_avg,
+    }));
   } else {
     // Query LA stats (existing logic)
     const { data, error } = await sb
