@@ -62,14 +62,14 @@ export default function Home() {
         }}
         className="centered-logo-container"
       >
-        <img 
-          src="/logo-test.png" 
-          alt="eggs.live" 
-          style={{ 
-            height: '200px',
+        <img
+          src="/logo-test.png"
+          alt="eggs.live"
+          style={{
+            height: '70px',
             objectFit: 'contain',
-            marginBottom: '-25px'
-          }} 
+            marginBottom: '4px'
+          }}
         />
         <div style={{ 
           fontWeight: 400, 
