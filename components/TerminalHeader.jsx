@@ -22,25 +22,29 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
     const mm = String(date.getMonth() + 1).padStart(2, '0');
     const dd = String(date.getDate()).padStart(2, '0');
     const yyyy = date.getFullYear();
-    // Local time, no seconds and no time zone abbreviation
-    const timeString = date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    // Local time with seconds, no time zone abbreviation
+    const timeString = date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     return `${mm}/${dd}/${yyyy} ${timeString}`;
   };
 
   const headerStyle = {
     background: '#000000',
     color: '#ffffff',
-    padding: isMobile ? '8px' : '8px 12px',
-    display: isMobile ? 'flex' : 'grid',
-    gridTemplateColumns: isMobile ? undefined : 'minmax(100px, 1fr) auto minmax(390px, 1.6fr)',
-    flexDirection: isMobile ? 'column' : undefined,
-    justifyContent: isMobile ? 'space-between' : undefined,
-    alignItems: 'center',
+    padding: isMobile ? '4px 8px' : '4px 12px',
+    display: 'flex',
+    flexDirection: 'column',
     fontFamily: 'Menlo, monospace',
     fontSize: isMobile ? '0.8rem' : '0.9rem',
     borderBottom: '1px solid #222222',
-    height: isMobile ? 'auto' : '34px',
     boxSizing: 'border-box',
+  };
+
+  const topRowStyle = {
+    display: 'flex',
+    flexDirection: isMobile ? 'column' : 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
     position: 'relative',
   };
 
@@ -64,14 +68,24 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
     textDecoration:'none'
   };
 
-  const buttonGroupStyle = {
+  const buttonGroupStyle = isMobile ? {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
     gap: '8px',
-    flex: isMobile ? 'none' : '0 0 240px',
-    marginBottom: isMobile ? '5px' : '0',
-    width: isMobile ? '100%' : '240px',
+    marginBottom: '5px',
+    width: '100%',
+  } : {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: '8px',
+    // Absolutely centered on the row so it stays dead-center regardless of
+    // how wide the EGGS.LIVE / date-time content on either side is.
+    position: 'absolute',
+    left: '50%',
+    top: '50%',
+    transform: 'translate(-50%, -50%)',
   };
 
   const viewButtonStyle = {
@@ -109,58 +123,68 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
     whiteSpace: 'nowrap',
   };
 
+  const zipRowStyle = {
+    textAlign: isMobile ? 'center' : 'right',
+    fontSize: isMobile ? '0.75rem' : '0.85rem',
+    fontWeight: 600,
+    marginTop: '4px',
+  };
+
   return (
     <div style={headerStyle}>
-      <div style={infoGroupStyle}>
-        <a href="/" style={eggsLiveStyle}>EGGS.LIVE</a>
+      <div style={topRowStyle}>
+        <div style={infoGroupStyle}>
+          <a href="/" style={eggsLiveStyle}>EGGS.LIVE</a>
+        </div>
+
+        <div style={buttonGroupStyle}>
+          <button
+            onClick={() => onSetView('local')}
+            style={view === 'local' ? activeViewButtonStyle : viewButtonStyle}
+          >
+            {view === 'local' ? '[ LOCAL ]' : 'LOCAL'}
+          </button>
+          <button
+            onClick={() => onSetView('national')}
+            style={view === 'national' ? activeViewButtonStyle : viewButtonStyle}
+          >
+            {view === 'national' ? '[ NATIONAL ]' : 'NATIONAL'}
+          </button>
+        </div>
+
+        <div style={dateTimeStyle}>
+          <span>{formatDateTime(currentDateTime)}</span>
+        </div>
       </div>
 
-      <div style={buttonGroupStyle}>
-        <button
-          onClick={() => onSetView('local')}
-          style={view === 'local' ? activeViewButtonStyle : viewButtonStyle}
-        >
-          {view === 'local' ? '[ LOCAL ]' : 'LOCAL'}
-        </button>
-        <button
-          onClick={() => onSetView('national')}
-          style={view === 'national' ? activeViewButtonStyle : viewButtonStyle}
-        >
-          {view === 'national' ? '[ NATIONAL ]' : 'NATIONAL'}
-        </button>
-      </div>
-
-      <div style={dateTimeStyle}>
-        <span>{formatDateTime(currentDateTime)}</span>
-        {view === 'local' && (
-          <span style={{ marginLeft: 16, fontWeight: 600 }}>
-            ZIP CODE:{' '}
-            {editingZip ? (
-              <input
-                value={tempZip}
-                onChange={e=>setTempZip(e.target.value)}
-                onBlur={()=>setEditingZip(false)}
-                onKeyDown={e=>{if(e.key==='Enter'){setEditingZip(false); if(tempZip.match(/^\d{5}$/)){router.push(`/${tempZip}`)}}}}
-                style={{width:70,boxSizing:'border-box',background:'#000',color:'#fff',border:'1px solid transparent',outline:'none',boxShadow:'none',fontFamily:'Menlo, monospace',fontSize:16,fontWeight:600,textAlign:'left',transform:`scale(${isMobile ? 0.75 : 0.85})`,transformOrigin:'left center'}}
-                type="text"
-                inputMode="numeric"
-                maxLength={5}
-                autoComplete="off"
-                data-1p-ignore
-                data-lpignore="true"
-                autoFocus
-              />
-            ) : (
-              <span
-                style={{display:'inline-block',width:70,boxSizing:'border-box',border:'1px solid transparent',textAlign:'left',cursor:'pointer'}}
-                onClick={()=>setEditingZip(true)}
-              >
-                {zipCode || 'N/A'}
-              </span>
-            )}
-          </span>
-        )}
-      </div>
+      {view === 'local' && (
+        <div style={zipRowStyle}>
+          ZIP CODE:{' '}
+          {editingZip ? (
+            <input
+              value={tempZip}
+              onChange={e=>setTempZip(e.target.value)}
+              onBlur={()=>setEditingZip(false)}
+              onKeyDown={e=>{if(e.key==='Enter'){setEditingZip(false); if(tempZip.match(/^\d{5}$/)){router.push(`/${tempZip}`)}}}}
+              style={{width:70,boxSizing:'border-box',background:'#000',color:'#fff',border:'1px solid transparent',outline:'none',boxShadow:'none',fontFamily:'Menlo, monospace',fontSize:16,fontWeight:600,textAlign:'left',transform:`scale(${isMobile ? 0.75 : 0.85})`,transformOrigin:'left center'}}
+              type="text"
+              inputMode="numeric"
+              maxLength={5}
+              autoComplete="off"
+              data-1p-ignore
+              data-lpignore="true"
+              autoFocus
+            />
+          ) : (
+            <span
+              style={{display:'inline-block',width:70,boxSizing:'border-box',border:'1px solid transparent',textAlign:isMobile ? 'center' : 'left',cursor:'pointer'}}
+              onClick={()=>setEditingZip(true)}
+            >
+              {zipCode || 'N/A'}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
-} 
+}

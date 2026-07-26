@@ -264,7 +264,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
       <div
         style={{
           marginTop: isMobile ? 16 : 24,
-          padding: '12px 0',
+          padding: '6px 0',
           borderTop: '1px solid #222222',
           textAlign: 'center',
           fontFamily: 'Menlo, monospace',
@@ -277,11 +277,11 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
         <a href="https://atlasacopian.com/" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit' }}>
           Atlas Acopian
         </a>
-        {' '}and{' '}
+        {', '}
         <a href="https://cursor.com/" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit' }}>
           Cursor
         </a>
-        {' '}and{' '}
+        {', and '}
         <a href="https://claude.ai/" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit' }}>
           Claude
         </a>
