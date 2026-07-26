@@ -18,6 +18,30 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
+// Some stores have real rows missing entirely for weeks/months at a time
+// (not just an explicit null placeholder) when a scrape has been failing.
+// Recharts' category/point x-axis connects adjacent array entries with a
+// straight line regardless of the real calendar gap between them, which
+// turns "we have no data for months" into a misleadingly smooth diagonal
+// trend line. Insert a synthetic null break-point wherever consecutive
+// entries are more than GAP_THRESHOLD_DAYS apart so the line visibly breaks.
+const GAP_THRESHOLD_DAYS = 14;
+function insertGapBreaks(history) {
+  if (history.length < 2) return history;
+  const out = [history[0]];
+  for (let i = 1; i < history.length; i++) {
+    const prev = history[i - 1];
+    const curr = history[i];
+    const daysBetween = (new Date(curr.date) - new Date(prev.date)) / 86_400_000;
+    if (daysBetween > GAP_THRESHOLD_DAYS) {
+      const midpoint = new Date((new Date(prev.date).getTime() + new Date(curr.date).getTime()) / 2).toISOString();
+      out.push({ date: midpoint, regular: null, organic: null });
+    }
+    out.push(curr);
+  }
+  return out;
+}
+
 export default function EggPriceChart({ selectedStore, store, highlight = false, preview = false, priceType = 'regular', isMobile = false, zipCode = null }) {
   // Use selectedStore if provided, otherwise fall back to store prop
   const currentStore = selectedStore || store;
@@ -39,7 +63,7 @@ export default function EggPriceChart({ selectedStore, store, highlight = false,
         const res = await fetch(`/api/simple-store-history?storeIdentifier=${id}`);
         if (!res.ok) throw new Error(res.statusText);
         const data = await res.json();
-        setHistory(data.history || []);
+        setHistory(insertGapBreaks(data.history || []));
       } catch (err) {
         setError(err.message);
       } finally {
@@ -132,7 +156,7 @@ export default function EggPriceChart({ selectedStore, store, highlight = false,
               isAnimationActive={true}
               animationDuration={preview ? 800 : 1500}
               animationEasing="ease-in-out"
-              connectNulls={true}
+              connectNulls={false}
             />
           </LineChart>
         </ResponsiveContainer>
