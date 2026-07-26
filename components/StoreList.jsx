@@ -88,31 +88,21 @@ export default function StoreList({
     if (!priceDate) return null;
     return Math.round((todayLocalMidnight - parseDateOnlyLocal(priceDate)) / 86_400_000);
   };
-  const formatShortDate = (priceDate) => {
-    const d = parseDateOnlyLocal(priceDate);
-    return `${d.getMonth() + 1}/${d.getDate()}`;
-  };
-
-  // Never label a price "today" if it isn't - always show the actual pull
-  // date so freshness is explicit rather than assumed. A price 2+ days old
-  // is a real data gap (not just today's batch not having reached this
-  // store yet), so the number itself is replaced with "STALE" rather than
-  // shown as if it were still a usable current price.
+  // Never label a price "today" if it isn't - say plainly whether it's from
+  // today or yesterday. A price 2+ days old is a real data gap (not just
+  // today's batch not having reached this store yet), so the number itself
+  // is replaced with "STALE" instead - no date, just the flag.
   const renderPrice = (price, priceDate) => {
     if (price == null) return <span style={priceStyle}>--</span>;
     const age = daysOld(priceDate);
     if (age != null && age >= 2) {
-      return (
-        <>
-          <span style={staleStyle}>STALE</span>
-          <span style={dateLabelStyle}>{formatShortDate(priceDate)}</span>
-        </>
-      );
+      return <span style={staleStyle}>STALE</span>;
     }
+    const freshnessLabel = age === 0 ? 'UPDATED TODAY' : age === 1 ? 'UPDATED YESTERDAY' : null;
     return (
       <>
         <span style={priceStyle}>{`$${price.toFixed(2)}`}</span>
-        <span style={dateLabelStyle}>{formatShortDate(priceDate)}</span>
+        {freshnessLabel && <span style={dateLabelStyle}>{freshnessLabel}</span>}
       </>
     );
   };
