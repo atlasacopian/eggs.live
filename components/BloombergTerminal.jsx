@@ -122,7 +122,7 @@ export default function BloombergTerminal({ zipCode, localStores = [], nationalS
                 minHeight: isMobile ? '200px' : localStoresRowMinHeight || 'auto',
               }}
             >
-              <EggPriceChart selectedStore={selectedStore} isMobile={isMobile} zipCode={zipCode} />
+              <EggPriceChart selectedStore={selectedStore} isMobile={isMobile} zipCode={zipCode} priceType={priceType} onPriceTypeChange={setPriceType} />
             </TerminalTile>
 
 
