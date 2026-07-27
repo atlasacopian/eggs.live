@@ -42,15 +42,13 @@ export const metadata = {
     description: SITE_DESCRIPTION,
     url: 'https://eggs.live',
     siteName: 'eggs.live',
-    images: [{ url: '/logo_test2.png', width: 2280, height: 1138, alt: 'eggs.live – Egg Price Tracker' }],
     locale: 'en_US',
     type: 'website',
   },
   twitter: {
-    card: 'summary_large_image',
+    card: 'summary',
     title: 'Live Egg Prices Near You',
     description: SITE_DESCRIPTION,
-    images: ['/logo_test2.png'],
   },
   robots: {
     index: true,
