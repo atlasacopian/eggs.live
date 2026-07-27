@@ -35,7 +35,11 @@ async function main() {
   const features = json.features || []
   console.log(`   ↳ received ${features.length} total active alerts (all types, all states)`)
 
-  const upserts = []
+  // Keyed by id so a repeated alert (e.g. NWS re-listing an updated/reissued
+  // alert under the same id within one response) can't produce two rows
+  // with the same conflict key in a single upsert batch - Postgres rejects
+  // "ON CONFLICT DO UPDATE" touching the same row twice in one statement.
+  const upsertsById = new Map()
   let skippedCategory = 0
   let skippedNoState = 0
 
@@ -67,8 +71,9 @@ async function main() {
     }
 
     for (const state of statesInAlert) {
-      upserts.push({
-        id: `${p.id}::${state}`,
+      const id = `${p.id}::${state}`
+      upsertsById.set(id, {
+        id,
         state,
         event_type: p.event,
         category,
@@ -83,6 +88,7 @@ async function main() {
     }
   }
 
+  const upserts = [...upsertsById.values()]
   console.log(`   ↳ ${upserts.length} rows after filtering to production-risk categories (skipped ${skippedCategory} other-category alerts, ${skippedNoState} with no matching state)`)
 
   if (upserts.length) {

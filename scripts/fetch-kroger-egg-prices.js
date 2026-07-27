@@ -92,7 +92,21 @@ let loggedFullProductForNullPrice = false; // Flag to ensure we only log one ful
 async function fetchWithRetry(url, options = {}, maxAttempts = 5) {
   let lastRes;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    const res = await fetch(url, options);
+    let res;
+    try {
+      res = await fetch(url, options);
+    } catch (networkErr) {
+      // Connection-level failures (ETIMEDOUT, ECONNRESET, DNS errors, etc.)
+      // throw before there's a response to check .status on - treat them
+      // like a transient 5xx instead of letting them crash the whole run.
+      if (attempt < maxAttempts) {
+        const waitMs = 2000 * attempt;
+        console.warn(`fetchWithRetry: network error (${networkErr.code || networkErr.message}). Retrying after ${waitMs}ms`);
+        await new Promise(r => setTimeout(r, waitMs));
+        continue;
+      }
+      throw new NonFatalSkipError(`Network error after ${maxAttempts} attempts: ${networkErr.code || networkErr.message}`);
+    }
     lastRes = res;
     // Log rate-limit headers
     const remaining = res.headers.get('X-RateLimit-Remaining');
