@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import styles from './LocationPrompt.module.css'
 import { getCurrentZip } from '../lib/geolocate'
@@ -23,6 +23,7 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
 
   const handleZipSubmit = (e) => {
     e.preventDefault()
+    if (submitting) return
     if (/^\d{5}$/.test(zipCode)) {
       setZipError(false)
       setSubmitting(true)
@@ -34,6 +35,20 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
   }
 
   const zipComplete = showZipInput && /^\d{5}$/.test(zipCode)
+
+  // Mobile's numeric keypad has no Enter/Go key, so there was previously no
+  // way to submit at all once the 5th digit was typed - auto-submit instead
+  // of waiting on a keypress that may not exist. Still works fine on desktop
+  // (form's onSubmit above also fires if someone does press Enter first).
+  useEffect(() => {
+    if (zipComplete && !submitting) {
+      setZipError(false)
+      setSubmitting(true)
+      if (onEnterZip) onEnterZip(zipCode)
+      else router.push(`/${zipCode}`)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zipComplete])
 
   return (
     <div className={styles.promptWrapper}>
@@ -78,8 +93,8 @@ export default function LocationPrompt({ onUseLocation, onEnterZip }) {
           )}
           <span className={styles.bracket}>]</span>
           {zipComplete && !zipError && (
-            <div className={`${styles.pressEnterHint} ${submitting ? styles.submitting : ''}`}>
-              {submitting ? 'LOADING…' : 'PRESS ENTER ↵'}
+            <div className={`${styles.pressEnterHint} ${styles.submitting}`}>
+              LOADING…
             </div>
           )}
           {showZipInput && zipError && (

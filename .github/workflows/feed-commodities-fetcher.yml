@@ -1,0 +1,50 @@
+name: Feed Commodities (Corn + Soybean Meal)
+
+on:
+  # Daily is cheap (two small API calls, upserts are idempotent no-ops when
+  # nothing new is published) and simplest way to reliably catch both NASS's
+  # and BLS's monthly releases, which land on different schedules.
+  schedule:
+    - cron: '0 15 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate secrets
+        run: bash scripts/ci-require-env.sh SUPABASE_URL SUPABASE_SERVICE_KEY USDA_NASS_API_KEY FRED_API_KEY
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          USDA_NASS_API_KEY: ${{ secrets.USDA_NASS_API_KEY }}
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+
+      - name: Fetch corn price (USDA NASS)
+        run: node scripts/fetch-corn-price.js
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          USDA_NASS_API_KEY: ${{ secrets.USDA_NASS_API_KEY }}
+
+      - name: Fetch soybean meal price (FRED)
+        run: node scripts/fetch-soybean-meal-price.js
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}

@@ -139,6 +139,45 @@
   .zipInput {
     background: transparent !important;
     color: var(--accent-color) !important;
+    /* iOS Safari zooms the whole page on focus for any input under 16px,
+       regardless of the viewport meta's user-scalable=no/maximum-scale - it
+       only suppresses pinch-zoom, not this focus-triggered zoom. */
+    font-size: 16px !important;
+  }
+
+  .container {
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    padding: 0 28px;
+  }
+
+  .orText {
+    font-size: 11px;
+  }
+
+  .option {
+    font-size: 15px;
+    height: 54px;
+    width: 100%;
+    max-width: 300px;
+    letter-spacing: 1.5px;
+    border-color: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+  }
+
+  .locationLabel {
+    width: auto;
+  }
+
+  .zipOption {
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .zipForm,
+  .zipLabel {
+    width: 170px;
   }
 }
 

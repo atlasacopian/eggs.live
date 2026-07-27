@@ -1,0 +1,43 @@
+name: USDA Layer Inventory (NASS)
+
+on:
+  # Daily is cheap (one small API call, ~223 rows upserted) and simplest way
+  # to reliably catch USDA's release, which lands ~17th-23rd of the month
+  # and shifts slightly month to month. Re-fetching unchanged months is a
+  # no-op upsert.
+  schedule:
+    - cron: '0 15 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate secrets
+        run: bash scripts/ci-require-env.sh SUPABASE_URL SUPABASE_SERVICE_KEY USDA_NASS_API_KEY
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          USDA_NASS_API_KEY: ${{ secrets.USDA_NASS_API_KEY }}
+
+      - name: Fetch USDA NASS table-egg layer inventory
+        run: node scripts/fetch-usda-layer-inventory.js
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          USDA_NASS_API_KEY: ${{ secrets.USDA_NASS_API_KEY }}

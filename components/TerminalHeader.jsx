@@ -1,13 +1,10 @@
 'use client'
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { PANEL_BORDER, SERIF, YELLOW, ORANGE } from '../lib/terminalTheme';
 
 export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
-  const router = useRouter();
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
-  const [editingZip, setEditingZip] = useState(false);
-  const [tempZip, setTempZip] = useState(zipCode || '');
-  const [zipHover, setZipHover] = useState(false);
+  const [hoveredTab, setHoveredTab] = useState(null); // 'local' | 'national' | null
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -15,8 +12,6 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
     }, 1000);
     return () => clearInterval(timer); // Cleanup the interval on component unmount
   }, []);
-
-  useEffect(()=>{setTempZip(zipCode||'')},[zipCode]);
 
   const formatDateTime = (date) => {
     // Format date as MM/DD/YYYY
@@ -31,12 +26,12 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
   const headerStyle = {
     background: '#000000',
     color: '#ffffff',
-    padding: isMobile ? '0 8px 4px' : '0 12px 4px',
+    padding: isMobile ? '6px 6px 5px' : '8px 10px 6px',
     display: 'flex',
     flexDirection: 'column',
     fontFamily: 'Menlo, monospace',
-    fontSize: isMobile ? '0.8rem' : '0.9rem',
-    borderBottom: '1px solid #222222',
+    fontSize: isMobile ? '0.78rem' : '0.85rem',
+    borderBottom: `1px solid ${PANEL_BORDER}`,
     boxSizing: 'border-box',
   };
 
@@ -56,103 +51,64 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
   } : {
     textAlign: 'left',
     minWidth: 0,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
   };
 
+  // Serif nameplate, like a printed bulletin's masthead - the one deliberate
+  // typographic break from the mono "data" register used everywhere else.
   const eggsLiveStyle = {
-    fontSize: isMobile ? '0.8rem' : '1rem',
-    fontWeight: 'bold',
+    fontFamily: SERIF,
+    fontSize: isMobile ? '1.05rem' : '1.3rem',
+    fontWeight: 700,
     color: '#fff',
-    marginRight: '12px',
-    textDecoration:'none'
+    letterSpacing: '0.01em',
   };
 
-  const buttonGroupStyle = isMobile ? {
+  // Flat underline tabs, not solid-fill pill buttons - a big colorful block
+  // read as an app button, not a serious terminal. Text + a thin colored
+  // underline when active is the same information with far less "toy" feel.
+  const navBarStyle = isMobile ? {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: '8px',
-    marginBottom: '5px',
-    width: '100%',
+    gap: 2,
+    marginTop: 4,
+    flexShrink: 0,
   } : {
     display: 'flex',
-    justifyContent: 'center',
     alignItems: 'center',
-    gap: '8px',
-    // Absolutely centered on the row so it stays dead-center regardless of
-    // how wide the EGGS.LIVE / date-time content on either side is.
+    gap: 2,
     position: 'absolute',
     left: '50%',
     top: '50%',
     transform: 'translate(-50%, -50%)',
   };
 
-  const viewButtonStyle = {
+  const tabStyle = (active, hovered) => ({
     background: 'transparent',
-    color: '#888888',
-    border: 'none',
-    padding: '4px 8px',
+    color: active ? YELLOW : hovered ? 'rgba(255, 226, 52, 0.5)' : '#555',
+    padding: isMobile ? '3px 9px' : '3px 11px',
+    fontSize: isMobile ? '0.62rem' : '0.68rem',
+    fontWeight: 700,
+    letterSpacing: '0.04em',
     cursor: 'pointer',
-    fontFamily: 'Menlo, monospace',
-    fontSize: '0.8rem',
-    textTransform: 'uppercase',
-    whiteSpace: 'nowrap',
-    // Fixed width sized for the longest bracketed label ("[ NATIONAL ]") so
-    // switching which view is active doesn't shift the other button.
-    width: '110px',
-    textAlign: 'center',
+    border: 'none',
     boxSizing: 'border-box',
-  };
-
-  const activeViewButtonStyle = {
-    ...viewButtonStyle,
-    color: '#fff',
-  };
+    fontFamily: 'Menlo, monospace',
+    whiteSpace: 'nowrap',
+  });
 
   const dateTimeStyle = isMobile ? {
     fontSize: '0.75rem',
     textAlign: 'center',
     width: '100%',
   } : {
-    fontSize: '0.85rem',
+    fontSize: '0.8rem',
+    color: '#999',
     textAlign: 'right',
     minWidth: 0,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
-  };
-
-  const zipInputStyle = {
-    ...activeViewButtonStyle,
-    background: 'transparent',
-    border: 'none',
-    outline: 'none',
-    boxShadow: 'none',
-    padding: '4px 8px',
-    // iOS Safari auto-zooms on focus for any input under 16px; render at 16px
-    // and scale back down visually to match the button's 0.8rem look.
-    fontSize: isMobile ? 16 : '0.8rem',
-    transform: isMobile ? 'scale(0.8)' : undefined,
-    transformOrigin: 'center',
-  };
-
-  const handleZipSubmit = () => {
-    setEditingZip(false);
-    if (tempZip.match(/^\d{5}$/) && tempZip !== zipCode) {
-      router.push(`/${tempZip}`);
-    } else {
-      setTempZip(zipCode || '');
-    }
-  };
-
-  const handleLocalClick = () => {
-    if (view === 'local') {
-      setEditingZip(true);
-    } else {
-      onSetView('local');
-    }
   };
 
   return (
@@ -162,50 +118,22 @@ export default function TerminalHeader({ view, zipCode, onSetView, isMobile }) {
           <span style={eggsLiveStyle}>EGGS.LIVE</span>
         </div>
 
-        <div style={buttonGroupStyle}>
-          {editingZip ? (
-            <input
-              value={tempZip}
-              onChange={e => setTempZip(e.target.value)}
-              onBlur={handleZipSubmit}
-              onKeyDown={e => { if (e.key === 'Enter') handleZipSubmit(); }}
-              style={zipInputStyle}
-              type="text"
-              inputMode="numeric"
-              maxLength={5}
-              autoComplete="off"
-              data-1p-ignore
-              data-lpignore="true"
-              autoFocus
-            />
-          ) : (
-            <button
-              onClick={handleLocalClick}
-              onMouseEnter={() => setZipHover(true)}
-              onMouseLeave={() => setZipHover(false)}
-              style={{
-                ...(view === 'local' ? activeViewButtonStyle : viewButtonStyle),
-                // Only the active zip is click-to-edit; hint that with an
-                // I-beam cursor (vs. the pointer hand on plain nav buttons).
-                cursor: view === 'local' ? 'text' : 'pointer',
-              }}
-            >
-              {view === 'local' ? (
-                <>
-                  {'[ '}
-                  <span style={{ textDecoration: zipHover ? 'underline' : 'none' }}>
-                    {zipCode || 'N/A'}
-                  </span>
-                  {' ]'}
-                </>
-              ) : (zipCode || 'N/A')}
-            </button>
-          )}
+        <div style={navBarStyle}>
+          <button
+            onClick={() => onSetView('local')}
+            onMouseEnter={() => setHoveredTab('local')}
+            onMouseLeave={() => setHoveredTab(null)}
+            style={tabStyle(view === 'local', hoveredTab === 'local')}
+          >
+            ZIP
+          </button>
           <button
             onClick={() => onSetView('national')}
-            style={view === 'national' ? activeViewButtonStyle : viewButtonStyle}
+            onMouseEnter={() => setHoveredTab('national')}
+            onMouseLeave={() => setHoveredTab(null)}
+            style={tabStyle(view === 'national', hoveredTab === 'national')}
           >
-            {view === 'national' ? '[ NATIONAL ]' : 'NATIONAL'}
+            MARKET
           </button>
         </div>
 

@@ -13,8 +13,10 @@ const {
   KROGER_CLIENT_SECRET
 } = process.env;
 
-// Add STORE_TABLE constant to allow using a reduced-size table
-const STORE_TABLE = process.env.KROGER_STORES_TABLE || 'kroger_stores';
+// Only stores with tracked_since set get scraped daily - Kroger's API rate
+// limits make scraping the full multi-thousand-store directory impractical,
+// so a curated subset is marked for tracking (see trim-kroger-stores.js).
+const STORE_TABLE = 'kroger_stores';
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
   console.error('❌ Set SUPABASE_URL & SUPABASE_SERVICE_KEY');
@@ -345,7 +347,8 @@ async function fetchStoreEggs (location_id_raw) {
     console.log(`Fetching page ${pageNumber} of stores (from: ${from}, to: ${from + pageSize - 1})...`);
     const { data: storePage, error, count } = await sb
       .from(STORE_TABLE)
-      .select('location_id', { count: 'exact' }) 
+      .select('location_id', { count: 'exact' })
+      .not('tracked_since', 'is', null)
       .order('location_id', { ascending: true })
       .range(from, from + pageSize - 1);
 
@@ -515,7 +518,7 @@ async function fetchStoreEggs (location_id_raw) {
         if (rows.length > 0) { // Ensure there's something to upsert
           console.log(`Upserting batch of ${rows.length} rows to Supabase...`);
           const { error: batchUpErr } = await sb
-            .from('kroger_egg_prices_new')
+            .from('kroger_egg_prices')
             .upsert(rows, { onConflict: 'location_id,captured_date' });
           if (batchUpErr) {
             console.error('Supabase batch upsert error:', batchUpErr);
@@ -568,7 +571,7 @@ async function fetchStoreEggs (location_id_raw) {
     }));
     try {
       const { error: skipUpErr } = await sb
-        .from('kroger_egg_prices_new')
+        .from('kroger_egg_prices')
         .upsert(placeholderRows, { onConflict: 'location_id,captured_date' });
       if (skipUpErr) console.error('Upsert skipped placeholder rows error:', skipUpErr);
     } catch(e) { console.error('Crash upserting skipped placeholders', e);}    

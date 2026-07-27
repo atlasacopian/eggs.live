@@ -17,8 +17,8 @@ const sb = createClient(SUPABASE_URL, key);
 
 /** @type {{ table: string, dateCol: string, workflow?: string, expectDays?: number }[]} */
 const CHECKS = [
-  { table: 'kroger_egg_prices_new', dateCol: 'captured_date', workflow: 'Kroger Egg Prices', expectDays: 2 },
-  { table: 'target_egg_price_stats', dateCol: 'captured_date', workflow: 'Target Egg Prices', expectDays: 2 },
+  { table: 'kroger_egg_prices', dateCol: 'captured_date', workflow: 'Kroger Egg Prices', expectDays: 2 },
+  { table: 'target_egg_prices', dateCol: 'captured_date', workflow: 'Target Egg Prices', expectDays: 2 },
   { table: 'usda_weekly_egg_prices', dateCol: 'report_end_date', workflow: 'National Daily (USDA)', expectDays: 14 },
   { table: 'hpai_detections', dateCol: 'captured_at', workflow: 'HPAI Detections Fetcher (APHIS dashboard)', expectDays: 2 },
 ];

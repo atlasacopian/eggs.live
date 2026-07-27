@@ -21,6 +21,21 @@ export default function Home() {
     document.body.classList.remove('dark-theme')
   }, [])
 
+  // This page is a single fixed screen (logo + egg + two buttons), not a
+  // scrolling document - lock the outer page scroll while it's mounted so
+  // mobile Safari can't rubber-band/drag it, without touching overflow on
+  // other routes (the [zipCode] terminal view needs real scrolling).
+  useEffect(() => {
+    const prevHtmlOverflow = document.documentElement.style.overflow
+    const prevBodyOverflow = document.body.style.overflow
+    document.documentElement.style.overflow = 'hidden'
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.documentElement.style.overflow = prevHtmlOverflow
+      document.body.style.overflow = prevBodyOverflow
+    }
+  }, [])
+
   const handleUseLocation = async () => {
     const zip = await getCurrentZip()
     router.push(`/${zip || '90026'}`)
@@ -43,7 +58,11 @@ export default function Home() {
         color: '#000',
         position: 'relative',
         background: '#fff',
-        minHeight: '100vh',
+        // 100dvh (not 100vh) so mobile Safari sizes this to the actually
+        // visible viewport, not the taller value that includes the space
+        // behind its collapsing address bar - the latter was making this
+        // "one screen" page feel scrollable/draggable on phones.
+        height: '100dvh',
         overflow: 'hidden',
       }}
     >

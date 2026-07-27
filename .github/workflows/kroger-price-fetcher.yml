@@ -12,13 +12,21 @@ jobs:
     timeout-minutes: 360
     strategy:
       fail-fast: true
-      max-parallel: 1        # run the two partitions sequentially
+      max-parallel: 1        # run partitions sequentially - the Bottleneck
+                              # rate limiter is per-process, so running
+                              # partitions concurrently would double the true
+                              # Kroger-facing request rate past 1 rps.
       matrix:
         include:
+          # Now tracking all ~2,893 known Kroger-family stores (was 1,500) -
+          # split across 3 partitions to keep each job well under the
+          # 360-min timeout even as the store count grows.
           - start_at: 0
-            max_stores: 750
-          - start_at: 750
-            max_stores: 750
+            max_stores: 1000
+          - start_at: 1000
+            max_stores: 1000
+          - start_at: 2000
+            max_stores: 1000
     concurrency:
       group: kroger-prices-${{ matrix.start_at }}
       cancel-in-progress: false
@@ -32,12 +40,11 @@ jobs:
       NODE_ENV:              production
       RATE_LIMIT_RPS:        '1'
       MAX_CONCURRENT_REQUESTS: '3'
-      CONCURRENCY:           '1'
+      CONCURRENCY:           '3'
       MAX_CONSECUTIVE_SKIPS: '100'
       SHUFFLE_STORES:        '1'
       PAGE_DELAY_MS:         '500'
       STORE_DELAY_MS:        '250'
-      KROGER_STORES_TABLE:   kroger_stores_1500
 
     steps:
       - uses: actions/checkout@v5

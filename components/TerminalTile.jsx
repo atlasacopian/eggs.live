@@ -1,46 +1,74 @@
 import React from 'react';
+import { GREEN, PANEL_BORDER } from '../lib/terminalTheme';
 
-export default function TerminalTile({ title, span, children, style, bodyStyle }) {
-  const tileStyle = {
+// Black panel, black header, color comes from the text/data itself - but
+// every real Bloomberg screen is a literal bordered grid: each cell boxed on
+// all four sides, panels touching edge-to-edge with a hairline between them,
+// not floating cards with soft gaps. The full border is what makes this read
+// as a terminal grid instead of a loose stack of widgets.
+export default function TerminalTile({ title, span, children, style, bodyStyle, live = false }) {
+  const wrapperStyle = {
     gridColumn: span ? `span ${span}` : 'auto',
-    background: '#000000', // Changed to black
-    border: '1px solid #222222',     // Darker border for black background
-    color: '#ffffff',          // Changed to white
+    background: '#000',
+    color: '#ffffff',
     fontFamily: 'Menlo, monospace',
     display: 'flex',
     flexDirection: 'column',
-    overflow: 'hidden', // Prevent content from breaking layout
-    ...style, // Allow overriding with passed styles
+    overflow: 'hidden',
+    border: `1px solid ${PANEL_BORDER}`,
+    boxSizing: 'border-box',
+    ...style,
   };
 
   const headerStyle = {
-    background: '#000000', // Changed to black
-    padding: '6px 8px',
-    fontSize: '0.85rem',
-    color: '#ffffff',     // Changed to white
-    borderBottom: '1px solid #222222', // Darker border for black background
+    background: '#000',
+    color: '#fff',
     textTransform: 'uppercase',
-    letterSpacing: '0.05em',
+    fontSize: '0.7rem',
+    fontWeight: 700,
+    letterSpacing: '0.06em',
+    padding: '2px 5px 3px',
+    borderBottom: `1px solid ${PANEL_BORDER}`,
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 5,
+    flexShrink: 0,
   };
 
   const defaultBodyStyle = {
-    padding: '8px',
     flexGrow: 1,
-    overflow: 'auto', // Allow scrolling for content if it overflows
-    background: '#000000', // Ensure body background is also black
-    color: '#ffffff',     // Ensure body text is also white
-    ...bodyStyle, // Allow overriding with passed styles
+    overflow: 'auto',
+    background: '#000',
+    color: '#ffffff',
+    padding: '4px 5px',
+    ...bodyStyle,
   };
 
   return (
-    <div style={tileStyle}>
-      {title && <div style={headerStyle}>{title}</div>}
+    <div style={wrapperStyle}>
+      {title && (
+        <div style={headerStyle}>
+          {live && (
+            <span
+              style={{
+                display: 'inline-block',
+                width: 5,
+                height: 5,
+                borderRadius: '50%',
+                background: GREEN,
+                flexShrink: 0,
+              }}
+            />
+          )}
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</span>
+        </div>
+      )}
       <div style={defaultBodyStyle}>
         {children}
       </div>
     </div>
   );
-} 
+}

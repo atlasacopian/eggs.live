@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { supabaseBrowser } from '../lib/supabase'; // Assuming lib/supabase.js
+import { citationStyle } from '../lib/terminalTheme';
+
+const WHITE = '#fff';
 
 const formatDataForChart = (regularData, organicData) => {
   const combined = {};
@@ -29,11 +32,11 @@ export default function UsdaPriceChart() {
   const [lastUpdated, setLastUpdated] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [priceType, setPriceType] = useState('Regular');
 
   useEffect(() => {
     // Function to fetch and update chart data using API endpoint
     const fetchData = async () => {
-      console.log('🔄 Fetching fresh USDA data from API at:', new Date().toISOString());
       setLoading(true);
       setError(null);
 
@@ -41,30 +44,25 @@ export default function UsdaPriceChart() {
         // Use the API endpoint instead of direct database queries
         const response = await fetch('/api/national-egg-stats');
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        
+
         const data = await response.json();
-        console.log('API Response:', data);
 
         if (!data.priceHistoryRegular || !data.priceHistoryOrganic) {
           throw new Error('Invalid API response format');
         }
-        
+
         // Convert API data to chart format
         const regularData = data.priceHistoryRegular.map(item => ({
           report_end_date: item.date,
           price: item.value
         }));
-        
+
         const organicData = data.priceHistoryOrganic.map(item => ({
           report_end_date: item.date,
           price: item.value
         }));
-        
-        console.log('Converted Regular Data:', regularData);
-        console.log('Converted Organic Data:', organicData);
-        
+
         const formattedData = formatDataForChart(regularData, organicData);
-        console.log('All USDA Chart Data:', formattedData);
         setChartData(formattedData);
         if (formattedData.length) {
           setLastUpdated(formattedData[formattedData.length - 1].date);
@@ -83,7 +81,6 @@ export default function UsdaPriceChart() {
 
     // Set up periodic refresh every 5 minutes to get latest data
     const interval = setInterval(() => {
-      console.log('🔄 Periodic refresh of USDA data');
       fetchData();
     }, 5 * 60 * 1000); // 5 minutes
 
@@ -105,38 +102,70 @@ export default function UsdaPriceChart() {
     return <div style={{ padding: '20px', textAlign: 'center' }}>No USDA price data available for the selected types.</div>;
   }
 
+  // Explicit padded domain from the real data range for the selected series
+  // only - recharts' 'auto'/'auto' was collapsing everything near the top of
+  // the chart with only one legible tick once the panel got shorter, and
+  // scaling to whichever line isn't shown just wastes vertical range.
+  const values = chartData.map(d => d[priceType]).filter(v => typeof v === 'number');
+  const minVal = values.length ? Math.min(...values) : 0;
+  const maxVal = values.length ? Math.max(...values) : 10;
+  const pad = (maxVal - minVal) * 0.1 || 0.5;
+  const domainMin = Math.max(0, minVal - pad);
+  const domainMax = maxVal + pad;
+
+  const controlBtnStyle = (active) => ({
+    background: 'transparent',
+    border: 'none',
+    color: active ? WHITE : '#666',
+    fontFamily: 'Menlo, monospace',
+    fontSize: '0.65rem',
+    letterSpacing: '0.05em',
+    cursor: 'pointer',
+    padding: '2px 6px 4px',
+    textTransform: 'uppercase',
+  });
+
   return (
     <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <ResponsiveContainer width="100%" height="85%">
-        <LineChart data={chartData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-        <XAxis 
-          dataKey="date" 
-          stroke="#ccc"
-          tickFormatter={(tick) => new Date(tick).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}
-          minTickGap={30} // Adjust to show fewer labels if crowded
-        />
-          <YAxis stroke="#ccc" domain={[ 'auto', 'auto' ]}>
-        </YAxis>
-        <Tooltip 
-            wrapperStyle={{ backgroundColor: '#222', border: '1px solid #555' }}
-            contentStyle={{ backgroundColor: '#222', color: '#fff' }}
+      <div>
+        <button style={controlBtnStyle(priceType === 'Regular')} onClick={() => setPriceType('Regular')}>
+          {priceType === 'Regular' ? '[ Regular ]' : 'Regular'}
+        </button>
+        <button style={controlBtnStyle(priceType === 'Organic')} onClick={() => setPriceType('Organic')}>
+          {priceType === 'Organic' ? '[ Organic ]' : 'Organic'}
+        </button>
+      </div>
+      <ResponsiveContainer width="100%" height="76%">
+        <LineChart data={chartData} margin={{ top: 8, right: 16, left: 0, bottom: 4 }}>
+          <CartesianGrid vertical={false} stroke="#333" strokeOpacity={0.4} />
+          <XAxis
+            dataKey="date"
+            stroke="#444"
+            tick={{ fontSize: 11, fill: '#aaa' }}
+            tickLine={false}
+            tickFormatter={(tick) => new Date(tick).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}
+            minTickGap={40}
+          />
+          <YAxis
+            domain={[domainMin, domainMax]}
+            stroke="#444"
+            tick={{ fontSize: 11, fill: '#aaa' }}
+            tickLine={false}
+            tickFormatter={v => `$${v.toFixed(2)}`}
+            width={46}
+          />
+          <Tooltip
+            wrapperStyle={{ backgroundColor: '#000', border: `1px solid ${WHITE}` }}
+            contentStyle={{ backgroundColor: '#000', color: '#fff' }}
             itemStyle={{ color: '#fff' }}
             formatter={(value) => typeof value === 'number' ? `$${value.toFixed(2)}` : value}
-        />
-        <Legend wrapperStyle={{ color: '#fff' }} />
-        {/* Render Regular only if at least one data point exists */}
-        {chartData.some(d => d.Regular !== undefined) && (
-          <Line type="monotone" dataKey="Regular" stroke="#00b7ff" dot={false} strokeWidth={2} name="Regular (Natl Avg)" connectNulls={true} />
-        )}
-        {chartData.some(d => d.Organic !== undefined) && ( // Only render Organic line if data exists
-            <Line type="monotone" dataKey="Organic" stroke="#fd7e14" dot={false} strokeWidth={2} name="Organic (Natl Avg)" connectNulls={true} />
-        )}
-      </LineChart>
+          />
+          <Line type="linear" dataKey={priceType} stroke={WHITE} dot={false} strokeWidth={1.5} name={`${priceType} (Natl Avg)`} connectNulls={true} />
+        </LineChart>
       </ResponsiveContainer>
-      <div style={{ fontSize: '0.6em', color: '#666', marginTop: 4, textAlign: 'right' }}>
-        Source: USDA{lastUpdated ? ` • Last updated: ${new Date(lastUpdated).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : ''}
+      <div style={{ ...citationStyle, marginTop: 2, textAlign: 'right' }}>
+        Source: USDA{lastUpdated ? ` · Last updated: ${new Date(lastUpdated).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : ''}
       </div>
     </div>
   );
-} 
+}

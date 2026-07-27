@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { RED, YELLOW } from '../lib/terminalTheme';
 
 function formatDate(iso) {
   if (!iso) return '';
@@ -40,58 +41,58 @@ export default function BirdFluPanel() {
 
   const { totals, last30Days, recent } = data;
 
-  const statStyle = { textAlign: 'center' };
-  const statValueStyle = { fontSize: '1.4rem', fontWeight: 'bold' };
-  const statLabelStyle = { fontSize: '0.65rem', color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 2 };
+  // A real terminal doesn't render stats as centered stat cards - it's a
+  // line-item list, label left, value right, like a field readout.
+  const statRows = [
+    ['New (30d)', last30Days.newDetections, YELLOW],
+    ['Birds Affected', formatBirds(totals.totalBirdsAffected), RED],
+    ['Commercial', totals.commercialFlocks.toLocaleString(), '#fff'],
+    ['Backyard', totals.backyardFlocks.toLocaleString(), '#fff'],
+  ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', fontFamily: 'Menlo, monospace' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-around', padding: '4px 0 12px', borderBottom: '1px solid #222' }}>
-        <div style={statStyle}>
-          <div style={{ ...statValueStyle, color: '#ff5f5f' }}>{last30Days.newDetections}</div>
-          <div style={statLabelStyle}>New (30d)</div>
-        </div>
-        <div style={statStyle}>
-          <div style={statValueStyle}>{totals.commercialFlocks.toLocaleString()}</div>
-          <div style={statLabelStyle}>Commercial Flocks</div>
-        </div>
-        <div style={statStyle}>
-          <div style={statValueStyle}>{totals.backyardFlocks.toLocaleString()}</div>
-          <div style={statLabelStyle}>Backyard Flocks</div>
-        </div>
-        <div style={statStyle}>
-          <div style={{ ...statValueStyle, color: 'var(--accent-color)' }}>{formatBirds(totals.totalBirdsAffected)}</div>
-          <div style={statLabelStyle}>Birds Affected (Total)</div>
-        </div>
+    <div style={{ display: 'flex', height: '100%', gap: 6, fontFamily: 'Menlo, monospace' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', flexShrink: 0, width: 88, borderRight: '1px solid #222', paddingRight: 6 }}>
+        {statRows.map(([label, value, color], i) => (
+          <div
+            key={label}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              padding: '3px 2px',
+              borderBottom: i < statRows.length - 1 ? '1px solid #1a1a1a' : 'none',
+            }}
+          >
+            <span style={{ fontSize: '0.54rem', color: '#888', letterSpacing: '0.03em', textTransform: 'uppercase' }}>{label}</span>
+            <span style={{ fontSize: '0.72rem', fontWeight: 700, color }}>{value}</span>
+          </div>
+        ))}
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', marginTop: 8 }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.7rem' }}>
-          <thead>
-            <tr style={{ color: '#888', textAlign: 'left' }}>
-              <th style={{ padding: '2px 6px', fontWeight: 'normal' }}>Date</th>
-              <th style={{ padding: '2px 6px', fontWeight: 'normal' }}>County, State</th>
-              <th style={{ padding: '2px 6px', fontWeight: 'normal' }}>Type</th>
-              <th style={{ padding: '2px 6px', fontWeight: 'normal', textAlign: 'right' }}>Birds</th>
-            </tr>
-          </thead>
-          <tbody>
-            {recent.map((r, i) => (
-              <tr key={i} style={{ borderTop: '1px solid #1a1a1a' }}>
-                <td style={{ padding: '3px 6px', color: '#ccc' }}>{formatDate(r.confirmed_date)}</td>
-                <td style={{ padding: '3px 6px', color: '#ccc' }}>{r.county}, {r.state}</td>
-                <td style={{ padding: '3px 6px', color: r.flock_type === 'commercial' ? '#ff5f5f' : '#888' }}>
-                  {r.flock_type}
-                </td>
-                <td style={{ padding: '3px 6px', color: '#ccc', textAlign: 'right' }}>{r.birds_affected.toLocaleString()}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div style={{ fontSize: '0.65rem', color: '#666', textAlign: 'center', paddingTop: 6, borderTop: '1px solid #222' }}>
-        Source: USDA APHIS
+      {/* Compact one-line-per-detection list instead of a wide table with
+          its own header row - denser, and no header row eating height. Flock
+          type shown as a colored dot (not the word) to leave room for
+          county/state at narrow widths - the color still carries the
+          commercial-vs-backyard distinction. */}
+      <div style={{ flex: 1, minWidth: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+        {recent.slice(0, 8).map((r, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: '0.62rem', padding: '2px 0', borderBottom: '1px solid #141414' }}>
+            <span style={{ color: '#666', width: 42, flexShrink: 0, whiteSpace: 'nowrap' }}>{formatDate(r.confirmed_date)}</span>
+            <span
+              title={r.flock_type}
+              style={{
+                display: 'inline-block', width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
+                background: r.flock_type === 'commercial' ? RED : '#888',
+              }}
+            />
+            <span style={{ color: '#ccc', flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {r.county}, {r.state}
+            </span>
+            <span style={{ color: '#fff', fontWeight: 600, flexShrink: 0, width: 46, textAlign: 'right', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {formatBirds(r.birds_affected)}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );

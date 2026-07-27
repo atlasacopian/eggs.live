@@ -1,9 +1,10 @@
 'use client';
 
 import React from 'react';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from 'recharts';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
+import { BLUE, ORANGE, PURPLE, GREEN, RED, YELLOW } from '../lib/terminalTheme';
 
-const BAR_COLORS = ['#00b7ff', '#fd7e14', '#00c800', '#e0e0e0', '#ff5f5f', '#c084fc'];
+const PIE_COLORS = [BLUE, ORANGE, PURPLE, GREEN, RED, YELLOW];
 
 export default function NationalStoreStats({ stats, error }) {
   if (error) {
@@ -14,8 +15,8 @@ export default function NationalStoreStats({ stats, error }) {
   }
 
   // Show the top brands individually; bucket the long tail of small Kroger
-  // banners (often single-digit store counts) so their bars aren't reduced
-  // to invisible slivers next to Target/Kroger.
+  // banners (often single-digit store counts) into "Other" - shown as its
+  // own real slice with its own count, not silently dropped.
   const TOP_N = 5;
   const sorted = [...stats.brands].sort((a, b) => b.count - a.count);
   const top = sorted.slice(0, TOP_N);
@@ -27,39 +28,50 @@ export default function NationalStoreStats({ stats, error }) {
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ textAlign: 'center', padding: '4px 0 8px' }}>
-        <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#00c800' }}>
-          {stats.totalStores.toLocaleString()}
-        </div>
-        <div style={{ fontSize: '0.7rem', color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-          Stores Surveyed Nationwide
-        </div>
-      </div>
-      <div style={{ flex: 1, minHeight: 0 }}>
+    <div style={{ display: 'flex', alignItems: 'center', height: '100%', gap: 10 }}>
+      <div style={{ width: 84, height: '90%', flexShrink: 0 }}>
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={chartData} layout="vertical" margin={{ top: 4, right: 16, bottom: 4, left: 4 }}>
-            <XAxis type="number" stroke="#666" tick={{ fontSize: 10 }} />
-            <YAxis
-              type="category"
-              dataKey="name"
-              stroke="#ccc"
-              tick={{ fontSize: 10, fill: '#ccc' }}
-              width={110}
-              interval={0}
-            />
+          <PieChart>
+            <Pie
+              data={chartData}
+              dataKey="count"
+              nameKey="name"
+              innerRadius="52%"
+              outerRadius="88%"
+              paddingAngle={2}
+              stroke="#000"
+              strokeWidth={2}
+            >
+              {chartData.map((_, i) => (
+                <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+              ))}
+            </Pie>
             <Tooltip
               contentStyle={{ backgroundColor: '#111', border: '1px solid #333', color: '#fff' }}
               itemStyle={{ color: '#fff' }}
-              cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+              formatter={(value, name) => [value.toLocaleString(), name]}
             />
-            <Bar dataKey="count" radius={[0, 2, 2, 0]}>
-              {chartData.map((_, i) => (
-                <Cell key={i} fill={BAR_COLORS[i % BAR_COLORS.length]} />
-              ))}
-            </Bar>
-          </BarChart>
+          </PieChart>
         </ResponsiveContainer>
+      </div>
+
+      {/* Legend as a real list, not just hover tooltips - "Other" gets its
+          own row with its own count and share, same as every named brand.
+          The total lives here too now, as a header line above the
+          breakdown, instead of its own separate side block. */}
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3, fontFamily: 'Menlo, monospace' }}>
+        <div style={{ fontSize: '0.64rem', color: '#fff', fontWeight: 700, marginBottom: 2 }}>
+          {stats.totalStores.toLocaleString()} stores · {stats.brands.length} brands
+        </div>
+        {chartData.map((d, i) => (
+          <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: PIE_COLORS[i % PIE_COLORS.length], flexShrink: 0 }} />
+            <span style={{ color: '#ccc', fontSize: '0.62rem', flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {d.name}
+            </span>
+            <span style={{ color: '#fff', fontWeight: 700, fontSize: '0.62rem' }}>{d.count.toLocaleString()}</span>
+          </div>
+        ))}
       </div>
     </div>
   );

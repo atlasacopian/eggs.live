@@ -1,7 +1,8 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine } from 'recharts';
+import { ResponsiveContainer, ComposedChart, Line, Area, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine } from 'recharts';
 import { motion } from 'framer-motion';
+import { SIGNAL, RED } from '../lib/terminalTheme';
 
 // Custom tooltip for price and date
 const CustomTooltip = ({ active, payload, label }) => {
@@ -9,9 +10,9 @@ const CustomTooltip = ({ active, payload, label }) => {
     const { value } = payload[0];
     const dateStr = new Date(label).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     return (
-      <div className="bg-black text-white px-2 py-1 rounded shadow-lg">
-        <div>{`$${value.toFixed(2)}`}</div>
-        <div className="text-xs text-gray-400">{dateStr}</div>
+      <div style={{ background: '#0a0a0a', border: `1px solid ${SIGNAL}`, padding: '4px 8px', fontFamily: 'Menlo, monospace' }}>
+        <div style={{ color: '#fff', fontWeight: 700 }}>{`$${value.toFixed(2)}`}</div>
+        <div style={{ fontSize: '0.65rem', color: '#888' }}>{dateStr}</div>
       </div>
     );
   }
@@ -87,7 +88,7 @@ export default function EggPriceChart({ selectedStore, store, highlight = false,
     fetchHistory();
   }, [currentStore?.store_identifier]);
 
-  const strokeColor = highlight ? '#ffc107' : '#ffffff';
+  const strokeColor = highlight ? SIGNAL : '#ffffff';
   const dataKey = priceType;
 
   const selectedRangeDays = RANGES.find(r => r.label === range)?.days;
@@ -96,12 +97,16 @@ export default function EggPriceChart({ selectedStore, store, highlight = false,
     : history;
 
   // Compute dynamic domain for Y axis based on the visible window only, so
-  // zooming into a range also rescales the price axis to that window.
+  // zooming into a range also rescales the price axis to that window. Padding
+  // is proportional to the actual range (10%, floor $0.15) rather than a flat
+  // ±$0.20 - a flat pad swallows most of the chart when a store's price only
+  // moves a few cents, and barely registers when it moves several dollars.
   const values = visibleHistory.map(d => d[dataKey]).filter(v => typeof v === 'number');
   const minVal = values.length ? Math.min(...values) : 0;
   const maxVal = values.length ? Math.max(...values) : 1;
-  const domainMin = minVal - 0.2;
-  const domainMax = maxVal + 0.2;
+  const pad = Math.max((maxVal - minVal) * 0.1, 0.15);
+  const domainMin = Math.max(0, minVal - pad);
+  const domainMax = maxVal + pad;
 
   // Compute ticks: first, middle, last
   const dates = visibleHistory.map(d => d.date);
@@ -120,7 +125,7 @@ export default function EggPriceChart({ selectedStore, store, highlight = false,
   const controlBtnStyle = (active) => ({
     background: 'transparent',
     border: 'none',
-    color: active ? '#fff' : '#666',
+    color: active ? SIGNAL : '#666',
     fontFamily: 'Menlo, monospace',
     fontSize: '0.65rem',
     letterSpacing: '0.05em',
@@ -167,12 +172,28 @@ export default function EggPriceChart({ selectedStore, store, highlight = false,
           style={fullChartOuterStyle}
         >
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart
+            <ComposedChart
               data={visibleHistory}
               margin={{ top: 8, right: 12, left: 0, bottom: 20 }}
             >
+              <defs>
+                <linearGradient id="eggPriceAreaGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={strokeColor} stopOpacity={0.22} />
+                  <stop offset="100%" stopColor={strokeColor} stopOpacity={0.02} />
+                </linearGradient>
+              </defs>
               {/* Render subtle grid only in full view */}
               {!preview && <CartesianGrid vertical={false} stroke="#444" strokeOpacity={0.25} />}
+              {!preview && (
+                <Area
+                  type="linear"
+                  dataKey={dataKey}
+                  stroke="none"
+                  fill="url(#eggPriceAreaGradient)"
+                  connectNulls={false}
+                  isAnimationActive={false}
+                />
+              )}
               <XAxis
                 dataKey="date"
                 type="category"
@@ -218,7 +239,7 @@ export default function EggPriceChart({ selectedStore, store, highlight = false,
                 animationEasing="ease-in-out"
                 connectNulls={false}
               />
-            </LineChart>
+            </ComposedChart>
           </ResponsiveContainer>
         </motion.div>
       </>
@@ -247,7 +268,7 @@ export default function EggPriceChart({ selectedStore, store, highlight = false,
       <>
         {controlBar}
         <p style={{ color: '#888', fontSize: '0.85rem', padding: '8px 10px' }}>
-          No data in this range — try a wider one (6M, 1Y, or ALL).
+          No data in this range - try a wider one.
         </p>
       </>
     );

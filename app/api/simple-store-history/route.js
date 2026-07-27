@@ -40,30 +40,25 @@ export async function GET(req) {
     const targetId = storeIdentifier.startsWith('T') ? storeIdentifier.slice(1) : storeIdentifier;
     // Query Target stats
     const { data, error } = await sb
-      .from('target_egg_price_stats')
-      .select('captured_date, min_price, product_type')
-      .eq('store_id', targetId)
+      .from('target_egg_prices')
+      .select('captured_date, regular_min, organic_min')
+      .eq('location_id', targetId)
       .order('captured_date', { ascending: true });
     if (error) {
       console.error('[simple-store-history] Supabase error (target):', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
-    // Map to chart format: group by date
-    const byDate = {};
-    for (const item of data) {
-      if (!byDate[item.captured_date]) byDate[item.captured_date] = { date: item.captured_date };
-      byDate[item.captured_date][item.product_type] = item.min_price;
-    }
-    historyData = Object.values(byDate).map(item => ({
-      ...item,
-      date: item.date + 'T12:00:00Z'
+    historyData = (data || []).map(item => ({
+      date: item.captured_date + 'T12:00:00Z',
+      regular: item.regular_min,
+      organic: item.organic_min,
     }));
   } else if (/^K\d+$/.test(storeIdentifier)) {
     // Kroger: try both 'K12345' and '12345'
     let data, error;
     // Try with 'K' prefix
     ({ data, error } = await sb
-      .from('kroger_egg_prices_new')
+      .from('kroger_egg_prices')
       .select('captured_date, regular_min, organic_min')
       .eq('location_id', storeIdentifier)
       .order('captured_date', { ascending: true }));
@@ -75,7 +70,7 @@ export async function GET(req) {
       // Try without 'K' prefix
       const idNoK = storeIdentifier.slice(1);
       const { data: dataNoK, error: errorNoK } = await sb
-        .from('kroger_egg_prices_new')
+        .from('kroger_egg_prices')
         .select('captured_date, regular_min, organic_min')
         .eq('location_id', idNoK)
         .order('captured_date', { ascending: true });
@@ -117,21 +112,8 @@ export async function GET(req) {
       organic: item.organic_min,
     }));
   } else {
-    // Query LA stats (existing logic)
-    const { data, error } = await sb
-      .from('la_egg_prices')
-      .select('date, avg_regular_dozen_price, avg_organic_dozen_price')
-      .eq('store_identifier', storeIdentifier)
-      .order('date', { ascending: true });
-    if (error) {
-      console.error('[simple-store-history] Supabase error (la):', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-    historyData = data.map(item => ({
-      date: item.date + 'T12:00:00Z',
-      regular: item.avg_regular_dozen_price,
-      organic: item.avg_organic_dozen_price,
-    }));
+    console.warn(`[simple-store-history] Unrecognized storeIdentifier format: ${storeIdentifier}`);
+    historyData = [];
   }
 
   console.log(`[simple-store-history] Found ${historyData.length} records for ${storeIdentifier}`);

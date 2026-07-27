@@ -2,11 +2,13 @@ import { config } from 'dotenv';
 config({ path: '.env.local' });
 import { createClient } from '@supabase/supabase-js';
 
-// Load environment variables
+// Prunes the set of Kroger stores marked for daily price tracking
+// (kroger_stores.tracked_since IS NOT NULL) down to a maximum count,
+// keeping any store in a must-keep state/city. Never deletes a store row
+// itself - only clears tracked_since to stop scraping it.
 const {
   SUPABASE_URL,
   SUPABASE_SERVICE_KEY,
-  KROGER_STORES_TABLE = 'kroger_stores',
   KROGER_STATE_FILTER,
   KROGER_CITY_FILTER,
   KROGER_MAX_TOTAL_STORES,
@@ -19,17 +21,18 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
 
 const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-async function getAllStores() {
+async function getAllTrackedStores() {
   const all = [];
   const pageSize = 1000;
   let from = 0;
   while (true) {
     const { data, error } = await sb
-      .from(KROGER_STORES_TABLE)
+      .from('kroger_stores')
       .select('location_id, city, state')
+      .not('tracked_since', 'is', null)
       .range(from, from + pageSize - 1);
     if (error) {
-      console.error('❌ Error fetching stores:', error);
+      console.error('❌ Error fetching tracked stores:', error);
       process.exit(1);
     }
     if (!data || data.length === 0) break;
@@ -41,7 +44,7 @@ async function getAllStores() {
 }
 
 (async () => {
-  console.log(`🔧 Pruning table ${KROGER_STORES_TABLE} to a maximum of ${KROGER_MAX_TOTAL_STORES} stores...`);
+  console.log(`🔧 Pruning tracked Kroger stores to a maximum of ${KROGER_MAX_TOTAL_STORES}...`);
 
   const maxTotal = Number(KROGER_MAX_TOTAL_STORES);
   if (isNaN(maxTotal) || maxTotal <= 0) {
@@ -56,12 +59,12 @@ async function getAllStores() {
     ? KROGER_CITY_FILTER.split(',').map(s => s.trim().toUpperCase())
     : [];
 
-  const allStores = await getAllStores();
-  console.log(`Total stores in ${KROGER_STORES_TABLE}: ${allStores.length}`);
+  const trackedStores = await getAllTrackedStores();
+  console.log(`Total currently tracked stores: ${trackedStores.length}`);
 
   const mustKeep = [];
   const others = [];
-  for (const row of allStores) {
+  for (const row of trackedStores) {
     const state = row.state?.toUpperCase();
     const city = row.city?.toUpperCase();
     if (stateFilter.includes(state) || cityFilter.includes(city)) {
@@ -72,7 +75,7 @@ async function getAllStores() {
   }
 
   console.log(`Must-keep stores (filtered by state/city): ${mustKeep.length}`);
-  console.log(`Other stores eligible for pruning: ${others.length}`);
+  console.log(`Other tracked stores eligible for pruning: ${others.length}`);
 
   if (mustKeep.length > maxTotal) {
     console.warn('⚠️ Must-keep count exceeds maximum total; no pruning will be performed.');
@@ -82,22 +85,21 @@ async function getAllStores() {
   const slots = maxTotal - mustKeep.length;
   console.log(`Slots available for other stores: ${slots}`);
 
-  // Determine which other stores to delete: keep first `slots`, delete the rest
-  const toDelete = others.slice(slots).map(r => r.location_id);
-  if (toDelete.length === 0) {
-    console.log('✅ No additional stores need to be deleted.');
+  const toUntrack = others.slice(slots).map(r => r.location_id);
+  if (toUntrack.length === 0) {
+    console.log('✅ No additional stores need to be untracked.');
     process.exit(0);
   }
 
-  console.log(`Deleting ${toDelete.length} stores from ${KROGER_STORES_TABLE}...`);
-  const { error: deleteError } = await sb
-    .from(KROGER_STORES_TABLE)
-    .delete()
-    .in('location_id', toDelete);
-  if (deleteError) {
-    console.error('❌ Error deleting stores:', deleteError);
+  console.log(`Untracking ${toUntrack.length} stores...`);
+  const { error: updateError } = await sb
+    .from('kroger_stores')
+    .update({ tracked_since: null })
+    .in('location_id', toUntrack);
+  if (updateError) {
+    console.error('❌ Error untracking stores:', updateError);
     process.exit(1);
   }
 
-  console.log(`✅ Deleted ${toDelete.length} stores. Table now has ${maxTotal} entries.`);
-})(); 
+  console.log(`✅ Untracked ${toUntrack.length} stores. ${maxTotal} stores now tracked.`);
+})();

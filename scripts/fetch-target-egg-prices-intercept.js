@@ -100,7 +100,7 @@ async function fetchEggsFromRedSky(storeId, zip, visitorId, enableLog = false) {
     for (let from = 0; ; from += pageSize) {
       const { data, error } = await sb
         .from('target_stores')
-        .select('store_id, zip')
+        .select('location_id, zip')
         .range(from, from + pageSize - 1);
       if (error) throw error;
       if (!data || data.length === 0) break;
@@ -126,19 +126,19 @@ async function fetchEggsFromRedSky(storeId, zip, visitorId, enableLog = false) {
   const debugIds = args.filter((a) => /^\d+$/.test(a)).map(Number);
   const enableLog = args.includes('--show');
   if (debugIds.length) {
-    stores = stores.filter((s) => debugIds.includes(Number(s.store_id)));
+    stores = stores.filter((s) => debugIds.includes(Number(s.location_id)));
     console.log(`→ Debug mode: processing only stores [${debugIds.join(', ')}]`);
   }
-  console.log(`→ Stores remaining after filtering: [${stores.map(s => s.store_id).join(', ')}]`);
+  console.log(`→ Stores remaining after filtering: [${stores.map(s => s.location_id).join(', ')}]`);
 
   const now = new Date();
   const captured_date = now.toISOString().split('T')[0];
   const captured_at = now.toISOString();
 
-  for (const { store_id, zip } of stores) {
-    console.log(`\n===== Processing store ${store_id} =====`);
-    const results = await fetchEggsFromRedSky(store_id, zip, visitorId, enableLog);
-    console.log(`→ [RedSky] total items for store ${store_id}: ${results.length}`);
+  for (const { location_id, zip } of stores) {
+    console.log(`\n===== Processing store ${location_id} =====`);
+    const results = await fetchEggsFromRedSky(location_id, zip, visitorId, enableLog);
+    console.log(`→ [RedSky] total items for store ${location_id}: ${results.length}`);
 
     const buckets = { regular: [], organic: [] };
     const debugByType = { regular: [], organic: [] };
@@ -155,38 +155,38 @@ async function fetchEggsFromRedSky(storeId, zip, visitorId, enableLog = false) {
       }
     }
     if (debugByType.regular.length) {
-      console.log(`→ Regular 12-pack eggs for store ${store_id}:`);
+      console.log(`→ Regular 12-pack eggs for store ${location_id}:`);
       console.table(debugByType.regular);
     }
     if (debugByType.organic.length) {
-      console.log(`→ Organic 12-pack eggs for store ${store_id}:`);
+      console.log(`→ Organic 12-pack eggs for store ${location_id}:`);
       console.table(debugByType.organic);
     }
 
-    const payload = [];
+    // One row per store per day, regular/organic as columns - matches
+    // kroger_egg_prices/erewhon_egg_prices exactly (see database/015).
+    const stats = {};
     for (const type of ['regular', 'organic']) {
       const arr = buckets[type];
       if (!arr.length) {
-        console.warn(`⚠️ No ${type} egg prices for store ${store_id}`);
-        payload.push({ store_id, product_type: type, captured_date, captured_at, min_price: null, avg_price: null, max_price: null });
+        console.warn(`⚠️ No ${type} egg prices for store ${location_id}`);
+        stats[`${type}_min`] = null;
+        stats[`${type}_avg`] = null;
+        stats[`${type}_max`] = null;
       } else {
         const sum = arr.reduce((a, b) => a + b, 0);
-        payload.push({
-          store_id,
-          product_type: type,
-          captured_date,
-          captured_at,
-          min_price: Math.min(...arr),
-          avg_price: Number((sum / arr.length).toFixed(2)),
-          max_price: Math.max(...arr)
-        });
+        stats[`${type}_min`] = Math.min(...arr);
+        stats[`${type}_avg`] = Number((sum / arr.length).toFixed(2));
+        stats[`${type}_max`] = Math.max(...arr);
       }
     }
-    console.table(payload);
+    const status = (stats.regular_min != null || stats.organic_min != null) ? 'OK' : 'NO_DATA_FOUND';
+    const row = { location_id, captured_date, captured_at, status, ...stats };
+    console.table([row]);
     const { error: upErr } = await sb
-      .from('target_egg_price_stats')
-      .upsert(payload, { onConflict: ['store_id', 'product_type', 'captured_date'] });
-    if (upErr) console.error(`❌ Upsert failed for store ${store_id}:`, upErr.message);
+      .from('target_egg_prices')
+      .upsert([row], { onConflict: 'location_id,captured_date' });
+    if (upErr) console.error(`❌ Upsert failed for store ${location_id}:`, upErr.message);
     else console.log('✅ Upsert successful');
 
     await new Promise(r => setTimeout(r, 1000));
