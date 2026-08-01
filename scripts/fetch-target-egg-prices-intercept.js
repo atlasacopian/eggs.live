@@ -1,197 +1,98 @@
 import { config } from 'dotenv';
 config({ path: '.env.local' });
-import { chromium } from 'playwright';
+import fetch from 'node-fetch';
 import { createClient } from '@supabase/supabase-js';
-import pLimit from 'p-limit';
+import crypto from 'crypto';
 
-const { SUPABASE_URL, SUPABASE_SERVICE_KEY, BRIGHTDATA_BROWSER_AUTH } = process.env;
+// Ensure required environment variables
+const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36';
+
+const { SUPABASE_URL, SUPABASE_SERVICE_KEY, REDSKY_KEY } = process.env;
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
   console.error('❌ SUPABASE_URL and SUPABASE_SERVICE_KEY must be set');
   process.exit(1);
 }
-if (!BRIGHTDATA_BROWSER_AUTH) {
-  console.error('❌ BRIGHTDATA_BROWSER_AUTH must be set (Bright Data Scraping Browser zone credentials, user:pass)');
-  process.exit(1);
-}
-
+// Use provided RedSky key or fallback to built-in public key
+const USED_REDSKY_KEY = REDSKY_KEY || 'ff457966e64d5e877fdbad070f276d18ecec4a01';
 const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-const wsEndpoint = `wss://${BRIGHTDATA_BROWSER_AUTH}@brd.superproxy.io:9222`;
 
-// RedSky (Target's product-search API) is now behind PerimeterX and no
-// longer reachable directly - see database/README or commit history for
-// the investigation. This scrapes via a real browser session instead:
-// set the store's zip through Target's actual location picker (the only
-// way we found to get genuinely store-specific pickup pricing - the search
-// results grid shows the same nationwide price regardless of location),
-// then open each matched product's detail page for its real price.
+// Set DEBUG_STORE_IDS to an array of store IDs (numbers or strings) to process only those stores
+const DEBUG_STORE_IDS = null; // Process all stores
 
-// Kept in sync with the exclude list and organic check in
-// fetch-kroger-egg-prices.js's classify logic - same product shape, same
-// brand-agnostic 12-count-eggs definition across retailers.
-const EXCLUDE_WORDS = ['eggo', 'frozen', 'pancake', 'waffle', 'muffin', 'protein', 'powder', 'hard-cooked', 'scramble', 'liquid', 'bites'];
+const MAX_CONCURRENT_REQUESTS = 5; // Limit concurrency
+
+/**
+ * Classify a product title into 'regular' or 'organic' for 12-pack eggs.
+ */
 function classifyEggProduct(title) {
   if (!title) return null;
   const txt = title.toLowerCase();
-  if (EXCLUDE_WORDS.some((w) => txt.includes(w))) return null;
+  const exclude = ['eggo', 'frozen', 'pancake', 'waffle', 'muffin', 'protein', 'powder', 'hard-cooked', 'scramble', 'liquid', 'bites'];
+  if (exclude.some((w) => txt.includes(w))) return null;
   if (!/\beggs?\b/.test(txt)) return null;
   if (!/(\b12(?:\s*ct|\s*pk)?\b|\bdozen\b|\bdoz\b|\b12\b)/i.test(txt)) return null;
   if (/organic/.test(txt) || /\borg\b/.test(txt)) return 'organic';
   return 'regular';
 }
 
-function shipToZip(text) {
-  const m = text.match(/Ship to (\d{5})/);
-  return m ? m[1] : null;
-}
+/**
+ * Fetch all egg products for a specific store via RedSky API, handling pagination and v1 fallback.
+ */
+async function fetchEggsFromRedSky(storeId, zip, visitorId, enableLog = false) {
+  const all = [];
+  const limit = 24;
+  for (let offset = 0; ; offset += limit) {
+    // Try the v2 endpoint first
+    const urlV2 = new URL('https://redsky.target.com/redsky_aggregations/v1/web/plp_search_v2');
+    urlV2.searchParams.set('key', USED_REDSKY_KEY);
+    urlV2.searchParams.set('keyword', 'eggs');
+    urlV2.searchParams.set('pricing_store_id', storeId);
+    urlV2.searchParams.set('count', limit.toString());
+    urlV2.searchParams.set('offset', offset.toString());
+    urlV2.searchParams.set('channel', 'WEB');
+    urlV2.searchParams.set('scheduled_delivery_store_id', storeId);
+    urlV2.searchParams.set('page', '/s/eggs');
+    urlV2.searchParams.set('visitor_id', visitorId);
+    if (zip) urlV2.searchParams.set('zip', zip);
 
-function normalizeForMatch(s) {
-  return s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-}
+    if (enableLog) console.log(`→ [RedSky v2] Fetching: ${urlV2.toString()}`);
+    let res = await fetch(urlV2.toString(), { headers: { 'User-Agent': USER_AGENT } });
 
-// A distinctive fragment of the expected title (brand + first few words) -
-// used to confirm the page actually finished navigating to THIS product
-// before trusting its price. Target's site does client-side routing, and
-// a "$ is present" check alone can pass on leftover content from the
-// previous page (e.g. the search listing, which has its own $ prices for
-// other pack sizes) before the new page has fully replaced it.
-function titleFingerprint(title) {
-  return normalizeForMatch(title).split(' ').slice(0, 4).join(' ');
-}
+    // If v2 fails (404 or other non-2xx), try v1
+    if (!res.ok && res.status === 404) {
+      if (enableLog) console.log(`  → RedSky v2 failed (${res.status}), falling back to v1 for store ${storeId}`);
+      const urlV1 = new URL('https://redsky.target.com/redsky_aggregations/v1/web/plp_search');
+      urlV1.searchParams.set('key', USED_REDSKY_KEY);
+      urlV1.searchParams.set('keyword', 'eggs');
+      urlV1.searchParams.set('storeId', storeId);
+      urlV1.searchParams.set('limit', limit.toString());
+      urlV1.searchParams.set('offset', offset.toString());
+      urlV1.searchParams.set('visitor_id', visitorId);
+      if (zip) urlV1.searchParams.set('zip', zip);
 
-async function setStoreZip(page, zip) {
-  await page.goto('https://www.target.com/', { waitUntil: 'domcontentloaded', timeout: 90000 });
-  await page.getByText(/Ship to \d{5}/i).first().waitFor({ timeout: 30000 });
-  await page.waitForTimeout(1500);
-  await page.getByText(/Ship to \d{5}/i).first().click();
-  await page.waitForSelector('#zip-code', { timeout: 15000 });
-  await page.waitForTimeout(800);
-  const zipInput = page.locator('#zip-code');
-  await zipInput.fill('');
-  await zipInput.fill(zip);
-  await page.waitForTimeout(1500);
-  await page.evaluate(() => {
-    document.querySelector('button[data-test="@web/LocationFlyout/UpdateLocationButton"]')?.click();
-  });
-  await page.waitForTimeout(4000);
-
-  const text = await page.evaluate(() => document.body.innerText);
-  return shipToZip(text) === zip;
-}
-
-async function fetchStoreEggs(location_id, zip, enableLog = false) {
-  // Each store gets its own dedicated connection to the Scraping Browser,
-  // not a shared browser with multiple contexts - concurrent contexts on
-  // one connection were found to leak location state between stores
-  // (verified via the shipToZip drift-check below producing cross-store
-  // mismatches under concurrency), so isolation has to happen at the
-  // connection level.
-  const browser = await chromium.connectOverCDP(wsEndpoint);
-  const context = await browser.newContext();
-  const page = await context.newPage();
-  page.setDefaultTimeout(60000);
-  const buckets = { regular: [], organic: [] };
-
-  try {
-    const zipConfirmed = await setStoreZip(page, zip);
-    if (!zipConfirmed) {
-      if (enableLog) console.warn(`⚠️ Could not confirm zip ${zip} for store ${location_id}; retrying once.`);
-      const retryConfirmed = await setStoreZip(page, zip);
-      if (!retryConfirmed) {
-        throw new Error(`Zip ${zip} would not stick for store ${location_id}`);
-      }
+      if (enableLog) console.log(`→ [RedSky v1] Fetching: ${urlV1.toString()}`);
+      res = await fetch(urlV1.toString(), { headers: { 'User-Agent': USER_AGENT } });
     }
 
-    await page.goto('https://www.target.com/s?searchTerm=eggs', { waitUntil: 'domcontentloaded', timeout: 90000 });
-    await page.waitForFunction(() => document.body.innerText.includes('$'), { timeout: 45000 }).catch(() => {});
-    await page.waitForTimeout(1500);
-
-    const candidates = await page.$$eval('a[href*="/p/"]', (els) =>
-      els.map((el) => ({ href: el.getAttribute('href'), title: el.textContent || '' }))
-    );
-
-    // De-dupe by href (a title/link can appear more than once in the grid -
-    // sponsored slot plus organic listing, etc.) and classify each into
-    // regular/organic 12-count eggs using the same rules every retailer uses.
-    const seen = new Set();
-    const matched = [];
-    for (const c of candidates) {
-      if (!c.href || seen.has(c.href)) continue;
-      const type = classifyEggProduct(c.title);
-      if (!type) continue;
-      seen.add(c.href);
-      matched.push({ ...c, type });
+    if (!res.ok) {
+      const txt = await res.text();
+      console.warn(`⚠️ RedSky fetch failed for store ${storeId} (status ${res.status}): ${txt.slice(0, 150)}`);
+      break;
     }
 
-    if (enableLog) {
-      console.log(`→ Store ${location_id}: ${matched.length} matched egg products in listing:`);
-      for (const m of matched) console.log(`   [${m.type}] "${m.title.trim().slice(0, 80)}" -> ${m.href}`);
-    }
-
-    // Eggs are sold at essentially every Target - zero matches almost
-    // always means an incomplete/congested page load rather than a real
-    // "this store has no eggs" result. Throw so the caller retries instead
-    // of recording a false NO_DATA_FOUND.
-    if (matched.length === 0) {
-      throw new Error(`No egg products matched in listing for store ${location_id} - likely an incomplete page load`);
-    }
-
-    for (const { href, type, title } of matched) {
-      const detailUrl = href.startsWith('http') ? href : `https://www.target.com${href}`;
-      const expectedFingerprint = titleFingerprint(title);
-
-      await page.goto(detailUrl, { waitUntil: 'domcontentloaded', timeout: 90000 });
-      // A fixed sleep here was intermittently too short for the price to
-      // finish rendering (location was already confirmed correct, but the
-      // $ text just hadn't hydrated yet) - wait for actual price content
-      // the same way the search listing page already does.
-      await page.waitForFunction(() => /\$\d+\.\d{2}/.test(document.body.innerText), { timeout: 20000 }).catch(() => {});
-      await page.waitForTimeout(500);
-      let detailText = await page.evaluate(() => document.body.innerText);
-
-      // Target's site does client-side routing - a "$" being present can
-      // still be leftover content from the PREVIOUS page (the search
-      // listing has its own $ prices for other pack sizes/products) before
-      // the new page has fully replaced it. Confirm we're actually looking
-      // at the product we navigated to before trusting anything on it.
-      if (!normalizeForMatch(detailText).includes(expectedFingerprint)) {
-        if (enableLog) console.warn(`  ⚠️ Page hadn't finished navigating to "${title.trim().slice(0, 50)}" yet; waiting and re-checking.`);
-        await page.waitForTimeout(2500);
-        detailText = await page.evaluate(() => document.body.innerText);
-        if (!normalizeForMatch(detailText).includes(expectedFingerprint)) {
-          if (enableLog) console.warn(`  ⚠️ Still on the wrong page for "${title.trim()}"; skipping this price.`);
-          continue;
-        }
-      }
-
-      const detailZip = shipToZip(detailText);
-      if (enableLog) console.log(`  [detail] shipToZip=${detailZip} (expected ${zip}) for ${title.trim().slice(0, 60)}`);
-
-      // Confirm the location held on the detail page too - we've seen it
-      // silently revert to an IP-based default before, and a price read
-      // under the wrong location is worse than no price at all.
-      if (detailZip !== zip) {
-        if (enableLog) console.warn(`  ⚠️ Location drifted on detail page for ${title.trim()}; skipping this price.`);
-        continue;
-      }
-
-      const priceMatch = detailText.match(/\$(\d+\.\d{2})/);
-      if (priceMatch) {
-        const price = Number(priceMatch[1]);
-        buckets[type].push(price);
-        if (enableLog) console.log(`  ${type}: $${price} — ${title.trim()}`);
-      } else if (enableLog) {
-        console.warn(`  ⚠️ No price pattern found on detail page for ${title.trim()}`);
-      }
-    }
-  } finally {
-    await context.close();
-    await browser.close();
+    const json = await res.json();
+    const batch = json.data?.search?.products || [];
+    if (enableLog) console.log(`   → batch returned ${batch.length} items`);
+    if (!batch.length) break;
+    all.push(...batch);
+    if (batch.length < limit) break;
+    await new Promise(r => setTimeout(r, 300)); // Rate limit delay
   }
-
-  return buckets;
+  return all;
 }
 
 (async () => {
+  // Load all target_stores via pagination
   console.log('📦 Loading target_stores from Supabase...');
   async function getAllStores() {
     const all = [];
@@ -208,7 +109,6 @@ async function fetchStoreEggs(location_id, zip, enableLog = false) {
     }
     return all;
   }
-
   let stores;
   try {
     stores = await getAllStores();
@@ -218,6 +118,10 @@ async function fetchStoreEggs(location_id, zip, enableLog = false) {
   }
   console.log(`→ ${stores.length} stores fetched.`);
 
+  // Generate a visitor ID for this run
+  const visitorId = crypto.randomUUID();
+  console.log(`🔑 Generated visitorId: ${visitorId}`);
+
   const args = process.argv.slice(2);
   const debugIds = args.filter((a) => /^\d+$/.test(a)).map(Number);
   const enableLog = args.includes('--show');
@@ -225,56 +129,47 @@ async function fetchStoreEggs(location_id, zip, enableLog = false) {
     stores = stores.filter((s) => debugIds.includes(Number(s.location_id)));
     console.log(`→ Debug mode: processing only stores [${debugIds.join(', ')}]`);
   }
-
-  const startAtEnv = Number(process.env.START_AT ?? '0');
-  const maxStoresPerRun = Number(process.env.MAX_STORES_PER_RUN ?? '0');
-  let storesToProcess = stores.slice(startAtEnv);
-  if (maxStoresPerRun > 0) storesToProcess = storesToProcess.slice(0, maxStoresPerRun);
-
-  console.log(`→ Processing ${storesToProcess.length} stores.`);
-
-  // Multiple simultaneous Scraping Browser connections were unreliable
-  // against this account (rate limits, timeouts, incomplete loads) -
-  // default to fully sequential; raise via env once a higher concurrency
-  // is confirmed stable.
-  const concurrency = Number(process.env.CONCURRENCY ?? '1');
-  const limit = pLimit(concurrency);
+  console.log(`→ Stores remaining after filtering: [${stores.map(s => s.location_id).join(', ')}]`);
 
   const now = new Date();
   const captured_date = now.toISOString().split('T')[0];
   const captured_at = now.toISOString();
 
-  await Promise.all(storesToProcess.map((s, idx) => limit(async () => {
-    const { location_id, zip } = s;
-    console.log(`\n===== Processing store ${location_id} (zip ${zip}) [${idx + 1}/${storesToProcess.length}] =====`);
+  for (const { location_id, zip } of stores) {
+    console.log(`\n===== Processing store ${location_id} =====`);
+    const results = await fetchEggsFromRedSky(location_id, zip, visitorId, enableLog);
+    console.log(`→ [RedSky] total items for store ${location_id}: ${results.length}`);
 
-    let buckets;
-    const maxAttempts = 3;
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      try {
-        buckets = await fetchStoreEggs(location_id, zip, enableLog);
-        break;
-      } catch (e) {
-        // Failures here have turned out to be transient session/connection
-        // congestion against the Scraping Browser (rate limits, timeouts,
-        // or an incomplete page load surfaced as zero matched products) -
-        // back off and retry rather than losing the store for the day.
-        if (attempt < maxAttempts) {
-          const waitMs = 10000 * attempt;
-          console.warn(`⚠️ Store ${location_id}: ${e.message}. Retrying in ${waitMs / 1000}s (attempt ${attempt}/${maxAttempts})`);
-          await new Promise((r) => setTimeout(r, waitMs));
-          continue;
-        }
-        console.error(`❌ Failed to scrape store ${location_id}:`, e.message);
-        return;
+    const buckets = { regular: [], organic: [] };
+    const debugByType = { regular: [], organic: [] };
+    for (const prod of results) {
+      const title = prod.item?.product_description?.title || prod.title;
+      const type = classifyEggProduct(title);
+      if (!type) continue;
+      let price = null;
+      if (prod.price?.current_retail) price = prod.price.current_retail;
+      else if (prod.price?.current_retail_price) price = prod.price.current_retail_price;
+      if (price != null && price > 0) {
+        buckets[type].push(price);
+        debugByType[type].push({ tcin: prod.tcin, title, price });
       }
     }
-    if (!buckets) return;
+    if (debugByType.regular.length) {
+      console.log(`→ Regular 12-pack eggs for store ${location_id}:`);
+      console.table(debugByType.regular);
+    }
+    if (debugByType.organic.length) {
+      console.log(`→ Organic 12-pack eggs for store ${location_id}:`);
+      console.table(debugByType.organic);
+    }
 
+    // One row per store per day, regular/organic as columns - matches
+    // kroger_egg_prices/erewhon_egg_prices exactly (see database/015).
     const stats = {};
     for (const type of ['regular', 'organic']) {
       const arr = buckets[type];
       if (!arr.length) {
+        console.warn(`⚠️ No ${type} egg prices for store ${location_id}`);
         stats[`${type}_min`] = null;
         stats[`${type}_avg`] = null;
         stats[`${type}_max`] = null;
@@ -288,13 +183,14 @@ async function fetchStoreEggs(location_id, zip, enableLog = false) {
     const status = (stats.regular_min != null || stats.organic_min != null) ? 'OK' : 'NO_DATA_FOUND';
     const row = { location_id, captured_date, captured_at, status, ...stats };
     console.table([row]);
-
     const { error: upErr } = await sb
       .from('target_egg_prices')
       .upsert([row], { onConflict: 'location_id,captured_date' });
     if (upErr) console.error(`❌ Upsert failed for store ${location_id}:`, upErr.message);
     else console.log('✅ Upsert successful');
-  })));
+
+    await new Promise(r => setTimeout(r, 1000));
+  }
 
   console.log('\n🏁 All stores processed.');
   process.exit(0);
