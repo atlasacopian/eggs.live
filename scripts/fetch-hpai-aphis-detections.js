@@ -84,22 +84,32 @@ async function downloadCrosstabCsv() {
 }
 
 function parseCrosstab(filePath) {
-  // Tableau exports this crosstab as UTF-16LE, tab-separated.
+  // Tableau exports this crosstab as UTF-16LE, tab-separated. Column order
+  // isn't guaranteed to be stable across APHIS dashboard edits (they've
+  // inserted new columns before), so look columns up by name rather than
+  // trusting a fixed position.
   const buf = fs.readFileSync(filePath);
   const text = buf.toString('utf16le').replace(/^﻿/, '');
   const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
   const header = lines[0].split('\t');
-  const expected = ['Special ID', 'County Name', 'State', 'Production', 'Confirmed Diagnosis', 'Control Area Released'];
-  for (let i = 0; i < expected.length; i++) {
-    if (header[i] !== expected[i]) {
-      throw new Error(`Unexpected crosstab column at index ${i}: got "${header[i]}", expected "${expected[i]}"`);
-    }
+  const REQUIRED = ['Special ID', 'County Name', 'State', 'Production', 'Confirmed Diagnosis', 'Control Area Released', 'Birds Affected'];
+  const colIndex = {};
+  for (const name of REQUIRED) {
+    const i = header.indexOf(name);
+    if (i === -1) throw new Error(`Crosstab is missing expected column "${name}". Header: ${header.join(', ')}`);
+    colIndex[name] = i;
   }
 
   const rows = [];
   for (const line of lines.slice(1)) {
     const cols = line.split('\t');
-    const [specialId, county, state, production, confirmedRaw, controlArea, birdsRaw] = cols;
+    const specialId = cols[colIndex['Special ID']];
+    const county = cols[colIndex['County Name']];
+    const state = cols[colIndex['State']];
+    const production = cols[colIndex['Production']];
+    const confirmedRaw = cols[colIndex['Confirmed Diagnosis']];
+    const controlArea = cols[colIndex['Control Area Released']];
+    const birdsRaw = cols[colIndex['Birds Affected']];
     const confirmed_date = parseConfirmedDate(confirmedRaw);
     if (!confirmed_date) continue;
 
