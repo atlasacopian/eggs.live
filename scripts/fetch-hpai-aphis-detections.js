@@ -66,6 +66,13 @@ async function downloadCrosstabCsv() {
     await frame.locator('[data-tb-test-id="viz-viewer-toolbar-button-download"]').click();
     await frame.getByText('Crosstab', { exact: true }).click();
 
+    // This is a multi-sheet dashboard, so the crosstab dialog asks which
+    // sheet to export and defaults to whichever one Tableau feels like
+    // (this has changed on us before, silently exporting the wrong sheet).
+    // APHIS built a dedicated hidden worksheet, "ExportToCsv", with exactly
+    // the flat row-level columns we need — select it explicitly.
+    await frame.locator('[data-tb-test-id^="sheet-thumbnail-"][title="ExportToCsv"]').click();
+
     // Export dialog: select CSV, then click Download, capturing the file.
     // The custom-styled <label> intercepts pointer events, not the <input>.
     await frame.locator('[data-tb-test-id="crosstab-options-dialog-radio-csv-Label"]').click();
@@ -92,13 +99,19 @@ function parseCrosstab(filePath) {
   const text = buf.toString('utf16le').replace(/^﻿/, '');
   const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
   const header = lines[0].split('\t');
-  const REQUIRED = ['Special ID', 'County Name', 'State', 'Production', 'Confirmed Diagnosis', 'Control Area Released', 'Birds Affected'];
+  const REQUIRED = ['Special ID', 'County Name', 'State', 'Production', 'Confirmed Diagnosis', 'Control Area Released'];
   const colIndex = {};
   for (const name of REQUIRED) {
     const i = header.indexOf(name);
     if (i === -1) throw new Error(`Crosstab is missing expected column "${name}". Header: ${header.join(', ')}`);
     colIndex[name] = i;
   }
+  // The birds-affected measure column is the sole remaining column and
+  // Tableau exports it with a blank header (it's the worksheet's only
+  // measure), so it can't be looked up by name like the rest.
+  const usedIndices = new Set(Object.values(colIndex));
+  const birdsIndex = header.findIndex((_, i) => !usedIndices.has(i));
+  if (birdsIndex === -1) throw new Error(`Crosstab has no Birds Affected column. Header: ${header.join(', ')}`);
 
   const rows = [];
   for (const line of lines.slice(1)) {
@@ -109,7 +122,7 @@ function parseCrosstab(filePath) {
     const production = cols[colIndex['Production']];
     const confirmedRaw = cols[colIndex['Confirmed Diagnosis']];
     const controlArea = cols[colIndex['Control Area Released']];
-    const birdsRaw = cols[colIndex['Birds Affected']];
+    const birdsRaw = cols[birdsIndex];
     const confirmed_date = parseConfirmedDate(confirmedRaw);
     if (!confirmed_date) continue;
 
