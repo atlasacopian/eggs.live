@@ -142,11 +142,30 @@ function parseCrosstab(filePath) {
   return rows;
 }
 
+async function downloadAndParseWithRetry(maxAttempts = 3) {
+  let lastError;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const csvPath = await downloadCrosstabCsv();
+      const rows = parseCrosstab(csvPath);
+      if (!rows.length) throw new Error('Parsed 0 rows from crosstab export');
+      return rows;
+    } catch (e) {
+      lastError = e;
+      // This only runs once a day, so a single flaky Tableau render (the
+      // WASM viz occasionally needs longer than our fixed wait, or the
+      // download dialog doesn't fully settle) shouldn't cost a whole day
+      // of data — retry with a fresh browser before giving up for real.
+      console.error(`Attempt ${attempt}/${maxAttempts} failed: ${e.message}`);
+      if (attempt < maxAttempts) await new Promise((r) => setTimeout(r, 15000));
+    }
+  }
+  throw lastError;
+}
+
 (async () => {
   try {
-    const csvPath = await downloadCrosstabCsv();
-    const rows = parseCrosstab(csvPath);
-    if (!rows.length) throw new Error('Parsed 0 rows from crosstab export');
+    const rows = await downloadAndParseWithRetry();
 
     const CHUNK = 500;
     for (let i = 0; i < rows.length; i += CHUNK) {
