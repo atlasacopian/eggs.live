@@ -29,9 +29,15 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
 const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
 function parseConfirmedDate(raw) {
-  // "13-Jul-26" -> "2026-07-13"
+  const s = String(raw).trim();
+
+  // "2026-07-13" (current APHIS export format, as of Aug 2026)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+
+  // "13-Jul-26" -> "2026-07-13" (older format; APHIS has flipped between
+  // the two before, so keep supporting both rather than trusting either).
   const MONTHS = { Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12' };
-  const m = String(raw).trim().match(/^(\d{2})-([A-Za-z]{3})-(\d{2})$/);
+  const m = s.match(/^(\d{2})-([A-Za-z]{3})-(\d{2})$/);
   if (!m) return null;
   const [, dd, mon, yy] = m;
   const mm = MONTHS[mon];
