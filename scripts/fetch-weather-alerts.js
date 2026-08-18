@@ -18,20 +18,33 @@ const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
 // client string - see https://www.weather.gov/documentation/services-web-api
 const USER_AGENT = 'eggs.live weather-risk pipeline (contact: atlasacopian@gmail.com)'
 
+// api.weather.gov occasionally throws a transient 500 under load - retry a
+// couple times with backoff before giving up, rather than failing the whole
+// hourly run over what's usually a momentary blip.
+async function fetchActiveAlertsWithRetry(url, maxAttempts = 3) {
+  let lastError
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const res = await fetch(url, { headers: { 'User-Agent': USER_AGENT, Accept: 'application/geo+json' } })
+    if (res.ok) return res.json()
+
+    const text = await res.text().catch(() => '')
+    lastError = new Error(`NWS API request failed (${res.status}): ${text.slice(0, 300)}`)
+    console.error(`Attempt ${attempt}/${maxAttempts} failed: ${lastError.message}`)
+    if (attempt < maxAttempts) await new Promise(r => setTimeout(r, 5000))
+  }
+  throw lastError
+}
+
 async function main() {
   console.log('📡 Fetching NWS active alerts for all 50 states...')
 
   const url = new URL('https://api.weather.gov/alerts/active')
   url.searchParams.set('area', ALL_50_STATES.join(','))
 
-  const res = await fetch(url.toString(), { headers: { 'User-Agent': USER_AGENT, Accept: 'application/geo+json' } })
-  if (!res.ok) {
-    const text = await res.text().catch(() => '')
-    console.error(`❌ NWS API request failed (${res.status}): ${text.slice(0, 300)}`)
+  const json = await fetchActiveAlertsWithRetry(url.toString()).catch(e => {
+    console.error(`❌ ${e.message}`)
     process.exit(1)
-  }
-
-  const json = await res.json()
+  })
   const features = json.features || []
   console.log(`   ↳ received ${features.length} total active alerts (all types, all states)`)
 
