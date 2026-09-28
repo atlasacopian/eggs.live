@@ -249,7 +249,18 @@ async function fetchStoreEggs (location_id_raw) {
       // For all other errors, throw to abort the script
       throw new Error(`API call to ${currentUrl.toString()} failed for location ${location_id}. Status: ${res.status}. Response: ${errorBodyText.slice(0, 500)}`);
     }
-    const json = await res.json();
+    let json;
+    try {
+      json = await res.json();
+    } catch (bodyErr) {
+      // The connection can reset mid-stream while Kroger's response body is
+      // still being read/decompressed (ECONNRESET / "aborted"), even though
+      // fetchWithRetry already got back a 200 - res.ok being true doesn't
+      // guarantee the body is fully readable. Treat like any other transient
+      // fetch failure: skip this store instead of crashing the whole batch.
+      console.warn(`fetchStoreEggs: failed to read response body for store ${location_id} at offset ${offset} (${bodyErr.code || bodyErr.message}). Skipping store.`);
+      throw new NonFatalSkipError(`Body read error for store ${location_id}: ${bodyErr.code || bodyErr.message}`);
+    }
     const products = json.data || [];
 
     // classify & collect prices
