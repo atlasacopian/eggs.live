@@ -231,6 +231,12 @@ async function fetchStoreEggs (location_id_raw) {
           return buckets; // Skip this store but do NOT abort entire run
         }
       }
+      // Skip store on 401 – a single transient auth blip from Kroger shouldn't
+      // abort the whole run; just skip this store and keep going.
+      if (res.status === 401) {
+        console.warn(`fetchStoreEggs: 401 Unauthorized for store ${location_id}. Skipping store.`);
+        throw new NonFatalSkipError(`401 Unauthorized for store ${location_id}`);
+      }
       // Skip store on persistent 429 rate-limit (after retries already attempted)
       if (res.status === 429) {
         console.warn(`fetchStoreEggs: persistent rate-limit 429 for store ${location_id}. Skipping store.`);
