@@ -57,9 +57,11 @@ export async function GET() {
       fetchAllRows(sb, 'kroger_stores', 'brand, zip, latitude, longitude', q => q.not('tracked_since', 'is', null)),
       fetchAllRows(sb, 'target_stores', 'zip, latitude, longitude'),
       fetchAllRows(sb, 'erewhon_stores', 'zip, latitude, longitude'),
-      sb.from('kroger_egg_prices').select('*', { count: 'exact', head: true }).then(r => r.count || 0),
-      sb.from('target_egg_prices').select('*', { count: 'exact', head: true }).then(r => r.count || 0),
-      sb.from('erewhon_egg_prices').select('*', { count: 'exact', head: true }).then(r => r.count || 0),
+      // Only store-days that actually captured a price - a NO_DATA_FOUND /
+      // FETCH_ERROR row is a failed scrape, not a data point.
+      sb.from('kroger_egg_prices').select('*', { count: 'exact', head: true }).eq('status', 'OK').then(r => r.count || 0),
+      sb.from('target_egg_prices').select('*', { count: 'exact', head: true }).eq('status', 'OK').then(r => r.count || 0),
+      sb.from('erewhon_egg_prices').select('*', { count: 'exact', head: true }).eq('status', 'OK').then(r => r.count || 0),
     ]);
 
     const brandCounts = {};

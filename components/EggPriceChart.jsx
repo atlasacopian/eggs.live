@@ -4,19 +4,37 @@ import { ResponsiveContainer, ComposedChart, Line, Area, XAxis, YAxis, Cartesian
 import { motion } from 'framer-motion';
 import { SIGNAL, RED } from '../lib/terminalTheme';
 
-// Custom tooltip for price and date
-const CustomTooltip = ({ active, payload, label }) => {
-  if (active && payload && payload.length) {
-    const { value } = payload[0];
-    const dateStr = new Date(label).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    return (
-      <div style={{ background: '#0a0a0a', border: `1px solid ${SIGNAL}`, padding: '4px 8px', fontFamily: 'Menlo, monospace' }}>
-        <div style={{ color: '#fff', fontWeight: 700 }}>{`$${value.toFixed(2)}`}</div>
-        <div style={{ fontSize: '0.65rem', color: '#888' }}>{dateStr}</div>
-      </div>
-    );
-  }
-  return null;
+const fmt = v => (typeof v === 'number' ? `$${v.toFixed(2)}` : '—');
+
+// Tooltip spells out all three numbers for the hovered day, labelled, so
+// it's never ambiguous which line is which.
+const CustomTooltip = ({ active, payload, label, priceType }) => {
+  if (!active || !payload?.length) return null;
+  const d = payload[0].payload;
+  if (typeof d[priceType] !== 'number') return null;
+  const dateStr = new Date(label).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const row = (name, value, color) => (
+    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+      <span style={{ color: '#888' }}>{name}</span>
+      <span style={{ color, fontWeight: 700 }}>{fmt(value)}</span>
+    </div>
+  );
+  return (
+    <div style={{ background: '#0a0a0a', border: '1px solid #444', padding: '5px 8px', fontFamily: 'Menlo, monospace', fontSize: '0.7rem', minWidth: 140 }}>
+      <div style={{ fontSize: '0.62rem', color: '#888', marginBottom: 3 }}>{dateStr}</div>
+      {row('Cheapest', d[priceType], '#fff')}
+      {row('Average', d[`${priceType}_avg`], '#aaa')}
+      {row('Highest', d[`${priceType}_max`], '#777')}
+    </div>
+  );
+};
+
+// Each value below the chart's summary strip carries a swatch drawn the same
+// way as its series in the chart, so the strip doubles as the legend.
+const Swatch = ({ kind, color }) => {
+  const base = { display: 'inline-block', width: 14, marginRight: 5, verticalAlign: 'middle' };
+  if (kind === 'band') return <span style={{ ...base, height: 8, background: color, opacity: 0.25 }} />;
+  return <span style={{ ...base, height: 0, borderTop: `2px ${kind === 'dashed' ? 'dashed' : 'solid'} ${color}` }} />;
 };
 
 // Some stores have real rows missing entirely for weeks/months at a time
@@ -36,7 +54,7 @@ function insertGapBreaks(history) {
     const daysBetween = (new Date(curr.date) - new Date(prev.date)) / 86_400_000;
     if (daysBetween > GAP_THRESHOLD_DAYS) {
       const midpoint = new Date((new Date(prev.date).getTime() + new Date(curr.date).getTime()) / 2).toISOString();
-      out.push({ date: midpoint, regular: null, organic: null });
+      out.push({ date: midpoint, regular: null, regular_avg: null, regular_max: null, organic: null, organic_avg: null, organic_max: null });
     }
     out.push(curr);
   }
@@ -112,8 +130,12 @@ export default function EggPriceChart({ selectedStore, store, highlight = false,
   // ±$0.20 - a flat pad swallows most of the chart when a store's price only
   // moves a few cents, and barely registers when it moves several dollars.
   const values = visibleHistory.map(d => d[dataKey]).filter(v => typeof v === 'number');
-  const minVal = values.length ? Math.min(...values) : 0;
-  const maxVal = values.length ? Math.max(...values) : 1;
+  // Axis has to fit the whole band, not just the cheapest line.
+  const axisValues = visibleHistory
+    .flatMap(d => (typeof d[dataKey] === 'number' ? [d[dataKey], d[`${dataKey}_max`]] : []))
+    .filter(v => typeof v === 'number');
+  const minVal = axisValues.length ? Math.min(...axisValues) : 0;
+  const maxVal = axisValues.length ? Math.max(...axisValues) : 1;
   const pad = Math.max((maxVal - minVal) * 0.1, 0.15);
   const domainMin = Math.max(0, minVal - pad);
   const domainMax = maxVal + pad;
@@ -129,7 +151,7 @@ export default function EggPriceChart({ selectedStore, store, highlight = false,
     ? { width: '100%', height: 24 }
     : {
         width: '100%',
-        height: 'clamp(280px, calc(100vh - 260px), 720px)',
+        height: 'clamp(240px, calc(100vh - 340px), 640px)',
       };
 
   const controlBtnStyle = (active) => ({
@@ -169,11 +191,39 @@ export default function EggPriceChart({ selectedStore, store, highlight = false,
     </div>
   );
 
+  // Latest day with a price for the selected type - the headline numbers.
+  const latest = [...history].reverse().find(d => typeof d[dataKey] === 'number');
+  const AVG_COLOR = '#9a9a9a';
+  const summaryStrip = !preview && latest && (
+    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: '6px 18px', padding: '2px 6px 8px', fontFamily: 'Menlo, monospace' }}>
+      <div>
+        <div style={{ fontSize: '0.58rem', color: '#888', letterSpacing: '0.06em' }}><Swatch kind="solid" color={strokeColor} />CHEAPEST</div>
+        <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#fff', lineHeight: 1.1 }}>{fmt(latest[dataKey])}</div>
+      </div>
+      {typeof latest[`${dataKey}_avg`] === 'number' && (
+        <div>
+          <div style={{ fontSize: '0.58rem', color: '#888', letterSpacing: '0.06em' }}><Swatch kind="dashed" color={AVG_COLOR} />AVERAGE</div>
+          <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#bbb', lineHeight: 1.2 }}>{fmt(latest[`${dataKey}_avg`])}</div>
+        </div>
+      )}
+      {typeof latest[`${dataKey}_max`] === 'number' && (
+        <div>
+          <div style={{ fontSize: '0.58rem', color: '#888', letterSpacing: '0.06em' }}><Swatch kind="band" color={strokeColor} />RANGE</div>
+          <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#888', lineHeight: 1.2 }}>{fmt(latest[dataKey])}–{fmt(latest[`${dataKey}_max`])}</div>
+        </div>
+      )}
+      <div style={{ flexBasis: '100%', fontSize: '0.6rem', color: '#666' }}>
+        {currentStore?.name ? `${currentStore.name} · ` : ''}{dataKey} 12-egg cartons · {new Date(latest.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+      </div>
+    </div>
+  );
+
   // Unified chart renderer for both preview and full views
   const ChartRenderer = () => {
     return (
       <>
         {controlBar}
+        {summaryStrip}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -185,20 +235,41 @@ export default function EggPriceChart({ selectedStore, store, highlight = false,
               data={visibleHistory}
               margin={{ top: 8, right: 12, left: 0, bottom: 20 }}
             >
-              <defs>
-                <linearGradient id="eggPriceAreaGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={strokeColor} stopOpacity={0.22} />
-                  <stop offset="100%" stopColor={strokeColor} stopOpacity={0.02} />
-                </linearGradient>
-              </defs>
               {/* Render subtle grid only in full view */}
               {!preview && <CartesianGrid vertical={false} stroke="#444" strokeOpacity={0.25} />}
+              {/* Shaded band from the cheapest to the most expensive dozen. */}
               {!preview && (
                 <Area
                   type="linear"
-                  dataKey={dataKey}
+                  dataKey={d => (typeof d[dataKey] === 'number' && typeof d[`${dataKey}_max`] === 'number' ? [d[dataKey], d[`${dataKey}_max`]] : null)}
                   stroke="none"
-                  fill="url(#eggPriceAreaGradient)"
+                  fill={strokeColor}
+                  fillOpacity={0.06}
+                  connectNulls={false}
+                  isAnimationActive={false}
+                />
+              )}
+              {!preview && (
+                <Line
+                  type="linear"
+                  dataKey={`${dataKey}_max`}
+                  stroke="#555"
+                  strokeWidth={1}
+                  dot={false}
+                  activeDot={false}
+                  connectNulls={false}
+                  isAnimationActive={false}
+                />
+              )}
+              {!preview && (
+                <Line
+                  type="linear"
+                  dataKey={`${dataKey}_avg`}
+                  stroke={AVG_COLOR}
+                  strokeWidth={1.25}
+                  strokeDasharray="4 3"
+                  dot={false}
+                  activeDot={false}
                   connectNulls={false}
                   isAnimationActive={false}
                 />
@@ -231,10 +302,10 @@ export default function EggPriceChart({ selectedStore, store, highlight = false,
                 tick={{ fontSize: 11, fill: '#aaa', dx: -4 }}
                 tickMargin={8}
                 tickFormatter={!preview ? v => `$${v.toFixed(2)}` : undefined}
-                width={52}
+                width={60}
               />
               {/* Tooltip only in full view */}
-              {!preview && <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#888', strokeDasharray: '3 3' }} />}
+              {!preview && <Tooltip content={<CustomTooltip priceType={dataKey} />} cursor={{ stroke: '#888', strokeDasharray: '3 3' }} />}
               {/* Show both lines in full view, only one in preview */}
               <Line
                 type="linear"
@@ -243,8 +314,11 @@ export default function EggPriceChart({ selectedStore, store, highlight = false,
                 strokeWidth={preview ? 1 : 2}
                 dot={showDots ? { r: 3 } : false}
                 activeDot={preview ? false : { r: 6 }}
-                isAnimationActive={true}
-                animationDuration={preview ? 800 : 600}
+                // ChartRenderer remounts on every parent render (e.g. hovering
+                // the store list), which restarted the draw-in mid-way and left
+                // the line visibly cut off - animate only the small preview.
+                isAnimationActive={preview}
+                animationDuration={800}
                 animationEasing="ease-in-out"
                 connectNulls={false}
               />

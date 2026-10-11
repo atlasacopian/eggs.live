@@ -2,6 +2,22 @@ import { supabaseServer } from '../../../lib/supabase';
 import { NextResponse } from 'next/server';
 
 // This is a NEW, simpler route specifically for chart history
+
+const HISTORY_COLUMNS = 'captured_date, regular_min, regular_avg, regular_max, organic_min, organic_avg, organic_max';
+
+// `regular`/`organic` stay the cheapest dozen (the headline number); the
+// _avg/_max fields let the chart show the spread of the rest of the shelf.
+function toHistoryPoint(item) {
+  return {
+    date: item.captured_date + 'T12:00:00Z',
+    regular: item.regular_min,
+    regular_avg: item.regular_avg,
+    regular_max: item.regular_max,
+    organic: item.organic_min,
+    organic_avg: item.organic_avg,
+    organic_max: item.organic_max,
+  };
+}
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
   // IMPORTANT: We expect the *store identifier* passed directly
@@ -41,25 +57,21 @@ export async function GET(req) {
     // Query Target stats
     const { data, error } = await sb
       .from('target_egg_prices')
-      .select('captured_date, regular_min, organic_min')
+      .select(HISTORY_COLUMNS)
       .eq('location_id', targetId)
       .order('captured_date', { ascending: true });
     if (error) {
       console.error('[simple-store-history] Supabase error (target):', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
-    historyData = (data || []).map(item => ({
-      date: item.captured_date + 'T12:00:00Z',
-      regular: item.regular_min,
-      organic: item.organic_min,
-    }));
+    historyData = (data || []).map(toHistoryPoint);
   } else if (/^K\d+$/.test(storeIdentifier)) {
     // Kroger: try both 'K12345' and '12345'
     let data, error;
     // Try with 'K' prefix
     ({ data, error } = await sb
       .from('kroger_egg_prices')
-      .select('captured_date, regular_min, organic_min')
+      .select(HISTORY_COLUMNS)
       .eq('location_id', storeIdentifier)
       .order('captured_date', { ascending: true }));
     if (error) {
@@ -71,7 +83,7 @@ export async function GET(req) {
       const idNoK = storeIdentifier.slice(1);
       const { data: dataNoK, error: errorNoK } = await sb
         .from('kroger_egg_prices')
-        .select('captured_date, regular_min, organic_min')
+        .select(HISTORY_COLUMNS)
         .eq('location_id', idNoK)
         .order('captured_date', { ascending: true });
       if (errorNoK) {
@@ -89,28 +101,20 @@ export async function GET(req) {
     if (!data || data.length === 0) {
       console.warn(`[simple-store-history] No data found for Kroger storeIdentifier: ${storeIdentifier}`);
     }
-    historyData = (data || []).map(item => ({
-      date: item.captured_date + 'T12:00:00Z',
-      regular: item.regular_min,
-      organic: item.organic_min,
-    }));
+    historyData = (data || []).map(toHistoryPoint);
   } else if (/^E[A-Z]+$/.test(storeIdentifier)) {
     // Erewhon: strip 'E' prefix to get the Algolia location_id (e.g. 'GROVE')
     const locationId = storeIdentifier.slice(1);
     const { data, error } = await sb
       .from('erewhon_egg_prices')
-      .select('captured_date, regular_min, organic_min')
+      .select(HISTORY_COLUMNS)
       .eq('location_id', locationId)
       .order('captured_date', { ascending: true });
     if (error) {
       console.error('[simple-store-history] Supabase error (erewhon):', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
-    historyData = (data || []).map(item => ({
-      date: item.captured_date + 'T12:00:00Z',
-      regular: item.regular_min,
-      organic: item.organic_min,
-    }));
+    historyData = (data || []).map(toHistoryPoint);
   } else {
     console.warn(`[simple-store-history] Unrecognized storeIdentifier format: ${storeIdentifier}`);
     historyData = [];
