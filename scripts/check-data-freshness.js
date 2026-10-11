@@ -1,6 +1,13 @@
 /**
- * One-off health check: latest row per Supabase table used by eggs.live pipelines.
- * Run: node scripts/check-data-freshness.js
+ * Health check for every Supabase table an eggs.live pipeline writes to.
+ *
+ * "Fresh" alone isn't enough for the store-price tables: the Target fetcher
+ * wrote a fresh row for every store every night for months while RedSky was
+ * bot-blocking all of them, so those rows were all NO_DATA_FOUND. For price
+ * tables this also checks what share of stores on the latest day actually
+ * came back with a price.
+ *
+ * Run: node scripts/check-data-freshness.js   (exits 1 if anything is off)
  */
 import { config } from 'dotenv';
 config({ path: '.env.local' });
@@ -15,12 +22,27 @@ if (!SUPABASE_URL || !key) {
 
 const sb = createClient(SUPABASE_URL, key);
 
-/** @type {{ table: string, dateCol: string, workflow?: string, expectDays?: number }[]} */
+/**
+ * dateCol: when the pipeline last wrote (fetch time where the table has one,
+ *   since monthly/weekly sources legitimately publish with a lag).
+ * minOkShare: price tables only - share of the latest day's store rows that
+ *   must have status OK (Kroger normally sits ~92%, Erewhon 13/15).
+ *
+ * retired: pipeline intentionally stopped - shown, but never counted as a failure.
+ *
+ * @type {{ table: string, dateCol: string, workflow: string, expectDays: number, minOkShare?: number, retired?: boolean }[]}
+ */
 const CHECKS = [
-  { table: 'kroger_egg_prices', dateCol: 'captured_date', workflow: 'Kroger Egg Prices', expectDays: 2 },
-  { table: 'target_egg_prices', dateCol: 'captured_date', workflow: 'Target Egg Prices', expectDays: 2 },
+  { table: 'kroger_egg_prices', dateCol: 'captured_date', workflow: 'Kroger Egg Prices', expectDays: 2, minOkShare: 0.8 },
+  // Retired 2026-10-11 (PerimeterX-blocked; nightly schedule removed). History
+  // is kept and still served, so only report on it - don't fail the check.
+  { table: 'target_egg_prices', dateCol: 'captured_date', workflow: 'Target Egg Prices (retired)', expectDays: 2, retired: true },
+  { table: 'erewhon_egg_prices', dateCol: 'captured_date', workflow: 'Erewhon Egg Prices', expectDays: 2, minOkShare: 0.5 },
   { table: 'usda_weekly_egg_prices', dateCol: 'report_end_date', workflow: 'National Daily (USDA)', expectDays: 14 },
-  { table: 'hpai_detections', dateCol: 'captured_at', workflow: 'HPAI Detections Fetcher (APHIS dashboard)', expectDays: 2 },
+  { table: 'hpai_detections', dateCol: 'captured_at', workflow: 'HPAI Detections Fetcher', expectDays: 2 },
+  { table: 'feed_commodity_prices', dateCol: 'fetched_at', workflow: 'Feed Commodities (Corn + Soybean Meal)', expectDays: 2 },
+  { table: 'usda_layer_inventory', dateCol: 'fetched_at', workflow: 'USDA Layer Inventory (NASS)', expectDays: 2 },
+  { table: 'weather_risk_alerts', dateCol: 'fetched_at', workflow: 'Weather Risk (NWS Alerts)', expectDays: 1 },
 ];
 
 function daysAgo(isoOrDate) {
@@ -30,7 +52,7 @@ function daysAgo(isoOrDate) {
   return Math.floor((Date.now() - d.getTime()) / (24 * 60 * 60 * 1000));
 }
 
-function status(days, expectDays) {
+function freshness(days, expectDays) {
   if (days === null) return 'NO DATA';
   if (days <= expectDays) return 'OK';
   if (days <= expectDays * 2) return 'STALE';
@@ -44,74 +66,54 @@ async function latestFor(table, dateCol) {
     .order(dateCol, { ascending: false })
     .limit(1);
   if (error) return { error: error.message };
-  const row = data?.[0];
-  return { latest: row?.[dateCol] ?? null };
+  return { latest: data?.[0]?.[dateCol] ?? null };
 }
 
-async function countRows(table) {
-  const { count, error } = await sb.from(table).select('*', { count: 'exact', head: true });
-  if (error) return { error: error.message };
-  return { count };
+async function countRows(table, filter = (q) => q) {
+  const { count, error } = await filter(sb.from(table).select('*', { count: 'exact', head: true }));
+  return error ? null : count;
 }
 
-console.log('\nEGGS.LIVE — Supabase data freshness\n');
+console.log('\nEGGS.LIVE — Supabase data health\n');
 console.log(`Checked at: ${new Date().toISOString()}\n`);
 
 const rows = [];
 for (const check of CHECKS) {
-  const [latestRes, countRes] = await Promise.all([
-    latestFor(check.table, check.dateCol),
-    countRows(check.table),
-  ]);
+  const [latestRes, total] = await Promise.all([latestFor(check.table, check.dateCol), countRows(check.table)]);
   if (latestRes.error) {
-    rows.push({
-      table: check.table,
-      workflow: check.workflow,
-      latest: `ERROR: ${latestRes.error}`,
-      days: '—',
-      status: 'ERROR',
-      rows: countRes.error ? '?' : countRes.count,
-    });
+    rows.push({ ...check, latest: `ERROR: ${latestRes.error}`, days: '—', coverage: '—', status: 'ERROR', total: total ?? '?' });
     continue;
   }
   const days = daysAgo(latestRes.latest);
-  rows.push({
-    table: check.table,
-    workflow: check.workflow,
-    latest: latestRes.latest ?? '(empty)',
-    days: days === null ? '—' : String(days),
-    status: status(days, check.expectDays),
-    rows: countRes.error ? '?' : countRes.count,
-  });
+  let status = check.retired ? 'RETIRED' : freshness(days, check.expectDays);
+  let coverage = '—';
+
+  if (check.minOkShare != null && latestRes.latest) {
+    const onDay = (q) => q.eq('captured_date', latestRes.latest);
+    const [dayTotal, dayOk] = await Promise.all([
+      countRows(check.table, onDay),
+      countRows(check.table, (q) => onDay(q).eq('status', 'OK')),
+    ]);
+    if (dayTotal) {
+      coverage = `${dayOk}/${dayTotal}`;
+      if (status === 'OK' && dayOk < dayTotal * check.minOkShare) status = 'NO PRICES';
+    }
+  }
+
+  rows.push({ ...check, latest: String(latestRes.latest ?? '(empty)').slice(0, 10), days: days ?? '—', coverage, status, total: total ?? '?' });
 }
 
 const col = (s, w) => String(s).padEnd(w);
-const wTable = 28;
-const wWf = 32;
 console.log(
-  col('TABLE', wTable) +
-    col('LATEST', 12) +
-    col('DAYS AGO', 10) +
-    col('STATUS', 12) +
-    col('ROWS', 8) +
-    'WORKFLOW'
+  col('TABLE', 26) + col('LATEST', 12) + col('DAYS', 6) + col('PRICED', 12) + col('STATUS', 11) + col('ROWS', 9) + 'WORKFLOW'
 );
-console.log('-'.repeat(110));
+console.log('-'.repeat(120));
 for (const r of rows) {
   console.log(
-    col(r.table, wTable) +
-      col(r.latest, 12) +
-      col(r.days, 10) +
-      col(r.status, 12) +
-      col(r.rows, 8) +
-      r.workflow
+    col(r.table, 26) + col(r.latest, 12) + col(r.days, 6) + col(r.coverage, 12) + col(r.status, 11) + col(r.total, 9) + r.workflow
   );
 }
 
-console.log('\nGitHub Actions workflows (repo: atlasacopian/eggs.live):');
-console.log('  • Kroger Egg Prices      — daily ~08:00 UTC');
-console.log('  • Target Egg Prices      — daily ~07:05 UTC');
-console.log('  • National Daily (USDA)  — daily 16:00 UTC');
-console.log('  • National Historical (FRED) — daily 07:00 UTC');
-console.log('  • HPAI State Fetcher     — daily 07:10 UTC');
-console.log('\nTables with no workflow: news, CDC — only update if run manually.\n');
+const bad = rows.filter((r) => r.status !== 'OK' && r.status !== 'RETIRED');
+console.log(bad.length ? `\n❌ ${bad.length} pipeline(s) need attention: ${bad.map((r) => r.table).join(', ')}\n` : '\n✅ All pipelines healthy\n');
+process.exit(bad.length ? 1 : 0);

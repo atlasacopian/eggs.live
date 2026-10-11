@@ -135,6 +135,7 @@ async function fetchEggsFromRedSky(storeId, zip, visitorId, enableLog = false) {
   const captured_date = now.toISOString().split('T')[0];
   const captured_at = now.toISOString();
 
+  let okCount = 0;
   for (const { location_id, zip } of stores) {
     console.log(`\n===== Processing store ${location_id} =====`);
     const results = await fetchEggsFromRedSky(location_id, zip, visitorId, enableLog);
@@ -181,6 +182,7 @@ async function fetchEggsFromRedSky(storeId, zip, visitorId, enableLog = false) {
       }
     }
     const status = (stats.regular_min != null || stats.organic_min != null) ? 'OK' : 'NO_DATA_FOUND';
+    if (status === 'OK') okCount++;
     const row = { location_id, captured_date, captured_at, status, ...stats };
     console.table([row]);
     const { error: upErr } = await sb
@@ -192,6 +194,13 @@ async function fetchEggsFromRedSky(storeId, zip, visitorId, enableLog = false) {
     await new Promise(r => setTimeout(r, 1000));
   }
 
-  console.log('\n🏁 All stores processed.');
+  console.log(`\n🏁 All stores processed - ${okCount}/${stores.length} returned prices.`);
+  // Fail the run (so the Actions tab goes red) when almost nothing came back.
+  // RedSky answered every store with a 435 bot-block for months while this
+  // job kept exiting 0 and writing NO_DATA_FOUND rows unnoticed.
+  if (!debugIds.length && okCount < stores.length * 0.1) {
+    console.error(`❌ Only ${okCount}/${stores.length} stores returned prices - failing the run`);
+    process.exit(1);
+  }
   process.exit(0);
 })();

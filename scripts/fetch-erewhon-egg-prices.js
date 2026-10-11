@@ -59,6 +59,21 @@ async function searchEggs(locationId) {
   return json.hits || [];
 }
 
+// Shelf price, or the sale price when one is running - same rule as the
+// Kroger fetcher's promo handling, so a sale shows up as a real price drop.
+// Algolia reports a sale as a numeric top-level `Sales` (null/'' otherwise).
+function effectivePrice(hit) {
+  const shelf = typeof hit.Price === 'number' ? hit.Price : null;
+  const sale = typeof hit.Sales === 'number' && hit.Sales > 0 ? hit.Sales : null;
+  if (sale != null && (shelf == null || sale < shelf)) return sale;
+  return shelf;
+}
+
+// Fail the run (so the Actions tab goes red) when fewer than this share of
+// stores return any price - a blocked/changed endpoint otherwise just writes
+// a quiet column of empty rows every night.
+const MIN_OK_SHARE = 0.5;
+
 function aggregate(prices) {
   if (!prices.length) return { min: null, avg: null, max: null };
   return {
@@ -93,7 +108,8 @@ function aggregate(prices) {
       const buckets = { regular: [], organic: [] };
       for (const hit of hits) {
         const type = classifyEgg(hit);
-        if (type && typeof hit.Price === 'number') buckets[type].push(hit.Price);
+        const price = effectivePrice(hit);
+        if (type && price != null) buckets[type].push(price);
       }
 
       const reg = aggregate(buckets.regular);
@@ -108,7 +124,7 @@ function aggregate(prices) {
         organic_min: org.min,
         organic_avg: org.avg,
         organic_max: org.max,
-        status: 'OK',
+        status: reg.min != null || org.min != null ? 'OK' : 'NO_DATA_FOUND',
       });
       console.log(`${store.name}: regular ${buckets.regular.length} SKUs (avg $${reg.avg}), organic ${buckets.organic.length} SKUs (avg $${org.avg})`);
       await new Promise((r) => setTimeout(r, 300));
@@ -118,6 +134,13 @@ function aggregate(prices) {
     if (upsertErr) throw upsertErr;
 
     console.log(`✅ Upserted ${rows.length} Erewhon store-day rows`);
+
+    const okCount = rows.filter((r) => r.status === 'OK').length;
+    console.log(`→ ${okCount}/${rows.length} stores returned prices`);
+    if (okCount < rows.length * MIN_OK_SHARE) {
+      console.error(`❌ Only ${okCount}/${rows.length} stores returned prices - failing the run`);
+      process.exit(1);
+    }
   } catch (e) {
     console.error('Erewhon egg price ingest error', e);
     process.exit(1);

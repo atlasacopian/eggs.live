@@ -1,9 +1,10 @@
 name: Target Egg Prices
 
+# Nightly schedule disabled 2026-10-11: Target put RedSky behind PerimeterX
+# bot protection and every store has returned HTTP 435 since mid-2025.
+# Existing target_egg_prices history is kept and still shown on the site.
+# Manual trigger left in place for testing a future data source.
 on:
-  schedule:
-    # Run at 00:05 Los Angeles time (≈ 07:05 UTC during PDT, 08:05 UTC during PST)
-    - cron: '5 7 * * *'
   workflow_dispatch: {}    # manual trigger in UI
 
 jobs:

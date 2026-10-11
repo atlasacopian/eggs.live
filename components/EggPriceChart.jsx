@@ -60,7 +60,7 @@ export default function EggPriceChart({ selectedStore, store, highlight = false,
   // Fall back to internal state if the parent doesn't control priceType, so
   // this component still works (e.g. in preview mode) without wiring.
   const [internalPriceType, setInternalPriceType] = useState('regular');
-  const priceType = priceTypeProp ?? internalPriceType;
+  const requestedPriceType = priceTypeProp ?? internalPriceType;
   const setPriceType = onPriceTypeChange ?? setInternalPriceType;
   const [range, setRange] = useState('3M');
 
@@ -87,6 +87,16 @@ export default function EggPriceChart({ selectedStore, store, highlight = false,
     };
     fetchHistory();
   }, [currentStore?.store_identifier]);
+
+  // Some chains never carry one of the two types at all (Erewhon only stocks
+  // organic dozens), so only offer the types this store has any history for,
+  // and fall back to the one it does have rather than showing an empty chart.
+  // The parent's shared priceType is left untouched so switching back to a
+  // Kroger/Target store restores the user's pick.
+  const availableTypes = ['regular', 'organic'].filter(t => history.some(d => typeof d[t] === 'number'));
+  const priceType = availableTypes.includes(requestedPriceType) || !availableTypes.length
+    ? requestedPriceType
+    : availableTypes[0];
 
   const strokeColor = highlight ? SIGNAL : '#ffffff';
   const dataKey = priceType;
@@ -143,12 +153,11 @@ export default function EggPriceChart({ selectedStore, store, highlight = false,
   const controlBar = !preview && (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4, flexWrap: 'wrap', gap: 4 }}>
       <div style={{ display: 'flex' }}>
-        <button style={controlBtnStyle(priceType === 'regular')} onClick={() => setPriceType('regular')}>
-          {priceType === 'regular' ? '[ Regular ]' : 'Regular'}
-        </button>
-        <button style={controlBtnStyle(priceType === 'organic')} onClick={() => setPriceType('organic')}>
-          {priceType === 'organic' ? '[ Organic ]' : 'Organic'}
-        </button>
+        {(availableTypes.length ? availableTypes : ['regular', 'organic']).map(t => (
+          <button key={t} style={controlBtnStyle(priceType === t)} onClick={() => setPriceType(t)}>
+            {priceType === t ? `[ ${t} ]` : t}
+          </button>
+        ))}
       </div>
       <div style={{ display: 'flex' }}>
         {RANGES.map(r => (
