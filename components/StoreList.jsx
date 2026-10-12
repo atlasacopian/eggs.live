@@ -1,275 +1,176 @@
 import React, { useState } from 'react'
-import { YELLOW, BLUE, PURPLE, PANEL_BG, PANEL_BORDER, ROW_BORDER, changeColor, changeSign } from '../lib/terminalTheme'
+import Segmented from './Segmented.jsx'
+import { SANS, MONO, SURFACE_HI, HAIRLINE, TEXT, TEXT_2, TEXT_3, TYPE_COLOR, TYPE_LABEL, GOOD, BAD } from '../lib/terminalTheme'
 
-// Each column is independently sortable, click-to-toggle ascending/
-// descending, like a real data-table header - not a separate "sort by"
-// control off to the side.
-const COLUMNS = {
-  name: { defaultDir: 'asc', compare: (a, b) => a.name.localeCompare(b.name) },
-  distance: { defaultDir: 'asc', compare: (a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity) },
-  city: { defaultDir: 'asc', compare: (a, b) => (a.city || '').localeCompare(b.city || '') },
-  regular: { defaultDir: 'asc', compare: (a, b) => (a.regular_price ?? Infinity) - (b.regular_price ?? Infinity) },
-  organic: { defaultDir: 'asc', compare: (a, b) => (a.organic_price ?? Infinity) - (b.organic_price ?? Infinity) },
-};
+// "Food 4 Less (Highland Park)" -> { brand: 'Food 4 Less', branch: 'Highland Park' }
+export function splitStoreName(name = '') {
+  const m = name.match(/^(.*?)\s*\((.*)\)\s*$/);
+  return m ? { brand: m[1], branch: m[2] } : { brand: name, branch: '' };
+}
 
-const PRICE_COLS_WIDTH = 220;
+const hasPrice = s => s.regular_price != null || s.organic_price != null;
 
+/**
+ * Compact store list. Each row: store + where it is on the left, the
+ * cheapest regular and organic dozen on the right (average dozen beneath).
+ * The selected price type is emphasized and is what "Cheapest" sorts by.
+ * Stores with no current price are folded into one row at the bottom.
+ */
 export default function StoreList({
   stores = [],
   selectedStore = null,
   setSelectedStore = () => {},
   hoveredStore = null,
   setHoveredStore = () => {},
-  priceType = 'regular',
+  priceType: priceTypeProp,
+  onPriceTypeChange,
   isMobile = false,
   maxListHeight = '400px',
   zipCode = null,
   // A state-wide list has no single origin point to measure distance from -
-  // show each store's city instead, and default-sort by price since
-  // "nearest" is meaningless without a fixed location.
+  // show each store's city instead, and default-sort by price.
   showDistance = true,
   initialSortField = 'distance',
   maxRows = 14,
   emptyMessage = null,
 }) {
-  const [sortField, setSortField] = useState(initialSortField);
-  const [sortDir, setSortDir] = useState(COLUMNS[initialSortField].defaultDir);
+  const [internalType, setInternalType] = useState(initialSortField === 'organic' ? 'organic' : 'regular');
+  const priceType = priceTypeProp ?? internalType;
+  const setPriceType = onPriceTypeChange ?? setInternalType;
+  const [sort, setSort] = useState(initialSortField === 'distance' ? 'nearest' : 'cheapest');
   const [showUnpriced, setShowUnpriced] = useState(false);
+  const PRICE_COL = isMobile ? 70 : 92;
 
   if (!stores.length) {
     return (
-      <div style={{ color: '#888', fontSize: '0.8rem', padding: '6px 8px' }}>
-        {emptyMessage || (zipCode ? `No data available for ${zipCode}.` : 'No stores found in this area.')}
+      <div style={{ color: TEXT_3, fontSize: 13, padding: '12px 4px', fontFamily: SANS }}>
+        {emptyMessage || (zipCode ? `No stores found near ${zipCode}.` : 'No stores found in this area.')}
       </div>
     )
   }
 
-  const handleSortClick = (field) => {
-    if (field === sortField) {
-      setSortDir(d => (d === 'asc' ? 'desc' : 'asc'));
-    } else {
-      setSortField(field);
-      setSortDir(COLUMNS[field].defaultDir);
-    }
-  };
+  const compare = {
+    nearest: (a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity),
+    cheapest: (a, b) => (a[`${priceType}_price`] ?? Infinity) - (b[`${priceType}_price`] ?? Infinity),
+    name: (a, b) => a.name.localeCompare(b.name),
+  }[sort];
+  const sorted = [...stores].sort(compare);
+  const priced = sorted.filter(hasPrice).slice(0, maxRows);
+  const unpriced = sorted.filter(s => !hasPrice(s));
+  const unpricedBrands = [...new Set(unpriced.map(s => splitStoreName(s.name).brand))].join(', ');
 
-  const { compare } = COLUMNS[sortField];
-  const sortedStores = [...stores].sort((a, b) => {
-    const diff = compare(a, b);
-    return sortDir === 'asc' ? diff : -diff;
-  });
+  const sortOptions = showDistance
+    ? [{ value: 'nearest', label: 'Nearest' }, { value: 'cheapest', label: 'Cheapest' }]
+    : [{ value: 'cheapest', label: 'Cheapest' }, { value: 'name', label: 'A–Z' }];
 
-  const storeLineStyle = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '4px 8px',
-    borderBottom: `1px solid ${ROW_BORDER}`,
-    backgroundColor: PANEL_BG,
-    boxSizing: 'border-box',
-    transition: 'background-color 0.15s',
-  };
-
-  // The store name is just an identifier here - the price is what this list
-  // is for, so the name stays small and muted instead of competing with it.
-  const storeNameStyle = {
-    fontWeight: 500,
-    fontSize: '0.74rem',
-    color: '#ccc',
-    lineHeight: 1.15,
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-  };
-
-  const addressStyle = {
-    fontSize: '0.6rem',
-    color: '#666',
-    marginTop: 2,
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-  };
-
-  // The regular/organic price is the whole point of this list - it should
-  // dominate the row visually, bigger and bolder than anything else in it.
-  // Its color IS the up/down signal - no separate indicator needed.
-  const priceStyle = {
-    fontSize: '1.3rem',
-    fontWeight: 800,
-    letterSpacing: '0.01em',
-    lineHeight: 1,
-  };
-
-  const changeTextStyle = (change) => ({
-    fontSize: '0.64rem',
-    fontWeight: 600,
-    color: changeColor(change),
-    lineHeight: 1,
-  });
-
-  const colHeaderStyle = (field, color) => ({
-    background: 'transparent',
-    border: 'none',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 3,
-    width: '100%',
-    color: sortField === field ? color : '#666',
-    fontFamily: 'Menlo, monospace',
-    fontSize: '0.6rem',
-    fontWeight: 700,
-    letterSpacing: '0.08em',
-    cursor: 'pointer',
-    padding: 0,
-  });
-
-  const sortArrow = (field) => (sortField === field ? (sortDir === 'asc' ? '▲' : '▼') : '');
-
-  // Price color is the up/down signal itself - green if it rose, red if it
-  // fell, plain white if flat/unknown. No separate indicator needed.
-  const renderPrice = (price, change) => {
-    if (price == null) return <span style={{ ...priceStyle, fontSize: '0.9rem', color: '#3a3a3a' }} title="No recent price">—</span>;
-    return <span style={{ ...priceStyle, color: changeColor(change) }}>{`$${price.toFixed(2)}`}</span>;
-  };
-
-  // Under the headline (cheapest) price: the average across every dozen the
-  // store stocks, then the weekly change - only when the price actually
-  // moved, since a column of "0.0%" on every row is just noise. The average
-  // is skipped when it equals the cheapest (a store with a single dozen SKU).
-  const renderDetails = (price, avg, change) => {
-    if (price == null) return null;
-    const showAvg = typeof avg === 'number' && avg - price >= 0.005;
-    const showChange = typeof change === 'number' && Math.abs(change) >= 0.05;
-    if (!showAvg && !showChange) return null;
+  const priceCell = (s, t) => {
+    const price = s[`${t}_price`];
+    const avg = s[`${t}_avg`];
+    const change = s[`${t}_change`];
+    const emphasized = t === priceType;
+    const moved = typeof change === 'number' && Math.abs(change) >= 0.05;
     return (
-      <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, fontSize: '0.6rem', lineHeight: 1, whiteSpace: 'nowrap' }}>
-        {showAvg && <span style={{ color: '#7a7a7a' }}>avg ${avg.toFixed(2)}</span>}
-        {showChange && (
-          <span style={changeTextStyle(change)}>
-            {changeSign(change)}{Math.abs(change).toFixed(1)}% wk
-          </span>
+      <div key={t} style={{ width: PRICE_COL, textAlign: 'right', flexShrink: 0 }}>
+        <div style={{ fontFamily: MONO, fontSize: 16, fontWeight: 600, letterSpacing: '-0.01em', color: price == null ? '#3a3a3c' : emphasized ? TEXT : TEXT_2, lineHeight: 1.15 }}>
+          {price == null ? '—' : `$${price.toFixed(2)}`}
+        </div>
+        {price != null && (
+          <div style={{ fontFamily: MONO, fontSize: 10.5, color: TEXT_3, marginTop: 2, whiteSpace: 'nowrap' }}>
+            {moved && (
+              <span style={{ color: change < 0 ? GOOD : BAD, marginRight: 5 }}>
+                {change < 0 ? '↓' : '↑'}{Math.abs(change).toFixed(0)}%
+              </span>
+            )}
+            {typeof avg === 'number' && avg - price >= 0.005 ? `avg ${avg.toFixed(2)}` : ''}
+          </div>
         )}
-      </span>
+      </div>
     );
   };
 
-  const hasPrice = (st) => st.regular_price != null || st.organic_price != null;
-  const pricedStores = sortedStores.filter(hasPrice);
-  const unpricedStores = sortedStores.filter(st => !hasPrice(st));
-  const unpricedBrands = [...new Set(unpricedStores.map(st => st.brand))].join(', ');
-
-  const renderRow = (s, dimmed = false) => {
-    const isHovered = hoveredStore?.store_identifier === s.store_identifier;
+  const row = (s, dimmed = false) => {
+    const { brand, branch } = splitStoreName(s.name);
     const isSelected = selectedStore?.store_identifier === s.store_identifier;
+    const isHovered = hoveredStore?.store_identifier === s.store_identifier;
+    const place = showDistance ? (typeof s.distance === 'number' ? `${s.distance.toFixed(1)} mi` : null) : s.city;
+    // Skip the city when the branch is already named after it ("Turlock · Turlock").
+    const where = [branch, place && place.toLowerCase() !== branch.toLowerCase() ? place : null].filter(Boolean).join(' · ');
     return (
       <div
         key={s.store_identifier}
         onClick={() => setSelectedStore(s)}
         onMouseEnter={() => setHoveredStore(s)}
+        title={s.address}
         style={{
-          ...storeLineStyle,
-          ...(dimmed ? { padding: '3px 8px', opacity: 0.55 } : null),
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: dimmed ? '7px 10px' : '9px 10px',
+          borderRadius: 10,
           cursor: 'pointer',
-          background: isHovered ? '#111' : isSelected ? '#181818' : 'inherit',
-          boxShadow: isSelected ? `inset 2px 0 0 ${YELLOW}` : 'none',
+          background: isSelected ? SURFACE_HI : isHovered ? '#141416' : 'transparent',
+          opacity: dimmed ? 0.5 : 1,
+          transition: 'background 0.12s',
         }}
       >
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={storeNameStyle}>{s.name}</div>
-          {!dimmed && <div style={addressStyle}>{s.address}</div>}
+          <div style={{ fontSize: 14, fontWeight: 500, color: TEXT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{brand}</div>
+          <div style={{ fontSize: 12, color: TEXT_3, marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{where}</div>
         </div>
-        <div style={{ width: showDistance ? 56 : 90, flexShrink: 0, textAlign: 'center', fontSize: '0.72rem', color: '#aaa', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {showDistance
-            ? (typeof s.distance === 'number' ? `${s.distance.toFixed(1)}mi` : '--')
-            : (s.city || '--')}
-        </div>
-        <div style={{ display: 'flex', width: PRICE_COLS_WIDTH, flexShrink: 0 }}>
-          {['regular', 'organic'].map((t, i) => (
-            <div key={t} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, borderLeft: i ? `1px solid ${ROW_BORDER}` : 'none' }}>
-              {renderPrice(s[`${t}_price`], s[`${t}_change`])}
-              {renderDetails(s[`${t}_price`], s[`${t}_avg`], s[`${t}_change`])}
-            </div>
-          ))}
-        </div>
+        {!dimmed && ['regular', 'organic'].map(t => priceCell(s, t))}
+        {dimmed && <div style={{ fontSize: 11, color: TEXT_3, fontFamily: MONO }}>no current price</div>}
       </div>
     );
   };
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        overflowY: 'auto',
-        maxHeight: maxListHeight,
-      }}
-      onMouseLeave={() => setHoveredStore(null)}
-    >
-      {/* Legend - every number in a row is a 12-count carton price, and
-          which of the shelf's cartons each one describes isn't obvious. */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 14px', padding: '2px 8px 5px', fontSize: '0.6rem', color: '#777' }}>
-        <span><b style={{ color: '#eee' }}>Big price</b> = cheapest 12-egg carton</span>
-        <span><span style={{ color: '#aaa' }}>avg</span> = average of every 12-egg carton the store stocks</span>
-        <span><span style={{ color: '#aaa' }}>wk</span> = change in cheapest vs. 7 days ago</span>
+    <div style={{ fontFamily: SANS, display: 'flex', flexDirection: 'column', minHeight: 0 }} onMouseLeave={() => setHoveredStore(null)}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '0 2px 10px', flexWrap: 'wrap' }}>
+        <Segmented size="sm" ariaLabel="Sort stores" options={sortOptions} value={sort} onChange={setSort} />
+        {/* Column headers double as the Regular/Organic switch. */}
+        <div style={{ display: 'flex', gap: 8, paddingRight: 10 }}>
+          {['regular', 'organic'].map(t => (
+            <button
+              key={t}
+              onClick={() => setPriceType(t)}
+              style={{
+                width: PRICE_COL,
+                textAlign: 'right',
+                background: 'none',
+                border: 'none',
+                padding: 0,
+                cursor: 'pointer',
+                fontFamily: MONO,
+                fontSize: 10.5,
+                fontWeight: 600,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                color: t === priceType ? TYPE_COLOR[t] : TEXT_3,
+              }}
+            >
+              {TYPE_LABEL[t]}
+            </button>
+          ))}
+        </div>
       </div>
-      {/* Sortable column headers, sticky at the top of the scrollable list -
-          click any column to sort by it, click again to flip direction. */}
-      <div
-        style={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 1,
-          display: 'flex',
-          alignItems: 'center',
-          background: '#000',
-          padding: '1px 8px 4px',
-          borderBottom: `1px solid ${PANEL_BORDER}`,
-        }}
-      >
-        <div style={{ flex: 1 }}>
-          <button style={{ ...colHeaderStyle('name', YELLOW), justifyContent: 'flex-start' }} onClick={() => handleSortClick('name')}>
-            STORE / ADDRESS {sortArrow('name')}
+
+      <div style={{ overflowY: 'auto', maxHeight: maxListHeight, display: 'flex', flexDirection: 'column', gap: 1 }}>
+        {priced.map(s => row(s))}
+        {unpriced.length > 0 && (
+          <button
+            onClick={() => setShowUnpriced(v => !v)}
+            style={{ background: 'none', border: 'none', borderTop: `1px solid ${HAIRLINE}`, marginTop: 6, padding: '10px 10px 4px', textAlign: 'left', color: TEXT_3, fontSize: 12, fontFamily: SANS, cursor: 'pointer' }}
+          >
+            {showUnpriced ? 'Hide' : 'Show'} {unpriced.length} {unpriced.length === 1 ? 'store' : 'stores'} without a current price ({unpricedBrands})
           </button>
-        </div>
-        <div style={{ width: showDistance ? 56 : 90, flexShrink: 0 }}>
-          {showDistance ? (
-            <button style={colHeaderStyle('distance', YELLOW)} onClick={() => handleSortClick('distance')}>
-              DIST {sortArrow('distance')}
-            </button>
-          ) : (
-            <button style={colHeaderStyle('city', YELLOW)} onClick={() => handleSortClick('city')}>
-              CITY {sortArrow('city')}
-            </button>
-          )}
-        </div>
-        <div style={{ display: 'flex', width: PRICE_COLS_WIDTH, flexShrink: 0 }}>
-          <div style={{ flex: 1 }}>
-            <button style={colHeaderStyle('regular', BLUE)} onClick={() => handleSortClick('regular')}>
-              REGULAR {sortArrow('regular')}
-            </button>
-          </div>
-          <div style={{ flex: 1, borderLeft: `1px solid ${PANEL_BORDER}` }}>
-            <button style={colHeaderStyle('organic', PURPLE)} onClick={() => handleSortClick('organic')}>
-              ORGANIC {sortArrow('organic')}
-            </button>
-          </div>
-        </div>
+        )}
+        {showUnpriced && unpriced.map(s => row(s, true))}
       </div>
-      {pricedStores.slice(0, maxRows).map(st => renderRow(st))}
-      {/* Stores with no current price (e.g. Target, whose prices are no
-          longer collected) stay listed, but folded below the real prices
-          instead of interleaving rows of dashes with them. */}
-      {unpricedStores.length > 0 && (
-        <button
-          onClick={() => setShowUnpriced(v => !v)}
-          style={{ background: 'transparent', border: 'none', borderBottom: `1px solid ${ROW_BORDER}`, color: '#666', fontFamily: 'Menlo, monospace', fontSize: '0.62rem', textAlign: 'left', padding: '6px 8px', cursor: 'pointer' }}
-        >
-          {showUnpriced ? '▾' : '▸'} {unpricedStores.length} more {unpricedStores.length === 1 ? 'store' : 'stores'} with no current price ({unpricedBrands})
-        </button>
-      )}
-      {showUnpriced && unpricedStores.map(st => renderRow(st, true))}
+
+      <div style={{ borderTop: `1px solid ${HAIRLINE}`, marginTop: 8, padding: '10px 4px 0', fontSize: 11.5, color: TEXT_3, lineHeight: 1.5 }}>
+        Prices are for a 12-egg carton. The main price is the <span style={{ color: TEXT_2 }}>cheapest carton</span> on the shelf;
+        <span style={{ color: TEXT_2 }}> avg</span> is the average of every carton the store stocks; arrows show the change over 7 days.
+      </div>
     </div>
   )
 }

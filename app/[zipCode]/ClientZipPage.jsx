@@ -17,6 +17,7 @@ export default function ClientZipPage({ zipCode, initialData }) {
       <BloombergTerminal
         zipCode={zipCode}
         localStores={stores}
+        radiusMiles={initialData?.radiusMiles}
         nationalStats={null}
         showOnlyStoresAndHistory={true}
       />
