@@ -1,6 +1,6 @@
 import { config } from 'dotenv'
 config({ path: '.env.local' })
-import fetch from 'node-fetch'
+import { fetchWithRetry } from './lib/fetch-with-retry.js'
 import { createClient } from '@supabase/supabase-js'
 import { runIfMain } from './lib/run-if-main.js'
 
@@ -46,7 +46,7 @@ async function main() {
   url.searchParams.set('agg_level_desc', 'NATIONAL')
   url.searchParams.set('format', 'JSON')
 
-  const res = await fetch(url.toString())
+  const res = await fetchWithRetry(url.toString())
   if (!res.ok) {
     const text = await res.text().catch(() => '')
     console.error(`❌ Quick Stats API request failed (${res.status}): ${text.slice(0, 300)}`)

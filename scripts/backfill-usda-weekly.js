@@ -1,6 +1,6 @@
 import { config } from 'dotenv'
 config({ path: '.env.local' })
-import fetch from 'node-fetch'
+import { fetchWithRetry } from './lib/fetch-with-retry.js'
 import { createClient } from '@supabase/supabase-js'
 import { runIfMain } from './lib/run-if-main.js'
 
@@ -77,10 +77,9 @@ export async function run({ latestOnly = false } = {}) {
   //       drop the old pagination loop.
   const url = `https://marsapi.ams.usda.gov/services/v1.2/reports/${slugId}/${section}?page=1`
   console.log('📥 USDA fetch …')
-    const res = await fetch(url, { headers: { Authorization: `Basic ${creds}` } })
+    const res = await fetchWithRetry(url, { headers: { Authorization: `Basic ${creds}` } })
     if (!res.ok) {
-      console.error('USDA request failed', res.status)
-    return
+      throw new Error(`USDA request failed (HTTP ${res.status})`)
     }
     const json = await res.json()
     const rows = json.results || []
